@@ -1,0 +1,15 @@
+{
+	"name": "@app/brand",
+	"private": true,
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"scripts": {
+		"typecheck": "tsc --noEmit"
+	},
+	"devDependencies": {
+		"@app/config": "workspace:*",
+		"typescript": "^6.0.2"
+	}
+}
