@@ -48,10 +48,10 @@ Every strategy is a combination of an **ordering** (who chooses first) and a
 **round structure** (how turns proceed). That gives organizers named choices
 while keeping one code path.
 
-| Strategy (organizer-facing name) | Ordering | Rounds | Best for |
-|---|---|---|---|
-| **Take turns** (default) | Random, seeded | Snake: each round everyone gets their best still-feasible choice, and the order reverses each round | Fair spread of first choices; easy to explain |
-| **Early birds first** | By preference submission time | Snake | Organizers who promised that signing up early counts |
+| Strategy (organizer-facing name) | Ordering                      | Rounds                                                                                              | Best for                                             |
+| -------------------------------- | ----------------------------- | --------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| **Take turns** (default)         | Random, seeded                | Snake: each round everyone gets their best still-feasible choice, and the order reverses each round | Fair spread of first choices; easy to explain        |
+| **Early birds first**            | By preference submission time | Snake                                                                                               | Organizers who promised that signing up early counts |
 
 In each turn the participant gets their highest-ranked workshop that still has a
 feasible session (capacity, no overlap, eligible). If several sessions of that
@@ -117,11 +117,11 @@ the MVP:
 Generate synthetic events and measure CPU time in `wrangler dev` and in a
 deployed Worker:
 
-| Size | Participants | Workshops | Sessions |
-|---|---|---|---|
-| Target | 200 | 20 | 60 |
-| Large camp | 2,000 | 100 | 400 |
-| Stress | 10,000 | 300 | 1,200 |
+| Size       | Participants | Workshops | Sessions |
+| ---------- | ------------ | --------- | -------- |
+| Target     | 200          | 20        | 60       |
+| Large camp | 2,000        | 100       | 400      |
+| Stress     | 10,000       | 300       | 1,200    |
 
 If the stress case exceeds the Worker CPU limit, that's when a Workflow step
 (or later a container for a solver) comes in. Check current Worker CPU limits

@@ -14,7 +14,7 @@ outdoors or in a noisy hall, checking where to go next.
 
 So the interface should feel like **a well-made printed programme that happens to be
 live**: calm ink-on-paper chrome, with colour reserved for the one thing
-participants scan for, which is *which workshop is this*.
+participants scan for, which is _which workshop is this_.
 
 ## Signature: workshop markers and the day strip
 
@@ -24,7 +24,7 @@ the workshop does: its card, the schedule grid, the booking list, the itinerary,
 the printed attendance list, the check-in screen.
 
 - Eight felt-tip colours × eight shapes (circle, triangle, square, diamond,
-  star, hexagon, plus, half-moon). Workshop *n* gets colour `n mod 8` and shape
+  star, hexagon, plus, half-moon). Workshop _n_ gets colour `n mod 8` and shape
   `(n + floor(n / 8)) mod 8`, so 64 workshops get distinct pairs before any repeat.
 - **Shapes carry the meaning; colour reinforces it.** Colour-blind participants
   and black-and-white printouts still work.
@@ -52,19 +52,19 @@ All ratios measured against the tokens below (WCAG 2.x formula).
 
 ### Base
 
-| Token | Hex | Use | Contrast |
-|---|---|---|---|
-| `ink` | `#1C1E33` | Text, glyph outlines, primary icons | 15.3:1 on `paper` |
-| `paper` | `#F6F7F9` | App background | (base) |
-| `card` | `#FFFFFF` | Cards, sheets, inputs | ink 16.4:1 |
-| `muted` | `#565B70` | Secondary text, metadata | 6.3:1 on `paper` |
-| `edge` | `#7C8296` | Input borders, focus-adjacent outlines | 3.6:1 on `paper` (meets 3:1 for UI boundaries) |
-| `line` | `#D5D9E2` | Decorative dividers only, never the sole boundary of a control | 1.3:1 (decorative) |
-| `kelp` | `#0E6B5C` | Default platform brand colour: primary buttons, links, focus ring | 6.0:1 on `paper`, white text on it 6.4:1 |
-| `danger` | `#B42A1B` | Errors, destructive actions | 6.0:1 on `paper` |
-| `success` | `#1D7536` | Confirmation states | 5.4:1 on `paper` |
+| Token     | Hex       | Use                                                               | Contrast                                       |
+| --------- | --------- | ----------------------------------------------------------------- | ---------------------------------------------- |
+| `ink`     | `#1C1E33` | Text, glyph outlines, primary icons                               | 15.3:1 on `paper`                              |
+| `paper`   | `#F6F7F9` | App background                                                    | (base)                                         |
+| `card`    | `#FFFFFF` | Cards, sheets, inputs                                             | ink 16.4:1                                     |
+| `muted`   | `#565B70` | Secondary text, metadata                                          | 6.3:1 on `paper`                               |
+| `edge`    | `#7C8296` | Input borders, focus-adjacent outlines                            | 3.6:1 on `paper` (meets 3:1 for UI boundaries) |
+| `line`    | `#D5D9E2` | Decorative dividers only, never the sole boundary of a control    | 1.3:1 (decorative)                             |
+| `kelp`    | `#0E6B5C` | Default platform brand colour: primary buttons, links, focus ring | 6.0:1 on `paper`, white text on it 6.4:1       |
+| `danger`  | `#B42A1B` | Errors, destructive actions                                       | 6.0:1 on `paper`                               |
+| `success` | `#1D7536` | Confirmation states                                               | 5.4:1 on `paper`                               |
 
-`kelp` is the *placeholder* platform brand colour, picked because deep green-teal
+`kelp` is the _placeholder_ platform brand colour, picked because deep green-teal
 reads outdoorsy and calm and doesn't compete with the markers. A rebrand
 replaces it in `packages/brand`.
 
@@ -73,16 +73,16 @@ on `#FBE9E7` 14.0:1, on `#FFF4D6` 14.9:1), never coloured text on coloured fill.
 
 ### Markers
 
-| Marker | Fill | Shape (default order) |
-|---|---|---|
-| Tomato | `#D63B2F` | circle |
-| Sun | `#D99A00` | triangle |
-| Grass | `#2F8A41` | square |
-| Sea | `#1F7FB8` | diamond |
-| Grape | `#7A4FC9` | star |
-| Bubblegum | `#CF3F86` | hexagon |
-| Sky | `#2A95C2` | plus |
-| Moss | `#6B7A2E` | half-moon |
+| Marker    | Fill      | Shape (default order) |
+| --------- | --------- | --------------------- |
+| Tomato    | `#D63B2F` | circle                |
+| Sun       | `#D99A00` | triangle              |
+| Grass     | `#2F8A41` | square                |
+| Sea       | `#1F7FB8` | diamond               |
+| Grape     | `#7A4FC9` | star                  |
+| Bubblegum | `#CF3F86` | hexagon               |
+| Sky       | `#2A95C2` | plus                  |
+| Moss      | `#6B7A2E` | half-moon             |
 
 Rules:
 
@@ -102,30 +102,30 @@ Organizers can set a logo and one accent colour per event (MVP scope). The accen
 
 ## Typography
 
-| Role | Face | Why | Use |
-|---|---|---|---|
-| Display | **Unbounded** (OFL) | Wide and rounded, the feel of a hand-lettered festival poster; youthful without being childish | Event name, day headings, the big "next up" time. Never in buttons, forms or body text |
-| Body | **Atkinson Hyperlegible Next** (OFL) | Designed by the Braille Institute for low-vision legibility; distinct letterforms (Il1, 0O); a quiet, human face | Everything else |
-| Utility | **Atkinson Hyperlegible Mono** (OFL) | Same family, tabular figures | Times, seat counts, participant codes, data tables |
+| Role    | Face                                 | Why                                                                                                              | Use                                                                                    |
+| ------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| Display | **Unbounded** (OFL)                  | Wide and rounded, the feel of a hand-lettered festival poster; youthful without being childish                   | Event name, day headings, the big "next up" time. Never in buttons, forms or body text |
+| Body    | **Atkinson Hyperlegible Next** (OFL) | Designed by the Braille Institute for low-vision legibility; distinct letterforms (Il1, 0O); a quiet, human face | Everything else                                                                        |
+| Utility | **Atkinson Hyperlegible Mono** (OFL) | Same family, tabular figures                                                                                     | Times, seat counts, participant codes, data tables                                     |
 
 - **Self-host all fonts** as Worker static assets. No Google Fonts CDN: it sends
   visitor IPs to a third party, which a German court (Munich, 2022) found to
   breach GDPR.
 - **Dutch runs about 30% longer** and has long compounds
-  (*inschrijvingsformulier*). Display headings are capped at `clamp(1.75rem, 6vw, 2.75rem)`
+  (_inschrijvingsformulier_). Display headings are capped at `clamp(1.75rem, 6vw, 2.75rem)`
   on mobile, and use `hyphens: auto` with the correct `lang` attribute.
 
 Type scale (rem, 1.25 ratio, body 1rem / 16px minimum on mobile):
 
-| Token | Size | Face / weight |
-|---|---|---|
-| `display` | 2.75 (clamped) | Unbounded 600 |
-| `h1` | 1.95 | Unbounded 500 |
-| `h2` | 1.56 | Atkinson Next 700 |
-| `h3` | 1.25 | Atkinson Next 700 |
-| `body` | 1.0 | Atkinson Next 400, line-height 1.55 |
-| `small` | 0.875 | Atkinson Next 400 |
-| `time` | 1.0 / 1.25 | Atkinson Mono 500, tabular |
+| Token     | Size           | Face / weight                       |
+| --------- | -------------- | ----------------------------------- |
+| `display` | 2.75 (clamped) | Unbounded 600                       |
+| `h1`      | 1.95           | Unbounded 500                       |
+| `h2`      | 1.56           | Atkinson Next 700                   |
+| `h3`      | 1.25           | Atkinson Next 700                   |
+| `body`    | 1.0            | Atkinson Next 400, line-height 1.55 |
+| `small`   | 0.875          | Atkinson Next 400                   |
+| `time`    | 1.0 / 1.25     | Atkinson Mono 500, tabular          |
 
 ## Shape, space, depth
 
@@ -226,18 +226,18 @@ Form, Command (search).
 
 Product components to build, in `packages/ui`:
 
-| Component | Notes |
-|---|---|
-| `Marker` | Glyph with ink outline; `aria-hidden` (the workshop name is the label) |
-| `WorkshopCard` | Marker, title, short description, age groups, sessions |
-| `SessionRow` | Time (mono), workshop, room, seat state, action |
-| `SeatState` | Text first: "4 places left", "Full, join waitlist", "You're 3rd in line". Never only a bar |
-| `RankList` | Up and down buttons, live-region announcements, optional drag |
-| `DayStrip` | Itinerary per day; printable |
-| `ScheduleGrid` | Read-only rooms × time; virtualised for big events with TanStack Virtual |
-| `AllocationMetrics` | Numbers with plain-language labels |
-| `ScanResult` | Check-in confirmation: large marker, name, session, status |
-| `EmptyState` | Says what to do next, with one action |
+| Component           | Notes                                                                                      |
+| ------------------- | ------------------------------------------------------------------------------------------ |
+| `Marker`            | Glyph with ink outline; `aria-hidden` (the workshop name is the label)                     |
+| `WorkshopCard`      | Marker, title, short description, age groups, sessions                                     |
+| `SessionRow`        | Time (mono), workshop, room, seat state, action                                            |
+| `SeatState`         | Text first: "4 places left", "Full, join waitlist", "You're 3rd in line". Never only a bar |
+| `RankList`          | Up and down buttons, live-region announcements, optional drag                              |
+| `DayStrip`          | Itinerary per day; printable                                                               |
+| `ScheduleGrid`      | Read-only rooms × time; virtualised for big events with TanStack Virtual                   |
+| `AllocationMetrics` | Numbers with plain-language labels                                                         |
+| `ScanResult`        | Check-in confirmation: large marker, name, session, status                                 |
+| `EmptyState`        | Says what to do next, with one action                                                      |
 
 ## Accessibility (WCAG 2.2 AA)
 
@@ -272,14 +272,14 @@ when a seat count changes.
 Plain, warm, direct, second person. Sentence case. Short. No exclamation marks
 in system messages, no apologies, never vague about what happened.
 
-| Moment | English | Dutch |
-|---|---|---|
-| Primary action, booking | Book this session | Reserveer deze sessie |
-| Ranking intro | Pick up to 5. We'll fit in as many of your top picks as we can. | Kies er maximaal 5. We plannen zoveel mogelijk van je favorieten in. |
+| Moment                    | English                                                                                 | Dutch                                                                                     |
+| ------------------------- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Primary action, booking   | Book this session                                                                       | Reserveer deze sessie                                                                     |
+| Ranking intro             | Pick up to 5. We'll fit in as many of your top picks as we can.                         | Kies er maximaal 5. We plannen zoveel mogelijk van je favorieten in.                      |
 | Session filled mid-choice | This session filled up while you were choosing. Pick another time or join the waitlist. | Deze sessie raakte vol terwijl je koos. Kies een ander moment of zet je op de wachtlijst. |
-| Waitlist | You're 3rd in line. We'll email you if a place opens up. | Je staat 3e op de wachtlijst. We mailen je als er een plaats vrijkomt. |
-| Organizer empty state | No workshops yet. Add the first one, and you can plan sessions after that. | Nog geen workshops. Voeg de eerste toe, daarna plan je de sessies. |
-| Publish | Publish results → toast "Results published. 214 participants will get an email." | Resultaten publiceren → "Resultaten gepubliceerd. 214 deelnemers krijgen een mail." |
+| Waitlist                  | You're 3rd in line. We'll email you if a place opens up.                                | Je staat 3e op de wachtlijst. We mailen je als er een plaats vrijkomt.                    |
+| Organizer empty state     | No workshops yet. Add the first one, and you can plan sessions after that.              | Nog geen workshops. Voeg de eerste toe, daarna plan je de sessies.                        |
+| Publish                   | Publish results → toast "Results published. 214 participants will get an email."        | Resultaten publiceren → "Resultaten gepubliceerd. 214 deelnemers krijgen een mail."       |
 
 An action keeps its name through the whole flow: "Publish results" produces
 "Results published", never "Allocation saved".
@@ -292,15 +292,15 @@ native speaker, not machine-translated, before the pilot.
 shadcn/ui reads semantic CSS variables (`--background`, `--foreground`,
 `--primary`, `--border`, `--ring`, …). We map them once:
 
-| shadcn variable | Our token |
-|---|---|
-| `--background` | `paper` |
-| `--foreground` | `ink` |
-| `--card` | `card` |
-| `--muted-foreground` | `muted` |
-| `--border`, `--input` | `edge` |
+| shadcn variable       | Our token      |
+| --------------------- | -------------- |
+| `--background`        | `paper`        |
+| `--foreground`        | `ink`          |
+| `--card`              | `card`         |
+| `--muted-foreground`  | `muted`        |
+| `--border`, `--input` | `edge`         |
 | `--primary`, `--ring` | `kelp` (brand) |
-| `--destructive` | `danger` |
+| `--destructive`       | `danger`       |
 
 Marker colours live as their own variables (`--marker-tomato` …) exposed to
 Tailwind through `@theme`. `packages/brand` overrides only brand values (primary,

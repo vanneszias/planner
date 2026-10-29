@@ -111,14 +111,14 @@ SMS and push notifications, native apps, French UI.
 
 Each milestone ends with something deployable to the preview environment.
 
-| # | Milestone | Exit criteria |
-|---|---|---|
-| M0 | **Foundations** | Four Workers deploy from CI to preview and production; EU D1, R2 and Queues exist; Better Auth sign-in works with all four methods; i18n renders EN and NL. |
-| M1 | **Organizer setup** | An organizer creates an organization, invites an editor, builds an event with 20 workshops and 60 sessions, and publishes its page. |
-| M2 | **Allocation engine (standalone)** | `packages/allocation` passes property tests (no constraint ever violated, same seed gives the same result) and the benchmark table in allocation-mvp.md. Usable from a script for concierge runs. |
-| M3 | **Registration and booking** | Adults self-register, organizers import minors, participants book with live seat counts and waitlists, the concurrency test passes. |
-| M4 | **Ranking and publishing** | Participants rank, organizers run drafts, review, adjust and publish; emails go out; itineraries update. |
-| M5 | **Event day and pilot readiness** | QR check-in, attendance exports, retention cleanup, audit log, accessibility audit fixed, privacy documents ready. |
+| #   | Milestone                          | Exit criteria                                                                                                                                                                                     |
+| --- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| M0  | **Foundations**                    | Four Workers deploy from CI to preview and production; EU D1, R2 and Queues exist; Better Auth sign-in works with all four methods; i18n renders EN and NL.                                       |
+| M1  | **Organizer setup**                | An organizer creates an organization, invites an editor, builds an event with 20 workshops and 60 sessions, and publishes its page.                                                               |
+| M2  | **Allocation engine (standalone)** | `packages/allocation` passes property tests (no constraint ever violated, same seed gives the same result) and the benchmark table in allocation-mvp.md. Usable from a script for concierge runs. |
+| M3  | **Registration and booking**       | Adults self-register, organizers import minors, participants book with live seat counts and waitlists, the concurrency test passes.                                                               |
+| M4  | **Ranking and publishing**         | Participants rank, organizers run drafts, review, adjust and publish; emails go out; itineraries update.                                                                                          |
+| M5  | **Event day and pilot readiness**  | QR check-in, attendance exports, retention cleanup, audit log, accessibility audit fixed, privacy documents ready.                                                                                |
 
 M2 sits early on purpose: with the engine runnable from a script, we can run a
 real organizer's allocation by hand (experiment 2 below) while M3 and M4 are
@@ -128,12 +128,12 @@ still being built.
 
 The original Phase 1 and 2 merge into the MVP because of decision D1.
 
-| Phase | Theme | Contents |
-|---|---|---|
-| 1 | **MVP** | Everything above, proven on 1 to 3 pilot events. |
-| 2 | **Depth for repeat organizers** | Duplicate an event or use templates; per-time-block hybrid; reallocation after publishing; group constraints; satisfaction-maximising solver (benchmarked, Workflow or container if needed); offline-capable check-in; facilitator view; feedback forms; French UI. |
-| 3 | **Platform** | Public API and webhooks on the `api` Worker; notification preferences; basic analytics; richer event branding; integrations (calendar, mailing lists). |
-| 4 | **Commercialisation and ecosystem** | Pricing live; paid ticketing; event discovery; third-party extensions. |
+| Phase | Theme                               | Contents                                                                                                                                                                                                                                                            |
+| ----- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1     | **MVP**                             | Everything above, proven on 1 to 3 pilot events.                                                                                                                                                                                                                    |
+| 2     | **Depth for repeat organizers**     | Duplicate an event or use templates; per-time-block hybrid; reallocation after publishing; group constraints; satisfaction-maximising solver (benchmarked, Workflow or container if needed); offline-capable check-in; facilitator view; feedback forms; French UI. |
+| 3     | **Platform**                        | Public API and webhooks on the `api` Worker; notification preferences; basic analytics; richer event branding; integrations (calendar, mailing lists).                                                                                                              |
+| 4     | **Commercialisation and ecosystem** | Pricing live; paid ticketing; event discovery; third-party extensions.                                                                                                                                                                                              |
 
 **Pricing should be decided before Phase 3, not Phase 4.** Pilots are free, but
 the pricing model (per event, per participant or subscription) changes what
@@ -142,22 +142,22 @@ feeds that decision.
 
 ## Validation experiments
 
-| # | Experiment | When | What it tells us | Success signal |
-|---|---|---|---|---|
-| 1 | Interview 6 to 8 organizers of youth and community events; collect their current spreadsheets and forms | Before M1 | How they allocate today, what hurts, whether ranking is wanted | At least half describe manual allocation as a top pain |
-| 2 | Concierge allocation: run a real event's allocation with the engine from a script, hand back results | After M2 | Whether the engine's output beats their manual result, and what they change | Organizer accepts the result with few manual moves |
-| 3 | Clickable prototype test with 8 to 10 young participants: book vs rank, with and without times | Before M4 UI | Which flow participants complete faster and prefer | Ranking completed in under 2 minutes on a phone |
-| 4 | Pilot event (200 participants) | After M5 | The MVP goal above | All MVP done criteria met |
-| 5 | Show pilot organizers three price points and models | During pilot | Willingness to pay and preferred model | At least one organizer would pay for their next event |
+| #   | Experiment                                                                                              | When         | What it tells us                                                            | Success signal                                         |
+| --- | ------------------------------------------------------------------------------------------------------- | ------------ | --------------------------------------------------------------------------- | ------------------------------------------------------ |
+| 1   | Interview 6 to 8 organizers of youth and community events; collect their current spreadsheets and forms | Before M1    | How they allocate today, what hurts, whether ranking is wanted              | At least half describe manual allocation as a top pain |
+| 2   | Concierge allocation: run a real event's allocation with the engine from a script, hand back results    | After M2     | Whether the engine's output beats their manual result, and what they change | Organizer accepts the result with few manual moves     |
+| 3   | Clickable prototype test with 8 to 10 young participants: book vs rank, with and without times          | Before M4 UI | Which flow participants complete faster and prefer                          | Ranking completed in under 2 minutes on a phone        |
+| 4   | Pilot event (200 participants)                                                                          | After M5     | The MVP goal above                                                          | All MVP done criteria met                              |
+| 5   | Show pilot organizers three price points and models                                                     | During pilot | Willingness to pay and preferred model                                      | At least one organizer would pay for their next event  |
 
 ## Risks
 
-| Risk | Mitigation |
-|---|---|
+| Risk                                                                                            | Mitigation                                                                                                                                                              |
+| ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **MVP scope is large** (both modes, four Workers, live updates, check-in, four sign-in methods) | Milestones are independently shippable; the concierge experiment gives value before the full UI. Cut candidates if needed: Google sign-in, live seat counts, swap pass. |
-| Local development across four Workers with cross-Worker Durable Object bindings | Prove it in M0 before building features. |
-| Cloudflare Email Service is in public beta; EU processing not confirmed | Verify data location and terms before the pilot; keep sending behind a small interface so another provider can be swapped in. |
-| Better Auth with four methods widens the auth surface | Use its built-in rate limiting and Turnstile support; password breach checks; security review before the pilot. Verify D1 setup against current Better Auth docs. |
-| Minors' data and GDPR | Minimal fields, 90-day retention, DPA, no personal data in logs or DO IDs, legal review of the privacy notice. |
-| TanStack Start moves fast | Pin versions; upgrade deliberately between milestones. |
-| WebSocket and Durable Object cost at larger events | Hibernatable WebSockets; measure during the pilot. |
+| Local development across four Workers with cross-Worker Durable Object bindings                 | Prove it in M0 before building features.                                                                                                                                |
+| Cloudflare Email Service is in public beta; EU processing not confirmed                         | Verify data location and terms before the pilot; keep sending behind a small interface so another provider can be swapped in.                                           |
+| Better Auth with four methods widens the auth surface                                           | Use its built-in rate limiting and Turnstile support; password breach checks; security review before the pilot. Verify D1 setup against current Better Auth docs.       |
+| Minors' data and GDPR, with no lawyer review before the pilot (S1)                              | Minimal fields, 90-day retention, DPA from templates, no personal data in logs or DO IDs; disclose to the pilot organizer; lawyer review before commercial launch.      |
+| TanStack Start moves fast                                                                       | Pin versions; upgrade deliberately between milestones.                                                                                                                  |
+| WebSocket and Durable Object cost at larger events                                              | Hibernatable WebSockets; measure during the pilot.                                                                                                                      |

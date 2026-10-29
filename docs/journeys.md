@@ -6,15 +6,15 @@ Copy is English here; every string ships in Dutch too.
 
 ## Event states drive what participants see
 
-| Event state | Booking mode participants see | Ranking mode participants see |
-|---|---|---|
-| `draft` | Nothing (page 404s for non-organizers) | Nothing |
-| `published`, before `opens_at` | Programme, "Booking opens Sat 3 May, 10:00" | Programme, "Ranking opens …" |
-| `published`, window open | Programme with seats, booking | Programme, ranking |
-| `published`, window closed, not allocated | Their bookings (changes per cut-off, D22) | "Your ranking is in. Results come by …" |
-| `published`, allocation published | n/a | Their day strip |
-| `closed` (event over) | Itinerary read-only | Itinerary read-only |
-| after retention | "This event's participant data has been deleted." | same |
+| Event state                               | Booking mode participants see                     | Ranking mode participants see           |
+| ----------------------------------------- | ------------------------------------------------- | --------------------------------------- |
+| `draft`                                   | Nothing (page 404s for non-organizers)            | Nothing                                 |
+| `published`, before `opens_at`            | Programme, "Booking opens Sat 3 May, 10:00"       | Programme, "Ranking opens …"            |
+| `published`, window open                  | Programme with seats, booking                     | Programme, ranking                      |
+| `published`, window closed, not allocated | Their bookings (changes per cut-off, D22)         | "Your ranking is in. Results come by …" |
+| `published`, allocation published         | n/a                                               | Their day strip                         |
+| `closed` (event over)                     | Itinerary read-only                               | Itinerary read-only                     |
+| after retention                           | "This event's participant data has been deleted." | same                                    |
 
 Organizers always see a banner on the public page saying which state it's in.
 
@@ -28,11 +28,11 @@ under 2 minutes on a phone**, without creating a password.
 1. **Event page** (`/{org}/{event}`, from a link, poster QR or message).
    Event band, three tabs (Programme · My day · Info). Programme lists sessions
    per day with markers, times, rooms and seat state ("4 places left").
-   *If not registered:* tapping a session opens its detail with
+   _If not registered:_ tapping a session opens its detail with
    "Book this session".
 2. **Register sheet** (opens on first "Book"). Name, email, age group (if the
    event uses them), consent checkbox linking the privacy notice. Turnstile runs
-   invisibly. Button: "Book this session". *Booking happens in the same step*; no
+   invisibly. Button: "Book this session". _Booking happens in the same step_; no
    email round trip first (C1). The confirmation email includes "Not you?
    Cancel this registration".
 3. **Booked.** Toast "Booked: Screen printing, Sat 10:00". The session row now
@@ -76,7 +76,7 @@ Organizer-registered (D2, D16). The minor has no account and may have no email.
 
 1. **Code card** (printed by the organizer, or forwarded by a guardian): QR
    code, short code `K7Q2-XA`, the event name, the minor's first name.
-2. **Scan or open link** → lands directly in *their* view: "Hi Noor" header,
+2. **Scan or open link** → lands directly in _their_ view: "Hi Noor" header,
    then the same booking (P1 steps 3 to 5) or ranking (P2 steps 2, 4 to 6) flow,
    with no register step.
 3. **Typing the code instead:** event page → "I have a code" → enter
@@ -103,12 +103,12 @@ Ways back, in order of how often they'll be used:
 
 ### P5. Something changes
 
-| Change | Participant sees |
-|---|---|
-| Waitlist promotion | Email and day strip badge: "You got a place: Climbing, Sat 13:30." |
-| Session time or room changed | Email, strip segment badge "Moved from 10:00" or "Now in Hall B". |
-| Session cancelled | Email: "Climbing on Saturday is cancelled." Slot becomes free time until the organizer places them. |
-| Organizer moved them | Email and badge: "Your organizer moved you to Podcast lab." |
+| Change                       | Participant sees                                                                                    |
+| ---------------------------- | --------------------------------------------------------------------------------------------------- |
+| Waitlist promotion           | Email and day strip badge: "You got a place: Climbing, Sat 13:30."                                  |
+| Session time or room changed | Email, strip segment badge "Moved from 10:00" or "Now in Hall B".                                   |
+| Session cancelled            | Email: "Climbing on Saturday is cancelled." Slot becomes free time until the organizer places them. |
+| Organizer moved them         | Email and badge: "Your organizer moved you to Podcast lab."                                         |
 
 Badges stay until the participant opens the strip, then fade to a quiet "changed" dot.
 
@@ -129,9 +129,9 @@ Badges stay until the participant opens the strip, then fade to a quiet "changed
 2. **"Create your first event"** guided flow, one question per step, all
    skippable with defaults:
    1. Name, dates, place (timezone derived from place, editable).
-   2. "How should people choose workshops?" Two big cards: *They book sessions
-      themselves (first come, first served)* / *They rank favourites and we
-      plan it for them*. Short honest description of each.
+   2. "How should people choose workshops?" Two big cards: _They book sessions
+      themselves (first come, first served)_ / _They rank favourites and we
+      plan it for them_. Short honest description of each.
    3. "How many sessions does each person attend?" (default 3)
    4. Age groups? (optional)
 3. Lands on the **event overview**: a checklist "Add workshops → Schedule
@@ -222,9 +222,9 @@ events and run allocations. Viewers can see participants and export lists."
 
 ## Resolved choices
 
-| | Choice | Decision |
-|---|---|---|
-| C1 | Book immediately or confirm email first? | Book immediately; the confirmation email has "Not you? Cancel this registration" (D23) |
-| C2 | Email codes to guardians? | Yes, alongside printed cards; guardian email stored per minor, cleared at retention (D24) |
-| C3 | Moves after a cancelled session? | System suggests, organizer confirms per person or in bulk (D25) |
-| C4 | Minimum ranked workshops? | Per-event setting, default sessions to attend + 1 (D26) |
+|     | Choice                                   | Decision                                                                                  |
+| --- | ---------------------------------------- | ----------------------------------------------------------------------------------------- |
+| C1  | Book immediately or confirm email first? | Book immediately; the confirmation email has "Not you? Cancel this registration" (D23)    |
+| C2  | Email codes to guardians?                | Yes, alongside printed cards; guardian email stored per minor, cleared at retention (D24) |
+| C3  | Moves after a cancelled session?         | System suggests, organizer confirms per person or in bulk (D25)                           |
+| C4  | Minimum ranked workshops?                | Per-event setting, default sessions to attend + 1 (D26)                                   |

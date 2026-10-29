@@ -21,14 +21,14 @@ organization ─┬─ member ── user ─┬─ passkey / account / session 
                   └─ audit_log ─────────────────────────────────┘
 ```
 
-| Brief term | Table | Notes |
-|---|---|---|
-| Workshop | `workshop` | What participants want to attend. |
-| Session | `session` | A scheduled occurrence: time, room, capacity. |
-| Registration | `registration` | A participant's enrolment in one event. Not a user: minors have no user. |
-| Preference | `preference` | Ranked interest in a workshop. |
-| Assignment | `assignment` | A place in a session, from booking, allocation or an organizer. Holds check-in. |
-| Itinerary | *(derived)* | `assignment` joined to `session`, `workshop`, `location`. Not stored. |
+| Brief term   | Table          | Notes                                                                           |
+| ------------ | -------------- | ------------------------------------------------------------------------------- |
+| Workshop     | `workshop`     | What participants want to attend.                                               |
+| Session      | `session`      | A scheduled occurrence: time, room, capacity.                                   |
+| Registration | `registration` | A participant's enrolment in one event. Not a user: minors have no user.        |
+| Preference   | `preference`   | Ranked interest in a workshop.                                                  |
+| Assignment   | `assignment`   | A place in a session, from booking, allocation or an organizer. Holds check-in. |
+| Itinerary    | _(derived)_    | `assignment` joined to `session`, `workshop`, `location`. Not stored.           |
 
 ## Conventions
 
@@ -68,31 +68,31 @@ work with the Drizzle D1 adapter.
 
 ### event
 
-| Column | Type | Notes |
-|---|---|---|
-| id | text PK | |
-| organization_id | text FK | |
-| slug | text | Unique per organization; public URL is `/{org-slug}/{event-slug}` (D19) |
-| name, description | text | |
-| timezone | text | IANA, e.g. `Europe/Brussels` |
-| starts_on, ends_on | text | |
-| status | text | `draft`, `published`, `closed`, `archived` |
-| mode | text | `booking` or `ranking` (D1) |
-| default_locale | text | `en` or `nl` (D13) |
-| sessions_per_participant | int | Slots to fill, e.g. 3 |
-| rank_limit | int | Default 5 (D8) |
-| rank_minimum | int ? | Null means sessions_per_participant + 1 (D26) |
-| show_times_while_ranking | bool | Default 1 (D7) |
-| show_explanations | bool | Default 0 (D9) |
-| fill_unassigned | text | `none` (default) or `any-open` (D10) |
-| allocation_strategy | text | `take-turns` (default) or `early-birds` (D3) |
-| opens_at, closes_at | int ? | Booking or ranking window |
-| change_cutoff | text | When participants can still cancel or change bookings: `booking-closes` (default) or `session-start` (D22) |
-| retention_days | int | Default 90, applies to all participants (D6, D21) |
-| data_deleted_at | int ? | Set by the retention job |
-| logo_key | text ? | R2 key |
-| accent_color | text ? | |
-| created_at, updated_at | int | |
+| Column                   | Type    | Notes                                                                                                      |
+| ------------------------ | ------- | ---------------------------------------------------------------------------------------------------------- |
+| id                       | text PK |                                                                                                            |
+| organization_id          | text FK |                                                                                                            |
+| slug                     | text    | Unique per organization; public URL is `/{org-slug}/{event-slug}` (D19)                                    |
+| name, description        | text    |                                                                                                            |
+| timezone                 | text    | IANA, e.g. `Europe/Brussels`                                                                               |
+| starts_on, ends_on       | text    |                                                                                                            |
+| status                   | text    | `draft`, `published`, `closed`, `archived`                                                                 |
+| mode                     | text    | `booking` or `ranking` (D1)                                                                                |
+| default_locale           | text    | `en` or `nl` (D13)                                                                                         |
+| sessions_per_participant | int     | Slots to fill, e.g. 3                                                                                      |
+| rank_limit               | int     | Default 5 (D8)                                                                                             |
+| rank_minimum             | int ?   | Null means sessions_per_participant + 1 (D26)                                                              |
+| show_times_while_ranking | bool    | Default 1 (D7)                                                                                             |
+| show_explanations        | bool    | Default 0 (D9)                                                                                             |
+| fill_unassigned          | text    | `none` (default) or `any-open` (D10)                                                                       |
+| allocation_strategy      | text    | `take-turns` (default) or `early-birds` (D3)                                                               |
+| opens_at, closes_at      | int ?   | Booking or ranking window                                                                                  |
+| change_cutoff            | text    | When participants can still cancel or change bookings: `booking-closes` (default) or `session-start` (D22) |
+| retention_days           | int     | Default 90, applies to all participants (D6, D21)                                                          |
+| data_deleted_at          | int ?   | Set by the retention job                                                                                   |
+| logo_key                 | text ?  | R2 key                                                                                                     |
+| accent_color             | text ?  |                                                                                                            |
+| created_at, updated_at   | int     |                                                                                                            |
 
 Settings are columns, not a JSON blob: there are few of them, they have
 defaults, and the engine and the UI both read them.
@@ -107,58 +107,58 @@ one.
 
 ### age_group, location
 
-| Table | Columns |
-|---|---|
+| Table       | Columns                                          |
+| ----------- | ------------------------------------------------ |
 | `age_group` | id, organization_id, event_id, label, sort_order |
-| `location` | id, organization_id, event_id, name, notes ? |
+| `location`  | id, organization_id, event_id, name, notes ?     |
 
 ### workshop, workshop_age_group
 
-| Column | Type | Notes |
-|---|---|---|
-| id | text PK | |
-| organization_id, event_id | text FK | |
-| title, description | text | |
-| image_key | text ? | R2 key |
-| facilitator_name | text ? | Free text, no facilitator accounts in the MVP |
-| category | text ? | |
-| sort_order | int | |
+| Column                    | Type    | Notes                                         |
+| ------------------------- | ------- | --------------------------------------------- |
+| id                        | text PK |                                               |
+| organization_id, event_id | text FK |                                               |
+| title, description        | text    |                                               |
+| image_key                 | text ?  | R2 key                                        |
+| facilitator_name          | text ?  | Free text, no facilitator accounts in the MVP |
+| category                  | text ?  |                                               |
+| sort_order                | int     |                                               |
 
 `workshop_age_group (workshop_id, age_group_id)`, PK on both. No rows means
 open to every age group.
 
 ### session
 
-| Column | Type | Notes |
-|---|---|---|
-| id | text PK | |
-| organization_id, event_id | text FK | |
-| workshop_id | text FK | |
-| location_id | text FK ? | Set null on location delete |
-| starts_at, ends_at | int | Check `ends_at > starts_at` |
-| capacity | int | Check `capacity >= 0` |
-| status | text | `scheduled` or `cancelled` |
+| Column                    | Type      | Notes                       |
+| ------------------------- | --------- | --------------------------- |
+| id                        | text PK   |                             |
+| organization_id, event_id | text FK   |                             |
+| workshop_id               | text FK   |                             |
+| location_id               | text FK ? | Set null on location delete |
+| starts_at, ends_at        | int       | Check `ends_at > starts_at` |
+| capacity                  | int       | Check `capacity >= 0`       |
+| status                    | text      | `scheduled` or `cancelled`  |
 
 ### registration (participant)
 
-| Column | Type | Notes |
-|---|---|---|
-| id | text PK | |
-| organization_id, event_id | text FK | |
-| user_id | text FK ? | Adults who self-register |
-| managed_by_user_id | text FK ? | Guardian or adult registering others (D2) |
-| registered_by | text | `self`, `guardian`, `organizer` |
-| display_name | text | |
-| email | text ? | Never required for minors |
-| guardian_email | text ? | Minors only, for emailing their private link (D24) |
-| age_group_id | text FK ? | |
-| is_minor | bool | Drives retention and email rules |
-| access_token_hash | text | Private link and QR, booking, itinerary, check-in (D16) |
-| feed_token_hash | text ? | iCal feed, separately revocable |
-| preferences_submitted_at | int ? | Ordering for "Early birds first" |
-| status | text | `active` or `cancelled` |
-| created_at | int | |
-| anonymised_at | int ? | Set by the retention job |
+| Column                    | Type      | Notes                                                   |
+| ------------------------- | --------- | ------------------------------------------------------- |
+| id                        | text PK   |                                                         |
+| organization_id, event_id | text FK   |                                                         |
+| user_id                   | text FK ? | Adults who self-register                                |
+| managed_by_user_id        | text FK ? | Guardian or adult registering others (D2)               |
+| registered_by             | text      | `self`, `guardian`, `organizer`                         |
+| display_name              | text      |                                                         |
+| email                     | text ?    | Never required for minors                               |
+| guardian_email            | text ?    | Minors only, for emailing their private link (D24)      |
+| age_group_id              | text FK ? |                                                         |
+| is_minor                  | bool      | Drives retention and email rules                        |
+| access_token_hash         | text      | Private link and QR, booking, itinerary, check-in (D16) |
+| feed_token_hash           | text ?    | iCal feed, separately revocable                         |
+| preferences_submitted_at  | int ?     | Ordering for "Early birds first"                        |
+| status                    | text      | `active` or `cancelled`                                 |
+| created_at                | int       |                                                         |
+| anonymised_at             | int ?     | Set by the retention job                                |
 
 The access token and the feed token are separate because calendar URLs end up
 in third-party calendar apps; leaking one must not grant booking access.
@@ -175,18 +175,18 @@ and `event_id`.
 
 ### assignment
 
-| Column | Type | Notes |
-|---|---|---|
-| id | text PK | |
-| organization_id, event_id | text FK | |
-| registration_id | text FK | |
-| session_id | text FK | |
-| source | text | `booking`, `allocation`, `manual` |
-| run_id | text FK ? | Allocation run that produced it |
-| locked | bool | Organizer placement the allocator must keep (D12) |
-| checked_in_at | int ? | QR check-in (D15) |
-| checked_in_by | text ? | user id |
-| created_at | int | |
+| Column                    | Type      | Notes                                             |
+| ------------------------- | --------- | ------------------------------------------------- |
+| id                        | text PK   |                                                   |
+| organization_id, event_id | text FK   |                                                   |
+| registration_id           | text FK   |                                                   |
+| session_id                | text FK   |                                                   |
+| source                    | text      | `booking`, `allocation`, `manual`                 |
+| run_id                    | text FK ? | Allocation run that produced it                   |
+| locked                    | bool      | Organizer placement the allocator must keep (D12) |
+| checked_in_at             | int ?     | QR check-in (D15)                                 |
+| checked_in_by             | text ?    | user id                                           |
+| created_at                | int       |                                                   |
 
 Unique `(registration_id, session_id)`. Inserts use the guarded statement
 in [decisions.md](decisions.md).
@@ -199,20 +199,20 @@ promotion runs in the event's Durable Object.
 
 ### allocation_run, allocation_override
 
-| Column | Type | Notes |
-|---|---|---|
-| id | text PK | |
-| organization_id, event_id | text FK | |
-| status | text | `draft`, `published`, `superseded` |
-| strategy | text | |
-| seed | text | |
-| engine_version | text | |
-| input_hash | text | SHA-256 of the canonical input |
-| input_key | text | R2 key of the input snapshot (kept out of D1's 2 MB row limit) |
-| result_key | text | R2 key of the full result and traces |
-| metrics | json | Small summary for list views |
-| created_by | text | user id |
-| created_at, published_at ? | int | |
+| Column                     | Type    | Notes                                                          |
+| -------------------------- | ------- | -------------------------------------------------------------- |
+| id                         | text PK |                                                                |
+| organization_id, event_id  | text FK |                                                                |
+| status                     | text    | `draft`, `published`, `superseded`                             |
+| strategy                   | text    |                                                                |
+| seed                       | text    |                                                                |
+| engine_version             | text    |                                                                |
+| input_hash                 | text    | SHA-256 of the canonical input                                 |
+| input_key                  | text    | R2 key of the input snapshot (kept out of D1's 2 MB row limit) |
+| result_key                 | text    | R2 key of the full result and traces                           |
+| metrics                    | json    | Small summary for list views                                   |
+| created_by                 | text    | user id                                                        |
+| created_at, published_at ? | int     |                                                                |
 
 At most one `published` run per event: partial unique index on
 `(event_id) WHERE status = 'published'`.
@@ -244,17 +244,17 @@ field names, never names or emails, so the log survives retention cleanup intact
 
 ## Indexes
 
-| Table | Index | Serves |
-|---|---|---|
-| event | unique `(organization_id, slug)`; `(organization_id, starts_on)` | Public page; organizer event list |
-| workshop | `(event_id, sort_order)` | Workshop list |
-| session | `(event_id, starts_at)`; `(workshop_id)` | Schedule grid; workshop detail |
-| registration | unique `(access_token_hash)`; unique `(feed_token_hash)`; `(event_id, status)`; `(user_id)`; `(managed_by_user_id)` | Token lookup; participant lists; "my events" |
-| preference | PK covers `(registration_id, …)`; `(event_id)` | Engine snapshot load |
-| assignment | unique `(registration_id, session_id)`; `(session_id)`; `(event_id)` | Capacity count; overlap check; itinerary; roster |
-| waitlist_entry | `(session_id, created_at)` | Next in line |
-| allocation_run | `(event_id, created_at)`; partial unique published | Run history |
-| audit_log | `(organization_id, created_at)`; `(event_id, created_at)` | Audit views |
+| Table          | Index                                                                                                               | Serves                                           |
+| -------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| event          | unique `(organization_id, slug)`; `(organization_id, starts_on)`                                                    | Public page; organizer event list                |
+| workshop       | `(event_id, sort_order)`                                                                                            | Workshop list                                    |
+| session        | `(event_id, starts_at)`; `(workshop_id)`                                                                            | Schedule grid; workshop detail                   |
+| registration   | unique `(access_token_hash)`; unique `(feed_token_hash)`; `(event_id, status)`; `(user_id)`; `(managed_by_user_id)` | Token lookup; participant lists; "my events"     |
+| preference     | PK covers `(registration_id, …)`; `(event_id)`                                                                      | Engine snapshot load                             |
+| assignment     | unique `(registration_id, session_id)`; `(session_id)`; `(event_id)`                                                | Capacity count; overlap check; itinerary; roster |
+| waitlist_entry | `(session_id, created_at)`                                                                                          | Next in line                                     |
+| allocation_run | `(event_id, created_at)`; partial unique published                                                                  | Run history                                      |
+| audit_log      | `(organization_id, created_at)`; `(event_id, created_at)`                                                           | Audit views                                      |
 
 At the target size (200 registrations, 600 assignments) every query is small.
 These indexes matter for the shared database as organizations accumulate.

@@ -24,12 +24,12 @@ the `eu` jurisdiction ([eu-data-residency.md](eu-data-residency.md)).
                      later the public API
 ```
 
-| Worker | Owns | Bindings |
-|---|---|---|
-| `web` | Pages, server functions, auth, organizer and participant UI. Reads D1 directly. | D1, R2, coordinator (service binding to the DO namespace), Queues producer, Turnstile secret |
-| `api` | External, token-authenticated endpoints: iCal feeds, exports, webhooks; the public API in Phase 3. | D1, R2, coordinator, Queues producer |
-| `jobs` | Queue consumers (email, exports), cron (reminders, 90-day retention cleanup). | D1, R2, coordinator, Queues consumer |
-| `coordinator` | Hosts the `EventCoordinator` Durable Object class. No public routes. | D1 |
+| Worker        | Owns                                                                                               | Bindings                                                                                     |
+| ------------- | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `web`         | Pages, server functions, auth, organizer and participant UI. Reads D1 directly.                    | D1, R2, coordinator (service binding to the DO namespace), Queues producer, Turnstile secret |
+| `api`         | External, token-authenticated endpoints: iCal feeds, exports, webhooks; the public API in Phase 3. | D1, R2, coordinator, Queues producer                                                         |
+| `jobs`        | Queue consumers (email, exports), cron (reminders, 90-day retention cleanup).                      | D1, R2, coordinator, Queues consumer                                                         |
+| `coordinator` | Hosts the `EventCoordinator` Durable Object class. No public routes.                               | D1                                                                                           |
 
 `web` and `api` don't call each other. Both import the same domain packages,
 so a booking made through the UI and one made through a future API run the
@@ -48,7 +48,7 @@ Event IDs are opaque, never names: DO IDs are logged outside the jurisdiction.
 - Organizer manual moves on published assignments
 
 **Does not own:** reads, event editing, registration profile data, allocation
-*computation* (drafts run in `web`, only publishing goes through the DO).
+_computation_ (drafts run in `web`, only publishing goes through the DO).
 
 Each write runs the guarded SQL from [decisions.md](decisions.md) against D1,
 then broadcasts the change. D1 is the only source of truth: if the object is
