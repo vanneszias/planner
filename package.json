@@ -1,0 +1,22 @@
+{
+	"name": "workspace",
+	"private": true,
+	"type": "module",
+	"packageManager": "pnpm@10.34.5",
+	"engines": {
+		"node": ">=24"
+	},
+	"scripts": {
+		"dev": "pnpm --filter @app/web dev",
+		"build": "pnpm -r build",
+		"typecheck": "pnpm -r typecheck",
+		"test": "pnpm -r test",
+		"lint": "biome check .",
+		"format": "biome check --write .",
+		"cf-typegen": "pnpm -r cf-typegen"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.6.4",
+		"typescript": "^6.0.2"
+	}
+}
