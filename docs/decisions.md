@@ -1,0 +1,88 @@
+# Decisions
+
+All confirmed with the product owner on 2026-10-29.
+
+## Product
+
+| # | Decision | Implication |
+|---|---|---|
+| D1 | MVP ships **both** first-come-first-served session booking and ranked preferences with automatic allocation. Organizers pick the mode per event. | The allocator is on the critical path. Its scope is capped in [allocation-mvp.md](allocation-mvp.md). |
+| D2 | **Minors are registered by organizers**, with minimal data: name, age group, workshop choices. Self-service participant accounts and magic links are for adults (or guardians acting for a group). | Organizers are data controllers for those records; we are the processor. Needs organizer terms and a DPA. No email address required for a minor. |
+| D3 | **Organizers choose the fairness strategy per event.** | A small set of named strategies built on one engine. |
+| D4 | **EU, GDPR applies.** All stateful resources are created with the `eu` jurisdiction. | See [eu-data-residency.md](eu-data-residency.md). Jurisdiction is fixed at creation. |
+| D5 | **Planning target is a hypothetical event**: a 200-person youth weekend, 20 workshops, about 60 sessions over 2 days. | Recruiting a real first organizer is the top validation task. |
+| D6 | **Participant data is kept 90 days after the event ends** by default (extended to all participants by D21). Organizers can delete sooner. | Needs a cron job that deletes or anonymises expired registrations, and a visible "deleted on" date for organizers. |
+| D7 | **Showing session times while ranking is a per-event setting**, default on. | Ranking UI renders with and without times. |
+| D8 | **The maximum number of ranked workshops is a per-event setting**, default 5. | Engine input carries the limit; validated on submission. |
+| D9 | **Participant-facing allocation explanations are a per-event toggle**, default off. Organizers always see them. | Explanation text must never mention other participants. |
+| D10 | **Empty-slot handling is a per-event setting**: leave empty and flag (default) or auto-fill with any open session. | Engine rule `fillUnassigned: 'none' \| 'any-open'`. |
+| D11 | **The swap pass is a stretch goal** for the MVP. | Build after the core allocator and review screen. |
+| D12 | **Mixed booking and ranking within one event is Phase 2.** MVP hybrid means organizer-locked placements only. | One mode per event in the MVP. |
+| D13 | **UI in English and Dutch** for the MVP. | i18n from day one; French in Phase 2. |
+| D14 | **Organization roles: Owner, Editor, Viewer.** No per-event roles in the MVP. | Viewers see participant data, so access is logged. |
+| D15 | **Basic QR check-in is in the MVP.** | Each participant gets a QR code; organizers scan per session in the browser. |
+| D16 | **Minors book or rank through a private link or QR code**, with organizer entry or CSV import of their choices as a fallback. | One unguessable token per participant serves booking, itinerary and check-in. Tokens must be revocable and regenerable. |
+| D17 | **Check-in is online-only in the MVP.** | Printable attendance lists are the fallback; offline sync is Phase 2. |
+| D18 | **The allocation engine is built as an early standalone milestone (M2).** | Enables a concierge allocation for a real organizer before the ranking UI exists. |
+| D19 | **Public event URLs are `/{org-slug}/{event-slug}`.** | Event slugs unique per organization; reserved words blocked for org slugs; renamed slugs redirect. |
+| D20 | **After retention, participant records are anonymised, not deleted.** Names, emails, preferences and snapshots go; anonymous assignments stay. | Organizers keep attendance statistics per workshop. |
+| D21 | **Retention applies to all participants**, not only minors. | One rule; adults keep their account but lose the event data. |
+| D22 | **The cut-off for participants changing bookings is a per-event setting**: until booking closes (default) or until the session starts. | After the cut-off only organizers move people. |
+| D23 | **Booking happens immediately on registration**, without email confirmation first. | Confirmation email carries a "Not you? Cancel this registration" link. |
+| D24 | **Organizers can email minors' private links to guardians**, as well as print code cards. | `registration.guardian_email`, cleared at retention. |
+| D25 | **After a session is cancelled, the system suggests moves**; the organizer confirms per person or in bulk. | Reuses the engine's feasibility checks outside a full allocation run. |
+| D26 | **The minimum number of ranked workshops is a per-event setting**, default sessions to attend + 1. | `event.rank_minimum`, validated on submission. |
+
+## Design
+
+| # | Decision | Implication |
+|---|---|---|
+| U1 | **Visual signature: workshop markers (colour plus shape) and the day strip itinerary**, on near-colourless chrome. | See [design-system.md](design-system.md). Test with 16 to 25 year olds in the prototype experiment; deepen marker colours if it reads childish. |
+| U2 | **Typefaces: Unbounded (display, sparingly), Atkinson Hyperlegible Next (body), Atkinson Hyperlegible Mono (times, codes)**, self-hosted. | No Google Fonts CDN in production. |
+| U3 | **Default platform brand colour is kelp `#0E6B5C`.** | Placeholder, swappable in `packages/brand`. |
+
+## Architecture
+
+| # | Decision | Implication |
+|---|---|---|
+| A1 | **Four Workers from the start**, in a pnpm monorepo: `web`, `api`, `jobs`, `coordinator`. | See [architecture.md](architecture.md). Domain logic lives in shared packages, not in any one Worker. |
+| A2 | **`web` and `api` share domain packages.** `api` serves external endpoints only: calendar feeds, exports, webhooks, later the public API. `web` does not call `api` for its own data. | No extra hop on page loads; one set of domain types. |
+| A3 | **One shared EU D1 database** with `organization_id` on every tenant-owned row, enforced through one scoped data-access layer. | One migration path. Revisit only on size or isolation requirements. |
+| A4 | **A Durable Object per event serialises writes**: bookings, cancellations, waitlist promotions and allocation publishing. D1 stays the source of truth. | Bookings go `web → coordinator DO → D1`. See [architecture.md](architecture.md). |
+| A5 | **The per-event Durable Object pushes live updates over WebSockets in the MVP**: seat counts during booking, allocation status for organizers. | Use hibernatable WebSockets so idle connections don't keep the object billed. Clients fall back to TanStack Query refetching. |
+| A6 | **Better Auth** for authentication, with magic link, passkeys, email and password, and Google sign-in. | Uses the Drizzle adapter on D1; Better Auth tables live in the shared schema. Verify the D1 setup and the separate passkey package against current Better Auth docs. |
+| A7 | **Cloudflare Email Service** sends all email, through the `jobs` Worker. | Public beta: verify EU data processing and terms in M0. Sending stays behind a small interface so a provider can be swapped in. |
+
+## Capacity enforcement
+
+The Durable Object serialises writes for an event, but D1 still enforces
+capacity itself, so a bug or a second write path can never overbook.
+
+D1 runs batched statements as one SQL transaction
+([D1 Database API](https://developers.cloudflare.com/d1/worker-api/d1-database/)),
+but a batch only rolls back on an *error*. An `UPDATE ... WHERE taken < capacity`
+that matches zero rows is not an error, so a following `INSERT` in the same batch
+would still run. The guard therefore lives inside the insert:
+
+```sql
+INSERT INTO assignment (id, registration_id, session_id, source, created_at)
+SELECT ?1, ?2, ?3, 'booking', ?4
+WHERE (SELECT count(*) FROM assignment WHERE session_id = ?3)
+      < (SELECT capacity FROM session WHERE id = ?3)
+  AND NOT EXISTS (            -- no overlapping session already booked
+      SELECT 1 FROM assignment a
+      JOIN session s  ON s.id = a.session_id
+      JOIN session t  ON t.id = ?3
+      WHERE a.registration_id = ?2
+        AND s.starts_at < t.ends_at AND t.starts_at < s.ends_at);
+```
+
+Zero rows inserted means full or conflicting. A unique index on
+`(registration_id, session_id)` blocks double-booking. This needs a concurrency
+test (hundreds of parallel bookings against one session, with and without the
+Durable Object) before launch.
+
+## Validation tasks
+
+- Find a real first organizer with an event in the next 6 to 12 months.
+- Competitor research (not started).
