@@ -1,0 +1,44 @@
+{
+	"$schema": "https://inlang.com/schema/inlang-message-format",
+	"language_switch": "Taal",
+
+	"sign_in_title": "Aanmelden",
+	"sign_in_intro": "Voor organisatoren. Deelnemers hebben geen account nodig: gebruik de link van je organisator.",
+	"email_label": "E-mailadres",
+	"password_label": "Wachtwoord",
+	"name_label": "Je naam",
+	"send_link": "Mail me een aanmeldlink",
+	"use_password": "Gebruik een wachtwoord",
+	"use_link": "Gebruik een e-maillink",
+	"sign_in_with_password": "Aanmelden",
+	"sign_in_with_passkey": "Aanmelden met een passkey",
+	"sign_in_with_google": "Doorgaan met Google",
+	"or": "of",
+	"no_account": "Nieuw hier?",
+	"create_account_link": "Maak een organisatoraccount",
+
+	"link_sent_title": "Kijk in je mailbox",
+	"link_sent_body": "We hebben een aanmeldlink gestuurd naar {email}. Hij werkt één keer en verloopt na 15 minuten.",
+	"link_sent_again": "Ander e-mailadres gebruiken",
+
+	"sign_up_title": "Maak een organisatoraccount",
+	"sign_up_intro": "Zet evenementen, workshops en sessies op. Anderen uitnodigen kan later.",
+	"password_hint": "Minstens 10 tekens.",
+	"sign_up_submit": "Account maken",
+	"have_account": "Heb je al een account?",
+	"sign_in_link": "Aanmelden",
+
+	"home_title": "Welkom, {name}",
+	"home_body": "Je evenementen verschijnen hier.",
+	"add_passkey": "Voeg een passkey toe om sneller aan te melden",
+	"passkey_added": "Passkey toegevoegd. Meld je volgende keer daarmee aan.",
+	"sign_out": "Afmelden",
+
+	"error_invalid_credentials": "Dat e-mailadres en wachtwoord horen niet bij elkaar. Controleer ze, of meld je aan met een e-maillink.",
+	"error_password_compromised": "Dit wachtwoord is uitgelekt bij een datalek. Kies een ander.",
+	"error_password_too_short": "Gebruik minstens 10 tekens voor je wachtwoord.",
+	"error_user_exists": "Er bestaat al een account met dit e-mailadres. Meld je aan.",
+	"error_rate_limited": "Te veel pogingen. Wacht een minuut en probeer het opnieuw.",
+	"error_passkey": "De passkey werkte niet. Probeer opnieuw, of meld je aan met een e-maillink.",
+	"error_generic": "Dat lukte niet. Probeer het zo meteen opnieuw."
+}
