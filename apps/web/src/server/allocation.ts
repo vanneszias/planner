@@ -38,8 +38,11 @@ export const getAllocationFn = createServerFn({ method: 'GET' })
 		])
 		const current =
 			runs.find((r) => r.status === 'draft') ?? runs.find((r) => r.status === 'published')
-		const review = current ? await reviewRun(db, storage(), ctx, current.id) : null
+		// After anonymisation the run snapshots are gone (D20): nothing left to review.
+		const anonymised = (await getEvent(db, ctx, eventId)).dataDeletedAt !== null
+		const review = current && !anonymised ? await reviewRun(db, storage(), ctx, current.id) : null
 		return {
+			anonymised,
 			progress,
 			hasPublished: runs.some((r) => r.status === 'published'),
 			names: Object.fromEntries(people.map((p) => [p.id, p.displayName])),

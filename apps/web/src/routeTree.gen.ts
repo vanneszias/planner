@@ -15,6 +15,7 @@ import { Route as HealthRouteImport } from './routes/health'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as SignUpRouteImport } from './routes/sign-up'
 import { Route as OrgEventRouteImport } from './routes/$org/$event'
+import { Route as OrganizerAuditRouteImport } from './routes/_organizer/audit'
 import { Route as OrganizerHomeRouteImport } from './routes/_organizer/home'
 import { Route as OrganizerTeamRouteImport } from './routes/_organizer/team'
 import { Route as InvitationsInvitationIdRouteImport } from './routes/invitations/$invitationId'
@@ -25,6 +26,7 @@ import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiLiveEventIdRouteImport } from './routes/api/live/$eventId'
 import { Route as OrganizerEventsEventIdIndexRouteImport } from './routes/_organizer/events/$eventId/index'
 import { Route as OrganizerEventsEventIdAllocationRouteImport } from './routes/_organizer/events/$eventId/allocation'
+import { Route as OrganizerEventsEventIdCheckInRouteImport } from './routes/_organizer/events/$eventId/check-in'
 import { Route as OrganizerEventsEventIdParticipantsRouteImport } from './routes/_organizer/events/$eventId/participants'
 import { Route as OrganizerEventsEventIdScheduleRouteImport } from './routes/_organizer/events/$eventId/schedule'
 import { Route as OrganizerEventsEventIdSettingsRouteImport } from './routes/_organizer/events/$eventId/settings'
@@ -58,6 +60,11 @@ const OrgEventRoute = OrgEventRouteImport.update({
   id: '/$org/$event',
   path: '/$org/$event',
   getParentRoute: () => rootRouteImport,
+} as any)
+const OrganizerAuditRoute = OrganizerAuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => OrganizerRoute,
 } as any)
 const OrganizerHomeRoute = OrganizerHomeRouteImport.update({
   id: '/home',
@@ -112,6 +119,12 @@ const OrganizerEventsEventIdAllocationRoute =
     path: '/allocation',
     getParentRoute: () => OrganizerEventsEventIdRouteRoute,
   } as any)
+const OrganizerEventsEventIdCheckInRoute =
+  OrganizerEventsEventIdCheckInRouteImport.update({
+    id: '/check-in',
+    path: '/check-in',
+    getParentRoute: () => OrganizerEventsEventIdRouteRoute,
+  } as any)
 const OrganizerEventsEventIdParticipantsRoute =
   OrganizerEventsEventIdParticipantsRouteImport.update({
     id: '/participants',
@@ -143,6 +156,7 @@ export interface FileRoutesByFullPath {
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/$org/$event': typeof OrgEventRoute
+  '/audit': typeof OrganizerAuditRoute
   '/home': typeof OrganizerHomeRoute
   '/team': typeof OrganizerTeamRoute
   '/invitations/$invitationId': typeof InvitationsInvitationIdRoute
@@ -152,6 +166,7 @@ export interface FileRoutesByFullPath {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/live/$eventId': typeof ApiLiveEventIdRoute
   '/events/$eventId/allocation': typeof OrganizerEventsEventIdAllocationRoute
+  '/events/$eventId/check-in': typeof OrganizerEventsEventIdCheckInRoute
   '/events/$eventId/participants': typeof OrganizerEventsEventIdParticipantsRoute
   '/events/$eventId/schedule': typeof OrganizerEventsEventIdScheduleRoute
   '/events/$eventId/settings': typeof OrganizerEventsEventIdSettingsRoute
@@ -164,6 +179,7 @@ export interface FileRoutesByTo {
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/$org/$event': typeof OrgEventRoute
+  '/audit': typeof OrganizerAuditRoute
   '/home': typeof OrganizerHomeRoute
   '/team': typeof OrganizerTeamRoute
   '/invitations/$invitationId': typeof InvitationsInvitationIdRoute
@@ -172,6 +188,7 @@ export interface FileRoutesByTo {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/live/$eventId': typeof ApiLiveEventIdRoute
   '/events/$eventId/allocation': typeof OrganizerEventsEventIdAllocationRoute
+  '/events/$eventId/check-in': typeof OrganizerEventsEventIdCheckInRoute
   '/events/$eventId/participants': typeof OrganizerEventsEventIdParticipantsRoute
   '/events/$eventId/schedule': typeof OrganizerEventsEventIdScheduleRoute
   '/events/$eventId/settings': typeof OrganizerEventsEventIdSettingsRoute
@@ -186,6 +203,7 @@ export interface FileRoutesById {
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/$org/$event': typeof OrgEventRoute
+  '/_organizer/audit': typeof OrganizerAuditRoute
   '/_organizer/home': typeof OrganizerHomeRoute
   '/_organizer/team': typeof OrganizerTeamRoute
   '/invitations/$invitationId': typeof InvitationsInvitationIdRoute
@@ -195,6 +213,7 @@ export interface FileRoutesById {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/live/$eventId': typeof ApiLiveEventIdRoute
   '/_organizer/events/$eventId/allocation': typeof OrganizerEventsEventIdAllocationRoute
+  '/_organizer/events/$eventId/check-in': typeof OrganizerEventsEventIdCheckInRoute
   '/_organizer/events/$eventId/participants': typeof OrganizerEventsEventIdParticipantsRoute
   '/_organizer/events/$eventId/schedule': typeof OrganizerEventsEventIdScheduleRoute
   '/_organizer/events/$eventId/settings': typeof OrganizerEventsEventIdSettingsRoute
@@ -209,6 +228,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/$org/$event'
+    | '/audit'
     | '/home'
     | '/team'
     | '/invitations/$invitationId'
@@ -218,6 +238,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/live/$eventId'
     | '/events/$eventId/allocation'
+    | '/events/$eventId/check-in'
     | '/events/$eventId/participants'
     | '/events/$eventId/schedule'
     | '/events/$eventId/settings'
@@ -230,6 +251,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/$org/$event'
+    | '/audit'
     | '/home'
     | '/team'
     | '/invitations/$invitationId'
@@ -238,6 +260,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/live/$eventId'
     | '/events/$eventId/allocation'
+    | '/events/$eventId/check-in'
     | '/events/$eventId/participants'
     | '/events/$eventId/schedule'
     | '/events/$eventId/settings'
@@ -251,6 +274,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/$org/$event'
+    | '/_organizer/audit'
     | '/_organizer/home'
     | '/_organizer/team'
     | '/invitations/$invitationId'
@@ -260,6 +284,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/live/$eventId'
     | '/_organizer/events/$eventId/allocation'
+    | '/_organizer/events/$eventId/check-in'
     | '/_organizer/events/$eventId/participants'
     | '/_organizer/events/$eventId/schedule'
     | '/_organizer/events/$eventId/settings'
@@ -323,6 +348,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/$org/$event'
       preLoaderRoute: typeof OrgEventRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_organizer/audit': {
+      id: '/_organizer/audit'
+      path: '/audit'
+      fullPath: '/audit'
+      preLoaderRoute: typeof OrganizerAuditRouteImport
+      parentRoute: typeof OrganizerRoute
     }
     '/_organizer/home': {
       id: '/_organizer/home'
@@ -394,6 +426,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrganizerEventsEventIdAllocationRouteImport
       parentRoute: typeof OrganizerEventsEventIdRouteRoute
     }
+    '/_organizer/events/$eventId/check-in': {
+      id: '/_organizer/events/$eventId/check-in'
+      path: '/check-in'
+      fullPath: '/events/$eventId/check-in'
+      preLoaderRoute: typeof OrganizerEventsEventIdCheckInRouteImport
+      parentRoute: typeof OrganizerEventsEventIdRouteRoute
+    }
     '/_organizer/events/$eventId/participants': {
       id: '/_organizer/events/$eventId/participants'
       path: '/participants'
@@ -427,6 +466,7 @@ declare module '@tanstack/react-router' {
 
 interface OrganizerEventsEventIdRouteRouteChildren {
   OrganizerEventsEventIdAllocationRoute: typeof OrganizerEventsEventIdAllocationRoute
+  OrganizerEventsEventIdCheckInRoute: typeof OrganizerEventsEventIdCheckInRoute
   OrganizerEventsEventIdParticipantsRoute: typeof OrganizerEventsEventIdParticipantsRoute
   OrganizerEventsEventIdScheduleRoute: typeof OrganizerEventsEventIdScheduleRoute
   OrganizerEventsEventIdSettingsRoute: typeof OrganizerEventsEventIdSettingsRoute
@@ -438,6 +478,7 @@ const OrganizerEventsEventIdRouteRouteChildren: OrganizerEventsEventIdRouteRoute
   {
     OrganizerEventsEventIdAllocationRoute:
       OrganizerEventsEventIdAllocationRoute,
+    OrganizerEventsEventIdCheckInRoute: OrganizerEventsEventIdCheckInRoute,
     OrganizerEventsEventIdParticipantsRoute:
       OrganizerEventsEventIdParticipantsRoute,
     OrganizerEventsEventIdScheduleRoute: OrganizerEventsEventIdScheduleRoute,
@@ -452,6 +493,7 @@ const OrganizerEventsEventIdRouteRouteWithChildren =
   )
 
 interface OrganizerRouteChildren {
+  OrganizerAuditRoute: typeof OrganizerAuditRoute
   OrganizerHomeRoute: typeof OrganizerHomeRoute
   OrganizerTeamRoute: typeof OrganizerTeamRoute
   OrganizerEventsEventIdRouteRoute: typeof OrganizerEventsEventIdRouteRouteWithChildren
@@ -459,6 +501,7 @@ interface OrganizerRouteChildren {
 }
 
 const OrganizerRouteChildren: OrganizerRouteChildren = {
+  OrganizerAuditRoute: OrganizerAuditRoute,
   OrganizerHomeRoute: OrganizerHomeRoute,
   OrganizerTeamRoute: OrganizerTeamRoute,
   OrganizerEventsEventIdRouteRoute:
@@ -487,10 +530,11 @@ export const routeTree = rootRouteImport
   ._addFileTypes<FileRouteTypes>()
 
 import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
+import type { startInstance } from './start.ts'
 declare module '@tanstack/react-start' {
   interface Register {
     ssr: true
     router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
   }
 }

@@ -5,6 +5,7 @@ import { Label } from '@app/ui/components/label'
 import { createFileRoute, Link, redirect, useNavigate } from '@tanstack/react-router'
 import { type FormEvent, useState } from 'react'
 import { AuthShell, FormError } from '#/components/auth-shell'
+import { Turnstile } from '#/components/event/turnstile'
 import { authErrorMessage } from '#/lib/auth-errors'
 import { safeRedirect } from '#/lib/redirect'
 import { m } from '#/paraglide/messages'
@@ -31,16 +32,23 @@ function SignIn() {
 	const [sentTo, setSentTo] = useState<string | null>(null)
 	const [error, setError] = useState<string | null>(null)
 	const [pending, setPending] = useState(false)
+	const [captcha, setCaptcha] = useState<string>()
+	const [attempt, setAttempt] = useState(0)
 
 	async function submit(event: FormEvent) {
 		event.preventDefault()
 		setError(null)
 		setPending(true)
+		// Magic link requests carry a Turnstile token (security-privacy.md); it works once.
 		const result =
 			mode === 'link'
-				? await authClient.signIn.magicLink({ email, callbackURL: next })
+				? await authClient.signIn.magicLink(
+						{ email, callbackURL: next },
+						{ headers: captcha ? { 'x-captcha-response': captcha } : {} },
+					)
 				: await authClient.signIn.email({ email, password })
 		setPending(false)
+		if (mode === 'link') setAttempt((n) => n + 1)
 		if (result.error) return setError(authErrorMessage(result.error))
 		if (mode === 'link') setSentTo(email)
 		else await navigate({ href: next })
@@ -105,6 +113,9 @@ function SignIn() {
 							onChange={(event) => setPassword(event.target.value)}
 						/>
 					</div>
+				)}
+				{mode === 'link' && (
+					<Turnstile siteKey={options.turnstileSiteKey} onToken={setCaptcha} resetKey={attempt} />
 				)}
 				<FormError message={error} />
 				<Button type="submit" disabled={pending}>

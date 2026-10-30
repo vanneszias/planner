@@ -9,6 +9,7 @@ const statement = {
 	...defaultStatements,
 	event: ['create', 'update', 'delete', 'allocate', 'publish'],
 	participant: ['read', 'write', 'export'],
+	audit: ['read'],
 } as const
 
 export const ac = createAccessControl(statement)
@@ -19,6 +20,8 @@ export const owner = ac.newRole({
 	invitation: ['create', 'cancel'],
 	event: ['create', 'update', 'delete', 'allocate', 'publish'],
 	participant: ['read', 'write', 'export'],
+	// Who did what in the organization: owners only.
+	audit: ['read'],
 })
 
 /** Changes events and runs allocations. Can't manage people or delete the organization. */

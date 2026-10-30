@@ -15,7 +15,7 @@ import {
 import { createServerFn } from '@tanstack/react-start'
 import { renderSVG } from 'uqr'
 import { sendEmails } from './email'
-import { action, requireOrganizer } from './organizer'
+import { action, limitBulk, requireOrganizer } from './organizer'
 import { guardianLinkEmail } from './participant-emails'
 
 /* The organizer's participant screens (journeys.md, O4). */
@@ -30,7 +30,12 @@ export const getParticipantsFn = createServerFn({ method: 'GET' })
 			listParticipants(db, ctx, eventId),
 			listAgeGroups(db, ctx, eventId),
 		])
-		return { participants, ageGroups, canWrite: can(ctx, { participant: ['write'] }) }
+		return {
+			participants,
+			ageGroups,
+			canWrite: can(ctx, { participant: ['write'] }),
+			canExport: can(ctx, { participant: ['export'] }),
+		}
 	})
 
 export const addMinorFn = createServerFn({ method: 'POST' })
@@ -44,7 +49,10 @@ export const importMinorsFn = createServerFn({ method: 'POST' })
 	.validator((input: { eventId: string; csv: string; commit: boolean }) => input)
 	.handler(async ({ data }) => {
 		const { db, ctx } = await requireOrganizer()
-		return action(() => importMinors(db, ctx, data.eventId, data.csv, data.commit))
+		return action(async () => {
+			if (data.commit) await limitBulk(ctx)
+			return importMinors(db, ctx, data.eventId, data.csv, data.commit)
+		})
 	})
 
 /**
@@ -56,6 +64,7 @@ export const issueCardsFn = createServerFn({ method: 'POST' })
 	.handler(async ({ data }) => {
 		const { db, ctx } = await requireOrganizer()
 		return action(async () => {
+			await limitBulk(ctx)
 			const issued = await issueCredentials(db, ctx, data.eventId, data.registrationIds)
 			return issued.map((person) => ({
 				id: person.id,
@@ -73,6 +82,7 @@ export const emailGuardiansFn = createServerFn({ method: 'POST' })
 	.handler(async ({ data }) => {
 		const { db, ctx } = await requireOrganizer()
 		return action(async () => {
+			await limitBulk(ctx)
 			const event = await getEvent(db, ctx, data.eventId)
 			const people = await listParticipants(db, ctx, data.eventId)
 			const withGuardian = people.filter(

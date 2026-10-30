@@ -48,13 +48,18 @@ export function parseCsv(text: string): Record<string, string>[] {
 	return body.map((cells) => Object.fromEntries(keys.map((k, i) => [k, (cells[i] ?? '').trim()])))
 }
 
-/** Quotes a value for CSV output. Formula-like cells get a leading ' (security-privacy.md). */
+/**
+ * Quotes a value for CSV output. Cells a spreadsheet would read as a formula
+ * (=, +, -, @, or a leading tab or carriage return) get a leading '
+ * (security-privacy.md, OWASP "CSV injection").
+ */
 export function csvCell(value: string | number | null | undefined): string {
 	let text = value == null ? '' : String(value)
-	if (/^[=+\-@]/.test(text)) text = `'${text}`
-	return /[",;\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
+	if (/^[=+\-@\t\r]/.test(text)) text = `'${text}`
+	return /[",;\n\r\t]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
 }
 
-export function toCsv(rows: (string | number | null | undefined)[][]): string {
-	return `${rows.map((r) => r.map(csvCell).join(',')).join('\n')}\n`
+/** Comma-separated by default; Dutch and French spreadsheets expect semicolons. */
+export function toCsv(rows: (string | number | null | undefined)[][], separator = ','): string {
+	return `${rows.map((r) => r.map(csvCell).join(separator)).join('\n')}\n`
 }

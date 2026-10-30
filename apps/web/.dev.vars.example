@@ -6,3 +6,5 @@ GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 # Optional locally: Cloudflare's always-pass test secret enables the bot check.
 TURNSTILE_SECRET=
+# Signs export download links; same value in apps/api/.dev.vars.
+EXPORT_SIGNING_KEY=

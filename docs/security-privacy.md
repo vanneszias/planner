@@ -236,15 +236,15 @@ that reach us are forwarded to the organizer within 2 working days.
 
 ## Before the pilot (mandatory)
 
-- [ ] Tenant isolation test suite in CI
-- [ ] Concurrency test for bookings (with and without the Durable Object)
-- [ ] Token-to-cookie exchange, log redaction, security headers
-- [ ] Rate limits and Turnstile as tabled
+- [x] Tenant isolation test suite in CI
+- [x] Concurrency test for bookings (with and without the Durable Object)
+- [x] Token-to-cookie exchange, security headers (log redaction still open: implementation-plan.md, M5 review)
+- [x] Rate limits and Turnstile as tabled
 - [ ] Upload pipeline: type check, re-encode, metadata stripped (verified with a GPS-tagged photo)
-- [ ] CSV injection guard on exports
+- [x] CSV injection guard on exports
 - [ ] SPF, DKIM, DMARC
 - [ ] Privacy notice, organizer terms with DPA, records of processing, lightweight DPIA, breach procedure (from templates, S1)
-- [ ] Retention job tested end to end, including R2 snapshots
+- [x] Retention job tested end to end, including R2 snapshots
 - [ ] Internal security review of auth flows
 
 ## Later

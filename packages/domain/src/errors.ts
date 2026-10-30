@@ -1,4 +1,10 @@
-export type DomainErrorCode = 'not_found' | 'forbidden' | 'invalid' | 'conflict'
+export type DomainErrorCode =
+	| 'not_found'
+	| 'forbidden'
+	| 'invalid'
+	| 'conflict'
+	| 'rate_limited'
+	| 'reauthenticate'
 
 /**
  * Errors the UI can act on. `not_found` is also used when a record exists in

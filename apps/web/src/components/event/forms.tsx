@@ -27,9 +27,17 @@ export function RegisterForm({
 	const [ageGroupId, setAgeGroupId] = useState(ageGroups[0]?.id ?? '')
 	const [consent, setConsent] = useState(false)
 	const [token, setToken] = useState<string>()
+	const [attempt, setAttempt] = useState(0)
 	const [issues, setIssues] = useState<Record<string, string>>({})
 	const [error, setError] = useState<string | null>(null)
 	const [pending, setPending] = useState(false)
+
+	/** Shows field problems and moves focus to the first, so it's announced with its error. */
+	function showIssues(found: Record<string, string>) {
+		setIssues(found)
+		const first = ['name', 'email', 'consent'].find((field) => found[field])
+		if (first) requestAnimationFrame(() => document.getElementById(`reg-${first}`)?.focus())
+	}
 
 	async function submit(event: FormEvent) {
 		event.preventDefault()
@@ -38,7 +46,8 @@ export function RegisterForm({
 		if (!name.trim()) missing.name = 'required'
 		if (!email.trim()) missing.email = 'required'
 		if (!consent) missing.consent = 'required'
-		if (Object.keys(missing).length) return setIssues(missing)
+		if (Object.keys(missing).length) return showIssues(missing)
+		if (pending) return
 		setPending(true)
 		const result = await registerFn({
 			data: {
@@ -49,9 +58,11 @@ export function RegisterForm({
 			},
 		})
 		setPending(false)
+		// Turnstile tokens work once.
+		setAttempt((n) => n + 1)
 		if (!result.ok) {
-			if (result.reason === 'invalid') return setIssues(result.issues ?? {})
-			return setError(m.refusal_bot())
+			if (result.reason === 'invalid') return showIssues(result.issues ?? {})
+			return setError(result.reason === 'busy' ? m.refusal_busy() : m.refusal_bot())
 		}
 		if (result.existing) return onDone(m.register_existing())
 		const booking = result.booking
@@ -102,18 +113,25 @@ export function RegisterForm({
 			)}
 			<label className="flex cursor-pointer items-start gap-3">
 				<input
+					id="reg-consent"
 					type="checkbox"
 					className="mt-1 size-5 shrink-0 accent-[var(--kelp)]"
 					checked={consent}
 					aria-invalid={issues.consent ? true : undefined}
+					aria-describedby={issues.consent ? 'reg-consent-error' : undefined}
 					onChange={(e) => setConsent(e.target.checked)}
 				/>
 				<span className="text-sm">{m.consent_label()}</span>
 			</label>
-			<Turnstile siteKey={turnstileSiteKey} onToken={setToken} />
-			<FormError message={error ?? (issues.consent ? m.field_required() : null)} />
+			{issues.consent && (
+				<p id="reg-consent-error" className="-mt-2 text-sm font-bold text-destructive">
+					{m.consent_required()}
+				</p>
+			)}
+			<Turnstile siteKey={turnstileSiteKey} onToken={setToken} resetKey={attempt} />
+			<FormError message={error} />
 			<div className="flex flex-wrap gap-2">
-				<Button type="submit" disabled={pending}>
+				<Button type="submit" aria-disabled={pending || undefined}>
 					{sessionId ? m.register_and_book() : m.register_only()}
 				</Button>
 				<Button type="button" variant="ghost" onClick={onCancel}>
@@ -137,6 +155,7 @@ export function ReturningForms({
 	const [code, setCode] = useState('')
 	const [email, setEmail] = useState('')
 	const [token, setToken] = useState<string>()
+	const [attempt, setAttempt] = useState(0)
 	const [codeError, setCodeError] = useState<string | null>(null)
 	const [sent, setSent] = useState<string | null>(null)
 
@@ -144,13 +163,15 @@ export function ReturningForms({
 		event.preventDefault()
 		setCodeError(null)
 		const result = await enterCodeFn({ data: { eventId, code, turnstileToken: token } })
-		if (!result.ok) return setCodeError(m.code_wrong())
+		setAttempt((n) => n + 1)
+		if (!result.ok) return setCodeError(result.busy ? m.refusal_busy() : m.code_wrong())
 		await onSignedIn()
 	}
 
 	async function submitEmail(event: FormEvent) {
 		event.preventDefault()
 		await findProgrammeFn({ data: { eventId, email, turnstileToken: token } })
+		setAttempt((n) => n + 1)
 		setSent(m.find_programme_sent())
 	}
 
@@ -205,7 +226,7 @@ export function ReturningForms({
 					</div>
 				</form>
 			</details>
-			<Turnstile siteKey={turnstileSiteKey} onToken={setToken} />
+			<Turnstile siteKey={turnstileSiteKey} onToken={setToken} resetKey={attempt} />
 		</div>
 	)
 }

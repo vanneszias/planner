@@ -14,8 +14,10 @@
 		"BETTER_AUTH_URL": "https://event-web.zias.workers.dev",
 		// "queue" when deployed; "console" only in local dev (sign-in links are printed).
 		"EMAIL_DELIVERY": "queue",
-		// Public Turnstile site key; empty until production keys exist (security checklist).
-		"TURNSTILE_SITE_KEY": ""
+		// Public Turnstile site key (invisible widget "event-web"); TURNSTILE_SECRET is a Worker secret.
+		"TURNSTILE_SITE_KEY": "0x4AAAAAAFsmjTgiklByDVV2",
+		// The api Worker's origin, for export download links.
+		"API_URL": "https://event-api.zias.workers.dev"
 	},
 	"upload_source_maps": true,
 	"d1_databases": [
@@ -28,6 +30,17 @@
 	],
 	"r2_buckets": [{ "binding": "FILES", "bucket_name": "event-files", "jurisdiction": "eu" }],
 	"queues": { "producers": [{ "binding": "JOBS", "queue": "event-jobs" }] },
+	// security-privacy.md, "Rate limits". namespace_id is unique per account.
+	"ratelimits": [
+		{ "name": "LIMIT_REGISTER", "namespace_id": "1001", "simple": { "limit": 10, "period": 60 } },
+		{ "name": "LIMIT_CODE", "namespace_id": "1002", "simple": { "limit": 5, "period": 60 } },
+		{ "name": "LIMIT_FIND_EMAIL", "namespace_id": "1003", "simple": { "limit": 3, "period": 60 } },
+		{ "name": "LIMIT_FIND_IP", "namespace_id": "1004", "simple": { "limit": 10, "period": 60 } },
+		{ "name": "LIMIT_BOOKING", "namespace_id": "1005", "simple": { "limit": 20, "period": 60 } },
+		{ "name": "LIMIT_RANKING", "namespace_id": "1006", "simple": { "limit": 10, "period": 60 } },
+		{ "name": "LIMIT_BULK", "namespace_id": "1007", "simple": { "limit": 5, "period": 60 } },
+		{ "name": "LIMIT_LIVE", "namespace_id": "1008", "simple": { "limit": 10, "period": 60 } }
+	],
 	"durable_objects": {
 		"bindings": [
 			{

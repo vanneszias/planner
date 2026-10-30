@@ -48,5 +48,7 @@ export function fieldMessage(code: string | undefined): string | null {
 export function actionMessage(result: Extract<ActionResult<unknown>, { ok: false }>): string {
 	if (result.code === 'forbidden') return m.error_forbidden()
 	if (result.code === 'not_found') return m.error_not_found()
+	if (result.code === 'rate_limited') return m.error_rate_limited()
+	if (result.code === 'reauthenticate') return m.error_reauthenticate()
 	return m.error_generic()
 }

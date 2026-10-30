@@ -7,3 +7,8 @@ allowBuilds:
   lightningcss: true
   sharp: true
   workerd: true
+
+# Dependabot alert #1 (GHSA-67mh-4wv8-2f99): drizzle-kit's old esbuild-kit loader
+# pulls esbuild 0.18, whose dev server answers any website. Dev-only, but pinned.
+overrides:
+  "@esbuild-kit/core-utils>esbuild": ^0.25.0

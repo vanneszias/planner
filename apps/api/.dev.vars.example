@@ -1,0 +1,3 @@
+# Copy to .dev.vars for local development. Never commit .dev.vars.
+# Same value as EXPORT_SIGNING_KEY in apps/web/.dev.vars: openssl rand -base64 32
+EXPORT_SIGNING_KEY=

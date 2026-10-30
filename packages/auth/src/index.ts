@@ -4,7 +4,7 @@ import { drizzleAdapter } from '@better-auth/drizzle-adapter'
 import { passkey } from '@better-auth/passkey'
 import { betterAuth } from 'better-auth'
 import { APIError } from 'better-auth/api'
-import { haveIBeenPwned, magicLink, organization } from 'better-auth/plugins'
+import { captcha, haveIBeenPwned, magicLink, organization } from 'better-auth/plugins'
 import { tanstackStartCookies } from 'better-auth/tanstack-start'
 import { ac, roles } from './permissions.ts'
 
@@ -23,6 +23,11 @@ export type AuthOptions = {
 	onUserCreated?: (user: { id: string; name: string; email: string }) => Promise<void>
 	/** Slugs organizations may not use (app routes). Checked on create and rename. */
 	isReservedSlug?: (slug: string) => boolean
+	/**
+	 * Turnstile secret: when set, sign-up and magic link requests need a token in
+	 * `x-captcha-response` (security-privacy.md, "Turnstile placement").
+	 */
+	turnstileSecret?: string
 }
 
 export function createAuth({
@@ -33,6 +38,7 @@ export function createAuth({
 	google,
 	onUserCreated,
 	isReservedSlug = () => false,
+	turnstileSecret,
 }: AuthOptions) {
 	const checkSlug = async ({ organization }: { organization: { slug?: string } }) => {
 		if (organization.slug && isReservedSlug(organization.slug)) {
@@ -58,7 +64,17 @@ export function createAuth({
 			},
 		},
 		// Workers isolates don't share memory, so in-memory counters would be useless.
-		rateLimit: { enabled: true, storage: 'database' },
+		// Per IP and path; the rate limit table in security-privacy.md.
+		rateLimit: {
+			enabled: true,
+			storage: 'database',
+			customRules: {
+				'/sign-in/magic-link': { window: 60, max: 10 },
+				'/sign-in/email': { window: 60, max: 5 },
+				'/sign-up/email': { window: 60, max: 5 },
+				'/request-password-reset': { window: 60, max: 3 },
+			},
+		},
 		session: {
 			// Organizer sessions expire after 30 days idle (security-privacy.md).
 			expiresIn: 60 * 60 * 24 * 30,
@@ -118,6 +134,15 @@ export function createAuth({
 					}),
 			}),
 			haveIBeenPwned(),
+			...(turnstileSecret
+				? [
+						captcha({
+							provider: 'cloudflare-turnstile',
+							secretKey: turnstileSecret,
+							endpoints: ['/sign-up/email', '/sign-in/magic-link'],
+						}),
+					]
+				: []),
 			// Must stay last (Better Auth TanStack Start docs).
 			tanstackStartCookies(),
 		],
