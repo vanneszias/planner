@@ -15,6 +15,7 @@
 		"cf-typegen": "wrangler types --strict-vars=false -c wrangler.jsonc -c ../coordinator/wrangler.jsonc"
 	},
 	"dependencies": {
+		"@app/allocation": "workspace:*",
 		"@app/auth": "workspace:*",
 		"@app/brand": "workspace:*",
 		"@app/db": "workspace:*",

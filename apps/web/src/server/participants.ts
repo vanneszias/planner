@@ -8,10 +8,13 @@ import {
 	listAgeGroups,
 	listParticipants,
 	type MinorInput,
+	type RankingResult,
+	rankingFor,
+	setPreferencesFor,
 } from '@app/domain'
 import { createServerFn } from '@tanstack/react-start'
 import { renderSVG } from 'uqr'
-import { sendEmail } from './email'
+import { sendEmails } from './email'
 import { action, requireOrganizer } from './organizer'
 import { guardianLinkEmail } from './participant-emails'
 
@@ -81,19 +84,40 @@ export const emailGuardiansFn = createServerFn({ method: 'POST' })
 				data.eventId,
 				withGuardian.map((p) => p.id),
 			)
-			for (const person of issued) {
-				if (!person.guardianEmail) continue
-				await sendEmail(
-					guardianLinkEmail({
-						to: person.guardianEmail,
-						locale: event.defaultLocale,
-						name: person.displayName,
-						eventName: event.name,
-						link: linkFor(person.token),
-						code: person.code,
-					}),
-				)
-			}
+			await sendEmails(
+				issued.flatMap((person) =>
+					person.guardianEmail
+						? [
+								guardianLinkEmail({
+									to: person.guardianEmail,
+									locale: event.defaultLocale,
+									name: person.displayName,
+									eventName: event.name,
+									link: linkFor(person.token),
+									code: person.code,
+								}),
+							]
+						: [],
+				),
+			)
 			return { sent: issued.length, skipped: data.registrationIds.length - issued.length }
 		})
+	})
+
+/** An organizer enters a ranking for someone who doesn't (D16 fallback). */
+export const getRankingForFn = createServerFn({ method: 'GET' })
+	.validator((input: { eventId: string; registrationId: string }) => input)
+	.handler(async ({ data }) => {
+		const { db, ctx } = await requireOrganizer()
+		return action(() => rankingFor(db, ctx, data.eventId, data.registrationId))
+	})
+
+export const setRankingForFn = createServerFn({ method: 'POST' })
+	.validator((input: { eventId: string; registrationId: string; workshopIds: string[] }) => input)
+	.handler(async ({ data }) => {
+		const { db, ctx } = await requireOrganizer()
+		return action(
+			async (): Promise<RankingResult> =>
+				setPreferencesFor(db, ctx, data.eventId, data.registrationId, data.workshopIds),
+		)
 	})

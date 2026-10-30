@@ -24,6 +24,9 @@ export async function getPublicEvent(db: Db, orgSlug: string, eventSlug: string)
 			closesAt: schema.event.closesAt,
 			sessionsPerParticipant: schema.event.sessionsPerParticipant,
 			changeCutoff: schema.event.changeCutoff,
+			rankLimit: schema.event.rankLimit,
+			rankMinimum: schema.event.rankMinimum,
+			showTimesWhileRanking: schema.event.showTimesWhileRanking,
 		})
 		.from(schema.event)
 		.innerJoin(schema.organization, eq(schema.organization.id, schema.event.organizationId))

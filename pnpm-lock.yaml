@@ -47,6 +47,9 @@ importers:
       '@app/domain':
         specifier: workspace:*
         version: link:../../packages/domain
+      '@app/platform':
+        specifier: workspace:*
+        version: link:../../packages/platform
     devDependencies:
       '@app/config':
         specifier: workspace:*
@@ -90,6 +93,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@app/allocation':
+        specifier: workspace:*
+        version: link:../../packages/allocation
       '@app/auth':
         specifier: workspace:*
         version: link:../../packages/auth

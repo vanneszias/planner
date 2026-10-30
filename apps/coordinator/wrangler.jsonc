@@ -16,6 +16,7 @@
 			"migrations_dir": "../../packages/db/migrations"
 		}
 	],
+	"r2_buckets": [{ "binding": "FILES", "bucket_name": "event-files", "jurisdiction": "eu" }],
 	"durable_objects": {
 		"bindings": [{ "name": "EVENT_COORDINATOR", "class_name": "EventCoordinator" }]
 	},

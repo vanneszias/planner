@@ -2,6 +2,7 @@ import { Button } from '@app/ui/components/button'
 import { createFileRoute, getRouteApi, useRouter } from '@tanstack/react-router'
 import { type FormEvent, useMemo, useState } from 'react'
 import { FormError } from '#/components/auth-shell'
+import { RankList } from '#/components/event/rank-list'
 import { Field, FieldInput } from '#/components/field'
 import { actionMessage, fieldMessage } from '#/lib/errors'
 import { m } from '#/paraglide/messages'
@@ -9,8 +10,10 @@ import {
 	addMinorFn,
 	emailGuardiansFn,
 	getParticipantsFn,
+	getRankingForFn,
 	importMinorsFn,
 	issueCardsFn,
+	setRankingForFn,
 } from '#/server/participants'
 
 export const Route = createFileRoute('/_organizer/events/$eventId/participants')({
@@ -21,12 +24,21 @@ const eventRoute = getRouteApi('/_organizer/events/$eventId')
 
 type Card = { id: string; firstName: string; code: string; qr: string }
 type Panel = 'add' | 'import' | { confirm: 'cards' | 'email' } | null
+type RankingPanel = {
+	id: string
+	name: string
+	ranking: string[]
+	rankable: string[]
+	rules: { min: number; max: number }
+}
 
 /** Participants (journeys.md, O4): list, add, import, code cards, guardian emails. */
 function Participants() {
 	const { participants, ageGroups, canWrite } = Route.useLoaderData()
-	const { event } = eventRoute.useLoaderData()
+	const { event, workshops } = eventRoute.useLoaderData()
 	const router = useRouter()
+	const [ranking, setRanking] = useState<RankingPanel | null>(null)
+	const ranks = event.mode === 'ranking'
 	const [ageFilter, setAgeFilter] = useState('')
 	const [statusFilter, setStatusFilter] = useState<'all' | 'none' | 'waitlisted'>('all')
 	const [selected, setSelected] = useState<Set<string>>(new Set())
@@ -76,6 +88,25 @@ function Participants() {
 				}),
 			)
 		}
+	}
+
+	async function openRanking(id: string, name: string) {
+		setError(null)
+		const result = await getRankingForFn({ data: { eventId: event.id, registrationId: id } })
+		if (!result.ok) return setError(actionMessage(result))
+		setRanking({ id, name, ...result.data })
+	}
+
+	async function saveRanking(panel: RankingPanel, workshopIds: string[]) {
+		const result = await setRankingForFn({
+			data: { eventId: event.id, registrationId: panel.id, workshopIds },
+		})
+		if (!result.ok) return actionMessage(result)
+		if (!result.data.ok) {
+			return result.data.reason === 'not_eligible' ? m.move_not_eligible() : m.error_generic()
+		}
+		await router.invalidate()
+		return null
 	}
 
 	if (cards) {
@@ -160,6 +191,35 @@ function Participants() {
 			</p>
 			<FormError message={error} />
 
+			{ranking && (
+				<div className="flex flex-col gap-3 rounded-xl bg-card p-5">
+					<RankList
+						key={ranking.id}
+						title={m.ranking_for({ name: ranking.name })}
+						savedMessage={m.ranking_saved_for({ name: ranking.name })}
+						saveLabel={m.save_ranking_for()}
+						contentLocale={event.defaultLocale}
+						initial={ranking.ranking}
+						rules={ranking.rules}
+						onSave={(ids) => saveRanking(ranking, ids)}
+						workshops={workshops
+							.filter((w) => ranking.rankable.includes(w.id))
+							.map((w) => ({
+								id: w.id,
+								title: w.title,
+								markerColor: w.markerColor,
+								markerShape: w.markerShape,
+								times: [],
+							}))}
+					/>
+					<div>
+						<Button variant="ghost" onClick={() => setRanking(null)}>
+							{m.back_to_list()}
+						</Button>
+					</div>
+				</div>
+			)}
+
 			{participants.length === 0 ? (
 				<p className="rounded-xl bg-card p-6">{m.participants_empty()}</p>
 			) : (
@@ -237,6 +297,7 @@ function Participants() {
 									<th className="p-3">{m.column_contact()}</th>
 									<th className="p-3">{m.column_sessions()}</th>
 									<th className="p-3">{m.column_waitlist()}</th>
+									{ranks && <th className="p-3">{m.column_ranked()}</th>}
 								</tr>
 							</thead>
 							<tbody>
@@ -268,6 +329,21 @@ function Participants() {
 										<td className="p-3 break-all">{p.email ?? p.guardianEmail ?? '—'}</td>
 										<td className="p-3 font-mono">{p.bookings}</td>
 										<td className="p-3 font-mono">{p.waitlisted || '—'}</td>
+										{ranks && (
+											<td className="p-3">
+												<span className="block">{p.ranked ? m.ranked_yes() : m.ranked_no()}</span>
+												{canWrite && (
+													<Button
+														variant="ghost"
+														className="h-9 px-2 text-sm"
+														aria-label={m.enter_ranking_for({ name: p.displayName })}
+														onClick={() => openRanking(p.id, p.displayName)}
+													>
+														{m.enter_ranking()}
+													</Button>
+												)}
+											</td>
+										)}
 									</tr>
 								))}
 							</tbody>

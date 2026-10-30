@@ -24,6 +24,7 @@ import { Route as OrganizerEventsNewRouteImport } from './routes/_organizer/even
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiLiveEventIdRouteImport } from './routes/api/live/$eventId'
 import { Route as OrganizerEventsEventIdIndexRouteImport } from './routes/_organizer/events/$eventId/index'
+import { Route as OrganizerEventsEventIdAllocationRouteImport } from './routes/_organizer/events/$eventId/allocation'
 import { Route as OrganizerEventsEventIdParticipantsRouteImport } from './routes/_organizer/events/$eventId/participants'
 import { Route as OrganizerEventsEventIdScheduleRouteImport } from './routes/_organizer/events/$eventId/schedule'
 import { Route as OrganizerEventsEventIdSettingsRouteImport } from './routes/_organizer/events/$eventId/settings'
@@ -105,6 +106,12 @@ const OrganizerEventsEventIdIndexRoute =
     path: '/',
     getParentRoute: () => OrganizerEventsEventIdRouteRoute,
   } as any)
+const OrganizerEventsEventIdAllocationRoute =
+  OrganizerEventsEventIdAllocationRouteImport.update({
+    id: '/allocation',
+    path: '/allocation',
+    getParentRoute: () => OrganizerEventsEventIdRouteRoute,
+  } as any)
 const OrganizerEventsEventIdParticipantsRoute =
   OrganizerEventsEventIdParticipantsRouteImport.update({
     id: '/participants',
@@ -144,6 +151,7 @@ export interface FileRoutesByFullPath {
   '/events/new': typeof OrganizerEventsNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/live/$eventId': typeof ApiLiveEventIdRoute
+  '/events/$eventId/allocation': typeof OrganizerEventsEventIdAllocationRoute
   '/events/$eventId/participants': typeof OrganizerEventsEventIdParticipantsRoute
   '/events/$eventId/schedule': typeof OrganizerEventsEventIdScheduleRoute
   '/events/$eventId/settings': typeof OrganizerEventsEventIdSettingsRoute
@@ -163,6 +171,7 @@ export interface FileRoutesByTo {
   '/events/new': typeof OrganizerEventsNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/live/$eventId': typeof ApiLiveEventIdRoute
+  '/events/$eventId/allocation': typeof OrganizerEventsEventIdAllocationRoute
   '/events/$eventId/participants': typeof OrganizerEventsEventIdParticipantsRoute
   '/events/$eventId/schedule': typeof OrganizerEventsEventIdScheduleRoute
   '/events/$eventId/settings': typeof OrganizerEventsEventIdSettingsRoute
@@ -185,6 +194,7 @@ export interface FileRoutesById {
   '/_organizer/events/new': typeof OrganizerEventsNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/live/$eventId': typeof ApiLiveEventIdRoute
+  '/_organizer/events/$eventId/allocation': typeof OrganizerEventsEventIdAllocationRoute
   '/_organizer/events/$eventId/participants': typeof OrganizerEventsEventIdParticipantsRoute
   '/_organizer/events/$eventId/schedule': typeof OrganizerEventsEventIdScheduleRoute
   '/_organizer/events/$eventId/settings': typeof OrganizerEventsEventIdSettingsRoute
@@ -207,6 +217,7 @@ export interface FileRouteTypes {
     | '/events/new'
     | '/api/auth/$'
     | '/api/live/$eventId'
+    | '/events/$eventId/allocation'
     | '/events/$eventId/participants'
     | '/events/$eventId/schedule'
     | '/events/$eventId/settings'
@@ -226,6 +237,7 @@ export interface FileRouteTypes {
     | '/events/new'
     | '/api/auth/$'
     | '/api/live/$eventId'
+    | '/events/$eventId/allocation'
     | '/events/$eventId/participants'
     | '/events/$eventId/schedule'
     | '/events/$eventId/settings'
@@ -247,6 +259,7 @@ export interface FileRouteTypes {
     | '/_organizer/events/new'
     | '/api/auth/$'
     | '/api/live/$eventId'
+    | '/_organizer/events/$eventId/allocation'
     | '/_organizer/events/$eventId/participants'
     | '/_organizer/events/$eventId/schedule'
     | '/_organizer/events/$eventId/settings'
@@ -374,6 +387,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrganizerEventsEventIdIndexRouteImport
       parentRoute: typeof OrganizerEventsEventIdRouteRoute
     }
+    '/_organizer/events/$eventId/allocation': {
+      id: '/_organizer/events/$eventId/allocation'
+      path: '/allocation'
+      fullPath: '/events/$eventId/allocation'
+      preLoaderRoute: typeof OrganizerEventsEventIdAllocationRouteImport
+      parentRoute: typeof OrganizerEventsEventIdRouteRoute
+    }
     '/_organizer/events/$eventId/participants': {
       id: '/_organizer/events/$eventId/participants'
       path: '/participants'
@@ -406,6 +426,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface OrganizerEventsEventIdRouteRouteChildren {
+  OrganizerEventsEventIdAllocationRoute: typeof OrganizerEventsEventIdAllocationRoute
   OrganizerEventsEventIdParticipantsRoute: typeof OrganizerEventsEventIdParticipantsRoute
   OrganizerEventsEventIdScheduleRoute: typeof OrganizerEventsEventIdScheduleRoute
   OrganizerEventsEventIdSettingsRoute: typeof OrganizerEventsEventIdSettingsRoute
@@ -415,6 +436,8 @@ interface OrganizerEventsEventIdRouteRouteChildren {
 
 const OrganizerEventsEventIdRouteRouteChildren: OrganizerEventsEventIdRouteRouteChildren =
   {
+    OrganizerEventsEventIdAllocationRoute:
+      OrganizerEventsEventIdAllocationRoute,
     OrganizerEventsEventIdParticipantsRoute:
       OrganizerEventsEventIdParticipantsRoute,
     OrganizerEventsEventIdScheduleRoute: OrganizerEventsEventIdScheduleRoute,
