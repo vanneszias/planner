@@ -18,6 +18,7 @@
 	},
 	"dependencies": {
 		"@app/db": "workspace:*",
-		"@app/domain": "workspace:*"
+		"@app/domain": "workspace:*",
+		"@app/platform": "workspace:*"
 	}
 }

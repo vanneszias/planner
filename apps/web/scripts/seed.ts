@@ -11,8 +11,12 @@ import {
 	createEvent,
 	createSessions,
 	createWorkshop,
+	listWorkshops,
 	organizerContext,
+	rankableWorkshopIds,
+	registerSelf,
 	saveAgeGroups,
+	savePreferences,
 	setEventStatus,
 } from '@app/domain'
 import { eq } from 'drizzle-orm'
@@ -111,6 +115,32 @@ try {
 		})
 	}
 	await setEventStatus(db, ctx, event.id, 'published')
+	if (mode === 'ranking') {
+		// 200 participants, each ranking five workshops they may join, popular ones more often.
+		const ageGroupIds = [young?.id, older?.id] as string[]
+		const workshops = await listWorkshops(db, ctx, event.id)
+		// A tiny seeded generator, so every seed run produces the same rankings.
+		let state = 42
+		const random = () => {
+			state = (state * 1103515245 + 12345) % 2147483648
+			return state / 2147483648
+		}
+		for (let i = 0; i < 200; i++) {
+			const result = await registerSelf(db, event.id, {
+				name: `Participant ${i + 1}`,
+				email: `participant${i + 1}-${event.id.slice(-6)}@example.com`,
+				ageGroupId: ageGroupIds[i % 2],
+			})
+			if (result.kind !== 'created') continue
+			const allowed = await rankableWorkshopIds(db, event.id, result.context.registrationId)
+			const choices = new Set<string>()
+			while (choices.size < 5) {
+				const w = workshops[Math.floor(random() ** 2 * workshops.length)]
+				if (w && allowed.has(w.id)) choices.add(w.id)
+			}
+			await savePreferences(db, result.context, [...choices])
+		}
+	}
 	console.log(
 		`Seeded "${event.name}" (${titles.length} workshops, ${titles.length * slots.length} sessions) in ${Math.round(performance.now() - started)} ms`,
 	)

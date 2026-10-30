@@ -251,13 +251,45 @@ the link.
 - [ ] Print layout checked only by page count (one A4 page for four cards); the
   hidden app chrome on paper still needs a look in a real print preview.
 
-## M4 to M5 (outline)
+## M4: Ranking and publishing
 
-| Milestone                   | First tasks                                                                                                               |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| M3 Registration and booking | Registration and tokens, guarded booking SQL, EventCoordinator booking path, waitlist, live seat counts, concurrency test |
-| M4 Ranking and publishing   | Ranking UI, draft runs, review screen, publish through the coordinator, email via `jobs`                                  |
-| M5 Event day and pilot      | QR check-in, exports, retention job, audit log, security checklist, accessibility audit                                   |
+Exit: participants rank, organizers run drafts, review, adjust and publish;
+emails go out; itineraries update.
+
+- [x] Schema: `preference`, `allocation_run`, `allocation_override`; one
+  published run per event (partial unique index).
+- [x] Ranking for participants (P2): add, reorder with up and down buttons,
+  remove, save; event's rank minimum and limit (D8, D26); times shown or hidden
+  (D7); eligible workshops only. First submission time orders "Early birds first".
+- [x] Organizers enter rankings for minors who don't (D16 fallback).
+- [x] Draft runs: snapshot from D1, `allocate()`, input and result stored in R2,
+  metrics in D1. Re-running supersedes older drafts.
+- [x] Review screen (O6): metrics in plain words, filters (empty places, no
+  top-3 choice), per-person ranking, result and explanation; manual moves
+  checked against the same constraints; "Fill all empty places" (D27).
+- [x] Publish through the event's Durable Object: one batch replacing
+  allocation assignments; a second publish shows who moves first.
+- [x] Emails "Your programme is ready", deduplicated per run and person.
+- [x] Participant explanations when the event allows them (D9).
+
+### Learned in M4
+
+- D1 binds at most 100 values per statement. Every `IN (...)` list and
+  multi-row insert goes through `d1-limits.ts` (`chunk`, `maxInList`,
+  `rowsPerInsert`); a 150-person test covers publish, credentials, CSV import
+  and email claims. Bulk writes go in one `db.batch()` (one query, all or
+  nothing), and bulk emails go to the queue with `sendBatch`.
+- Locked placements get no trace from the engine, so a run derived with
+  "Fill all empty places" carries its parent's traces forward; otherwise
+  participants would see an empty explanation.
+- Organizers enter rankings from the Participants table (ranking mode only),
+  using the same `RankList` as participants.
+
+## M5 (outline)
+
+| Milestone              | First tasks                                                                             |
+| ---------------------- | --------------------------------------------------------------------------------------- |
+| M5 Event day and pilot | QR check-in, exports, retention job, audit log, security checklist, accessibility audit |
 
 ## Setup decisions (2026-10-29)
 

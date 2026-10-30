@@ -8,10 +8,13 @@ import {
 	cancelRegistration,
 	joinWaitlist,
 	leaveWaitlist,
+	type OrganizerContext,
 	type ParticipantContext,
 	type Promotion,
+	publishRun,
 	seatCounts,
 } from '@app/domain'
+import { r2RunStorage } from '@app/platform'
 
 /**
  * One instance per event (see docs/architecture.md). Every booking write for
@@ -79,6 +82,24 @@ export class EventCoordinator extends DurableObject<Env> {
 			const promotions = await cancelRegistration(this.db(), context)
 			await this.broadcastSeats(context.eventId)
 			return promotions
+		})
+	}
+
+	/**
+	 * Publishes an allocation run (O6). Serialised with bookings and other
+	 * publishes, so two publishes never overlap. The caller (web) has already
+	 * checked the organizer's session; the domain checks the role again.
+	 */
+	async publish(
+		context: OrganizerContext,
+		eventId: string,
+		runId: string,
+	): Promise<{ registrationIds: string[] }> {
+		return this.serialized(async () => {
+			const result = await publishRun(this.db(), r2RunStorage(this.env.FILES), context, runId)
+			this.broadcast(JSON.stringify({ type: 'published' }))
+			await this.broadcastSeats(eventId)
+			return result
 		})
 	}
 

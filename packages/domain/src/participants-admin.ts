@@ -4,6 +4,7 @@ import { and, asc, count, eq, inArray } from 'drizzle-orm'
 import { z } from 'zod'
 import { auditStatement } from './audit.ts'
 import { type OrganizerContext, requirePermission } from './context.ts'
+import { chunk, maxInList } from './d1-limits.ts'
 import { invalid } from './errors.ts'
 import { getEvent } from './events.ts'
 import { accessTokenHash, newAccessToken, newShortCode, shortCodeHash } from './tokens.ts'
@@ -27,6 +28,7 @@ export async function listParticipants(db: Db, ctx: OrganizerContext, eventId: s
 				ageGroupId: schema.registration.ageGroupId,
 				isMinor: schema.registration.isMinor,
 				registeredBy: schema.registration.registeredBy,
+				preferencesSubmittedAt: schema.registration.preferencesSubmittedAt,
 				createdAt: schema.registration.createdAt,
 			})
 			.from(schema.registration)
@@ -57,8 +59,9 @@ export async function listParticipants(db: Db, ctx: OrganizerContext, eventId: s
 	})
 	const booked = new Map(bookings.map((b) => [b.registrationId, b.n]))
 	const waiting = new Map(waitlist.map((w) => [w.registrationId, w.n]))
-	return registrations.map((r) => ({
+	return registrations.map(({ preferencesSubmittedAt, ...r }) => ({
 		...r,
+		ranked: preferencesSubmittedAt !== null,
 		bookings: booked.get(r.id) ?? 0,
 		waitlisted: waiting.get(r.id) ?? 0,
 	}))
@@ -172,29 +175,33 @@ export async function importMinors(
 	if (rows.length > 5000) problems.push({ row: 1, field: 'csv', code: 'too_many' })
 	if (!commit || problems.length > 0) return { rows: rows.length, problems, imported: 0 }
 
-	let imported = 0
+	// One batch: a single D1 query that commits all rows or none.
+	const inserts = []
 	for (const value of values) {
 		if (!value) continue
-		await db.insert(schema.registration).values({
-			organizationId: ctx.organizationId,
-			eventId,
-			registeredBy: 'organizer',
-			isMinor: true,
-			displayName: value.name,
-			ageGroupId: value.ageGroupId ?? null,
-			guardianEmail: value.guardianEmail ?? null,
-			...(await unusedCredentials(eventId)),
-		})
-		imported++
+		inserts.push(
+			db.insert(schema.registration).values({
+				organizationId: ctx.organizationId,
+				eventId,
+				registeredBy: 'organizer',
+				isMinor: true,
+				displayName: value.name,
+				ageGroupId: value.ageGroupId ?? null,
+				guardianEmail: value.guardianEmail ?? null,
+				...(await unusedCredentials(eventId)),
+			}),
+		)
 	}
+	const [first, ...rest] = inserts
+	if (first) await db.batch([first, ...rest])
 	await auditStatement(db, ctx, {
 		action: 'participants.import',
 		subjectType: 'event',
 		subjectId: eventId,
 		eventId,
-		data: { count: imported },
+		data: { count: inserts.length },
 	})
-	return { rows: rows.length, problems, imported }
+	return { rows: rows.length, problems, imported: inserts.length }
 }
 
 /**
@@ -211,43 +218,61 @@ export async function issueCredentials(
 	requirePermission(ctx, { participant: ['write'] })
 	await getEvent(db, ctx, eventId)
 	if (registrationIds.length === 0) return []
-	const people = await db
-		.select({
-			id: schema.registration.id,
-			displayName: schema.registration.displayName,
-			guardianEmail: schema.registration.guardianEmail,
-			email: schema.registration.email,
-		})
-		.from(schema.registration)
-		.where(
-			and(
-				eq(schema.registration.eventId, eventId),
-				eq(schema.registration.organizationId, ctx.organizationId),
-				eq(schema.registration.status, 'active'),
-				inArray(schema.registration.id, registrationIds.slice(0, 1000)),
+	// D1: at most 100 bound parameters per statement, so look people up in chunks.
+	const people = (
+		await Promise.all(
+			chunk([...new Set(registrationIds)].slice(0, 2000), maxInList).map((ids) =>
+				db
+					.select({
+						id: schema.registration.id,
+						displayName: schema.registration.displayName,
+						guardianEmail: schema.registration.guardianEmail,
+						email: schema.registration.email,
+					})
+					.from(schema.registration)
+					.where(
+						and(
+							eq(schema.registration.eventId, eventId),
+							eq(schema.registration.organizationId, ctx.organizationId),
+							eq(schema.registration.status, 'active'),
+							inArray(schema.registration.id, ids),
+						),
+					),
 			),
 		)
-		.orderBy(asc(schema.registration.displayName))
+	)
+		.flat()
+		.sort((a, b) => a.displayName.localeCompare(b.displayName))
 
-	const issued = []
-	for (const person of people) {
-		const token = newAccessToken()
-		const code = newShortCode()
-		await db
-			.update(schema.registration)
-			.set({
+	const issued = await Promise.all(
+		people.map(async (person) => {
+			const token = newAccessToken()
+			const code = newShortCode()
+			return {
+				...person,
+				token,
+				code,
 				accessTokenHash: await accessTokenHash(token),
 				shortCodeHash: await shortCodeHash(eventId, code),
-			})
-			.where(eq(schema.registration.id, person.id))
-		issued.push({ ...person, token, code })
+			}
+		}),
+	)
+	// One batch per 100 updates: a batch counts as one query against the per-request limit.
+	for (const group of chunk(issued, 100)) {
+		const [first, ...rest] = group.map((person) =>
+			db
+				.update(schema.registration)
+				.set({ accessTokenHash: person.accessTokenHash, shortCodeHash: person.shortCodeHash })
+				.where(eq(schema.registration.id, person.id)),
+		)
+		if (first) await db.batch([first, ...rest])
 	}
 	await auditStatement(db, ctx, {
 		action: 'participants.credentials',
 		subjectType: 'event',
 		subjectId: eventId,
 		eventId,
-		data: { registrationIds: issued.map((p) => p.id) },
+		data: { count: issued.length },
 	})
-	return issued
+	return issued.map(({ accessTokenHash: _a, shortCodeHash: _s, ...person }) => person)
 }

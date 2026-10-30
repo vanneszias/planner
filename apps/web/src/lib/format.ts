@@ -51,3 +51,9 @@ export function groupByDay<T extends { startsAt: Date }>(items: T[], timeZone: s
 export function formatDateTime(instant: Date, timeZone: string): string {
 	return `${formatDay(instant, timeZone)}, ${formatTime(instant, timeZone)}`
 }
+
+/** "Sat 10:00": compact, for lists of session times. */
+export function formatShortDayTime(instant: Date, timeZone: string): string {
+	const day = new Intl.DateTimeFormat(locale(), { weekday: 'short', timeZone }).format(instant)
+	return `${day} ${formatTime(instant, timeZone)}`
+}

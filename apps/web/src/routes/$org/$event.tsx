@@ -5,10 +5,18 @@ import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { cn } from 'cn'
 import { useState } from 'react'
 import { DayStrip } from '#/components/event/day-strip'
+import { Explanation } from '#/components/event/explanation'
 import { RegisterForm, ReturningForms } from '#/components/event/forms'
+import { RankList } from '#/components/event/rank-list'
 import { useLiveSeats } from '#/components/event/use-live-seats'
 import { LanguageSwitch } from '#/components/language-switch'
-import { formatDateRange, formatDateTime, formatTime, groupByDay } from '#/lib/format'
+import {
+	formatDateRange,
+	formatDateTime,
+	formatShortDayTime,
+	formatTime,
+	groupByDay,
+} from '#/lib/format'
 import { m } from '#/paraglide/messages'
 import {
 	bookFn,
@@ -17,6 +25,7 @@ import {
 	getEventPage,
 	joinWaitlistFn,
 	leaveWaitlistFn,
+	savePreferencesFn,
 } from '#/server/participant'
 
 /** Public event page (journeys.md, P1–P5). Booking mode works here; ranking arrives in M4. */
@@ -60,7 +69,10 @@ function EventPage() {
 	const router = useRouter()
 	const { event, workshops, sessions, ageGroups, me } = page
 	const seats = useLiveSeats(event.id, page.seats)
-	const [tab, setTab] = useState<'programme' | 'myday'>('programme')
+	// Once results are published, participants land on their programme.
+	const [tab, setTab] = useState<'programme' | 'myday'>(
+		me && page.published ? 'myday' : 'programme',
+	)
 	const [registeringFor, setRegisteringFor] = useState<string | 'none' | null>(null)
 	const [notice, setNotice] = useState<string | null>(null)
 	const [busy, setBusy] = useState<string | null>(null)
@@ -74,11 +86,28 @@ function EventPage() {
 	const opensAt = event.opensAt ? new Date(event.opensAt) : null
 	const closesAt = event.closesAt ? new Date(event.closesAt) : null
 	const bookingMode = event.mode === 'booking'
+	const rankingMode = event.mode === 'ranking'
 	const open =
 		bookingMode &&
 		event.status === 'published' &&
 		(!opensAt || now >= opensAt.getTime()) &&
 		(!closesAt || now < closesAt.getTime())
+	const rankingOpen =
+		rankingMode &&
+		event.status === 'published' &&
+		(!opensAt || now >= opensAt.getTime()) &&
+		(!closesAt || now < closesAt.getTime())
+
+	async function saveRanking(workshopIds: string[]): Promise<string | null> {
+		const result = await savePreferencesFn({ data: { eventId: event.id, workshopIds } })
+		if (result.ok) {
+			await router.invalidate()
+			return null
+		}
+		if (result.reason === 'closed') return m.ranking_closed()
+		if (result.reason === 'not_eligible') return m.refusal_not_eligible()
+		return m.error_generic()
+	}
 
 	async function act(sessionId: string, run: () => Promise<{ ok: boolean; reason?: string }>) {
 		setBusy(sessionId)
@@ -205,6 +234,46 @@ function EventPage() {
 				/>
 			)}
 
+			{rankingMode &&
+				!page.published &&
+				tab === 'programme' &&
+				(me ? (
+					rankingOpen ? (
+						<RankList
+							contentLocale={event.defaultLocale}
+							initial={me.ranking}
+							rules={me.rules}
+							onSave={saveRanking}
+							workshops={workshops
+								.filter((w) => me.rankable.includes(w.id))
+								.map((w) => ({
+									id: w.id,
+									title: w.title,
+									markerColor: w.markerColor,
+									markerShape: w.markerShape,
+									times: event.showTimesWhileRanking
+										? sessions
+												.filter((s) => s.workshopId === w.id)
+												.map((s) => formatShortDayTime(s.startsAt, event.timezone))
+										: [],
+								}))}
+						/>
+					) : (
+						<p className="rounded-xl bg-card p-5 font-bold">{m.ranking_waiting()}</p>
+					)
+				) : (
+					rankingOpen &&
+					!registeringFor && (
+						<section className="flex flex-col gap-3 rounded-xl bg-card p-5">
+							<h2 className="font-display text-xl font-medium">{m.rank_title()}</h2>
+							<p className="text-muted-foreground">{m.register_intro()}</p>
+							<div>
+								<Button onClick={() => setRegisteringFor('none')}>{m.register_only()}</Button>
+							</div>
+						</section>
+					)
+				))}
+
 			{tab === 'myday' && me ? (
 				mine.length === 0 ? (
 					<p className="rounded-xl bg-card p-5">{m.my_day_empty()}</p>
@@ -226,7 +295,11 @@ function EventPage() {
 						})}
 					/>
 				)
-			) : (
+			) : null}
+			{tab === 'myday' && me?.explanation && (
+				<Explanation trace={me.explanation} titleOf={(id) => workshopById.get(id)?.title ?? ''} />
+			)}
+			{tab === 'myday' && me ? null : (
 				<section aria-labelledby="programme" className="flex flex-col gap-4">
 					<h2 id="programme" className="font-display text-xl font-medium">
 						{m.programme_title()}

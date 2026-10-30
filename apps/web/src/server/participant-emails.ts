@@ -98,3 +98,31 @@ export function guardianLinkEmail(input: {
 		text: `Hello,\n\n${name} is registered for ${eventName}. This link lets you choose workshops and see the programme:\n\n${link}\n\nOr type the code ${code} on the event page.\n\nOlder links and codes for ${name} no longer work.\n\n${brand.name}`,
 	}
 }
+
+/** After an allocation is published (O6 step 5). */
+export function programmeReadyEmail(input: {
+	to: string
+	locale: Locale
+	name: string
+	eventName: string
+	eventUrl: string
+	changed: boolean
+}): OutgoingEmail {
+	const { locale, name, eventName, eventUrl, changed } = input
+	if (locale === 'nl') {
+		return {
+			to: input.to,
+			subject: changed
+				? `Je programma voor ${eventName} is gewijzigd`
+				: `Je programma voor ${eventName} is klaar`,
+			text: `Hallo ${name},\n\n${changed ? 'Je programma is gewijzigd.' : 'Je programma staat klaar.'} Open het met de link uit je eerste mail, of op de evenementpagina met je code:\n\n${eventUrl}\n\n${brand.name}`,
+		}
+	}
+	return {
+		to: input.to,
+		subject: changed
+			? `Your programme for ${eventName} has changed`
+			: `Your programme for ${eventName} is ready`,
+		text: `Hi ${name},\n\n${changed ? 'Your programme has changed.' : 'Your programme is ready.'} Open it with the link from your first email, or on the event page with your code:\n\n${eventUrl}\n\n${brand.name}`,
+	}
+}

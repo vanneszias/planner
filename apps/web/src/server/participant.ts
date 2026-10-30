@@ -6,20 +6,27 @@ import {
 	contextFromCode,
 	DomainError,
 	findRedirect,
+	getPreferences,
 	getPublicEvent,
 	getRegistration,
+	hasPublishedRun,
+	minimumRanks,
 	type ParticipantContext,
 	type Promotion,
+	participantExplanation,
 	participantPlan,
 	publicEventMeta,
+	type RankingResult,
+	rankableWorkshopIds,
 	registerSelf,
 	rotateAccessToken,
 	type SelfRegistrationInput,
+	savePreferences,
 	seatCounts,
 	utcToZoned,
 	type WaitlistResult,
 } from '@app/domain'
-import { coordinatorFor } from '@app/platform'
+import { coordinatorFor, r2RunStorage } from '@app/platform'
 import { notFound, redirect } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
 import { and, eq } from 'drizzle-orm'
@@ -52,10 +59,19 @@ async function participantOrNull(eventId: string) {
 
 async function participantView(participant: ParticipantContext) {
 	const registration = await getRegistration(db(), participant)
+	const [plan, ranking, rankable, explanation] = await Promise.all([
+		participantPlan(db(), participant),
+		getPreferences(db(), participant.registrationId),
+		rankableWorkshopIds(db(), participant.eventId, participant.registrationId),
+		participantExplanation(db(), r2RunStorage(env.FILES), participant),
+	])
 	return {
 		name: registration.displayName,
 		ageGroupId: registration.ageGroupId,
-		...(await participantPlan(db(), participant)),
+		...plan,
+		ranking,
+		rankable: [...rankable],
+		explanation,
 	}
 }
 
@@ -74,8 +90,18 @@ export const getEventPage = createServerFn({ method: 'GET' })
 		return {
 			...page,
 			seats: await seatCounts(db(), page.event.id),
+			published: await hasPublishedRun(db(), page.event.id),
 			turnstileSiteKey: env.TURNSTILE_SITE_KEY || null,
-			me: participant ? await participantView(participant) : null,
+			me: participant
+				? await participantView(participant).then((view) => ({
+						...view,
+						// The counter on the ranking screen (D8, D26).
+						rules: {
+							min: minimumRanks(page.event, view.rankable.length),
+							max: Math.min(page.event.rankLimit, view.rankable.length),
+						},
+					}))
+				: null,
 		}
 	})
 
@@ -259,3 +285,12 @@ async function notifyPromotions(eventId: string, promotions: Promotion[]) {
 		)
 	}
 }
+
+/** Saves a participant's ranking (P2). Validation happens in the domain. */
+export const savePreferencesFn = createServerFn({ method: 'POST' })
+	.validator((input: { eventId: string; workshopIds: string[] }) => input)
+	.handler(async ({ data }) => {
+		const participant = await requireParticipant(data.eventId)
+		const result: RankingResult = await savePreferences(db(), participant, data.workshopIds)
+		return result
+	})

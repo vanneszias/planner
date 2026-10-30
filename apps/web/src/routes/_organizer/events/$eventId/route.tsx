@@ -41,6 +41,11 @@ function EventLayout() {
 				<Link to="/events/$eventId/schedule" params={params} className={tab}>
 					{m.nav_schedule()}
 				</Link>
+				{event.mode === 'ranking' && (
+					<Link to="/events/$eventId/allocation" params={params} className={tab}>
+						{m.nav_allocation()}
+					</Link>
+				)}
 				<Link to="/events/$eventId/participants" params={params} className={tab}>
 					{m.nav_participants()}
 				</Link>
