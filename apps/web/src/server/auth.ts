@@ -18,6 +18,7 @@ export function getAuth(): Auth {
 			await createPersonalOrganization(createDb(env.DB), user)
 		},
 		isReservedSlug: (slug) => reservedSlugs.has(slug),
+		turnstileSecret: env.TURNSTILE_SECRET || undefined,
 	})
 	return auth
 }

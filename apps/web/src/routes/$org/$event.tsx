@@ -3,7 +3,7 @@ import { Button } from '@app/ui/components/button'
 import { Marker } from '@app/ui/components/marker'
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { cn } from 'cn'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { DayStrip } from '#/components/event/day-strip'
 import { Explanation } from '#/components/event/explanation'
 import { RegisterForm, ReturningForms } from '#/components/event/forms'
@@ -59,6 +59,7 @@ const refusals: Record<string, () => string> = {
 	closed: m.refusal_closed,
 	not_eligible: m.refusal_not_eligible,
 	too_late: m.refusal_too_late,
+	busy: m.refusal_busy,
 	not_found: m.error_not_found,
 	already_booked: m.booked,
 }
@@ -106,17 +107,45 @@ function EventPage() {
 		}
 		if (result.reason === 'closed') return m.ranking_closed()
 		if (result.reason === 'not_eligible') return m.refusal_not_eligible()
+		if (result.reason === 'busy') return m.refusal_busy()
 		return m.error_generic()
 	}
 
-	async function act(sessionId: string, run: () => Promise<{ ok: boolean; reason?: string }>) {
+	/**
+	 * Books, cancels or queues, then says what happened and puts focus back
+	 * on that session's button (its label changes, the element may not).
+	 */
+	async function act(
+		sessionId: string,
+		run: () => Promise<{ ok: boolean; reason?: string }>,
+		success: string,
+	) {
+		if (busy) return
 		setBusy(sessionId)
 		setNotice(null)
 		const result = await run()
 		setBusy(null)
-		if (!result.ok && result.reason) setNotice((refusals[result.reason] ?? m.error_generic)())
+		setNotice(
+			result.ok ? success : result.reason ? (refusals[result.reason] ?? m.error_generic)() : null,
+		)
+		refocus.current = sessionId
 		await router.invalidate()
+		// Nothing to focus (the session lost its button): don't grab focus later.
+		setTimeout(() => {
+			refocus.current = null
+		}, 1000)
 	}
+
+	// After the page re-renders with the new state, focus that session's button again.
+	const refocus = useRef<string | null>(null)
+	useEffect(() => {
+		if (!refocus.current) return
+		const target = document.querySelector<HTMLElement>(`[data-session-action="${refocus.current}"]`)
+		if (target && document.activeElement !== target) {
+			target.focus()
+			refocus.current = null
+		}
+	})
 
 	function stateOf(session: Session) {
 		const taken = seats[session.id] ?? 0
@@ -353,11 +382,15 @@ function EventPage() {
 												<Button
 													variant={me ? 'default' : 'outline'}
 													aria-label={`${m.book_session()}: ${label}`}
-													disabled={busy === session.id}
+													data-session-action={session.id}
+													aria-disabled={busy === session.id || undefined}
 													onClick={() =>
 														me
-															? act(session.id, () =>
-																	bookFn({ data: { eventId: event.id, sessionId: session.id } }),
+															? act(
+																	session.id,
+																	() =>
+																		bookFn({ data: { eventId: event.id, sessionId: session.id } }),
+																	m.booked_notice({ session: label }),
 																)
 															: setRegisteringFor(session.id)
 													}
@@ -369,10 +402,14 @@ function EventPage() {
 												<Button
 													variant="outline"
 													aria-label={`${m.cancel_booking()}: ${label}`}
-													disabled={busy === session.id}
+													data-session-action={session.id}
+													aria-disabled={busy === session.id || undefined}
 													onClick={() =>
-														act(session.id, () =>
-															cancelFn({ data: { eventId: event.id, sessionId: session.id } }),
+														act(
+															session.id,
+															() =>
+																cancelFn({ data: { eventId: event.id, sessionId: session.id } }),
+															m.cancelled_notice({ session: label }),
 														)
 													}
 												>
@@ -383,12 +420,16 @@ function EventPage() {
 												<Button
 													variant="outline"
 													aria-label={`${m.join_waitlist()}: ${label}`}
-													disabled={busy === session.id}
+													data-session-action={session.id}
+													aria-disabled={busy === session.id || undefined}
 													onClick={() =>
-														act(session.id, () =>
-															joinWaitlistFn({
-																data: { eventId: event.id, sessionId: session.id },
-															}),
+														act(
+															session.id,
+															() =>
+																joinWaitlistFn({
+																	data: { eventId: event.id, sessionId: session.id },
+																}),
+															m.waitlist_joined_notice({ session: label }),
 														)
 													}
 												>
@@ -399,12 +440,16 @@ function EventPage() {
 												<Button
 													variant="ghost"
 													aria-label={`${m.leave_waitlist()}: ${label}`}
-													disabled={busy === session.id}
+													data-session-action={session.id}
+													aria-disabled={busy === session.id || undefined}
 													onClick={() =>
-														act(session.id, () =>
-															leaveWaitlistFn({
-																data: { eventId: event.id, sessionId: session.id },
-															}),
+														act(
+															session.id,
+															() =>
+																leaveWaitlistFn({
+																	data: { eventId: event.id, sessionId: session.id },
+																}),
+															m.waitlist_left_notice({ session: label }),
 														)
 													}
 												>
@@ -446,7 +491,7 @@ function EventPage() {
 function Shell({ page, children }: { page: Page; children: React.ReactNode }) {
 	const { event } = page
 	return (
-		<div className="mx-auto flex min-h-dvh max-w-2xl flex-col gap-6 px-4 py-6">
+		<main className="mx-auto flex min-h-dvh max-w-2xl flex-col gap-6 px-4 py-6">
 			<div className="flex justify-end">
 				<LanguageSwitch />
 			</div>
@@ -471,6 +516,6 @@ function Shell({ page, children }: { page: Page; children: React.ReactNode }) {
 				</p>
 			)}
 			{children}
-		</div>
+		</main>
 	)
 }

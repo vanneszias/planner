@@ -57,3 +57,8 @@ export function formatShortDayTime(instant: Date, timeZone: string): string {
 	const day = new Intl.DateTimeFormat(locale(), { weekday: 'short', timeZone }).format(instant)
 	return `${day} ${formatTime(instant, timeZone)}`
 }
+
+/** "30 Oct 2026, 13:05" in the viewer's own timezone, for things like exports and the audit log. */
+export function formatStamp(at: number): string {
+	return new Intl.DateTimeFormat(locale(), { dateStyle: 'medium', timeStyle: 'short' }).format(at)
+}

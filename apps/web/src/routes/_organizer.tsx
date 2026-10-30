@@ -29,7 +29,7 @@ const navLink =
 	'text-sm font-bold text-muted-foreground hover:text-foreground data-[status=active]:text-foreground data-[status=active]:underline data-[status=active]:underline-offset-4'
 
 function OrganizerLayout() {
-	const { organizations, activeId } = Route.useLoaderData()
+	const { organizations, activeId, canAudit } = Route.useLoaderData()
 	const navigate = useNavigate()
 	const router = useRouter()
 
@@ -59,6 +59,11 @@ function OrganizerLayout() {
 						<Link to="/team" className={navLink}>
 							{m.nav_team()}
 						</Link>
+						{canAudit && (
+							<Link to="/audit" className={navLink}>
+								{m.nav_audit()}
+							</Link>
+						)}
 					</nav>
 					<Button variant="ghost" className="px-2" onClick={signOut}>
 						{m.sign_out()}

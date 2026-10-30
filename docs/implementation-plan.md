@@ -50,6 +50,8 @@ pnpm --filter @app/db migrate:local
 pnpm dev                                            # http://localhost:3000, all four Workers
 pnpm lint && pnpm typecheck && pnpm test
 pnpm --filter @app/web seed you@example.com   # demo event for a local account
+cp apps/api/.dev.vars.example apps/api/.dev.vars    # same EXPORT_SIGNING_KEY as apps/web
+pnpm --dir apps/api exec wrangler dev --persist-to ../web/.wrangler/state  # export downloads
 ```
 
 Sign-in emails print to the dev server console locally.
@@ -194,7 +196,7 @@ usable from a script for concierge runs.
   spreadsheets in, programme and roster CSVs out, locally.
 - [x] Default for empty slots decided: leave empty, with "Fill all empty places"
   on the M4 review screen (D27).
-- [ ] Swap pass: after the M4 review screen (D28).
+- [ ] Swap pass: after the M4 review screen (D28); kept for after the pilot (2026-10-30).
 
 ## M3: Registration and booking
 
@@ -285,11 +287,166 @@ emails go out; itineraries update.
 - Organizers enter rankings from the Participants table (ranking mode only),
   using the same `RankList` as participants.
 
-## M5 (outline)
+## M5: Event day and pilot
 
-| Milestone              | First tasks                                                                             |
-| ---------------------- | --------------------------------------------------------------------------------------- |
-| M5 Event day and pilot | QR check-in, exports, retention job, audit log, security checklist, accessibility audit |
+Exit: an organizer checks people in from a phone with live counts, downloads
+participant, programme and attendance CSVs, sees who did what in the audit
+log, and participant data anonymises itself 90 days after the event; the
+security checklist and a WCAG 2.2 AA audit of the key flows are done.
+
+Decided 2026-10-30: check-in needs participant write access (owners and
+editors; volunteers get editor accounts until per-event roles, Phase 2); the
+swap pass (D28) stays after the pilot; production Turnstile keys are created
+through the Cloudflare API.
+
+### Check-in (O8, D15, D17)
+
+- [x] Schema: `registration.checked_in_at` for event-wide check-in (session
+  check-in uses `assignment.checked_in_at`); migration `0004`, additive.
+- [x] Domain: check in by private link token (the QR on cards and emails), by
+  6-character code, or by picking a name; per session or for the whole event;
+  "Not booked for this session · Check in anyway?" adds a manual place; undo.
+  Codes only resolve within their own event; every check-in is audit-logged.
+- [x] Through the event's Durable Object, which broadcasts check-in counts to
+  organizer sockets only (tagged `staff`); participants' sockets get seats only.
+- [x] Screen (phone-first): pick session (defaults to the one nearest now) or
+  "Whole event", camera scanner (`BarcodeDetector`, lazy-loaded `jsQR`
+  fallback for iOS), code field, name search, big `ScanResult`, "23 of 30
+  here" counter that updates live, printable attendance list (D17 fallback).
+- [x] Offline-tolerant where cheap: scans that fail for lack of a connection
+  wait in a queue on the device and send when it's back (D17 keeps the
+  real offline mode in Phase 2).
+
+### Exports (O9)
+
+- [x] Schema: `export_job` (domain model), migration `0004`.
+- [x] Participants, programmes (one row per place) and attendance (per
+  session) as CSV, built by `jobs` from a queue message into R2
+  (`exports/…`), formula-injection guarded (`csvCell`), UTF-8 BOM for Excel.
+- [x] Organizer requests an export (participant export permission, audit-logged),
+  sees its status, and downloads through a 15-minute signed link served by
+  `api` (HMAC with `EXPORT_SIGNING_KEY`, shared by `web` and `api`).
+- [x] Files expire after 7 days: the daily cron deletes them, and an R2
+  lifecycle rule on `exports/` (7 days) backs it up.
+
+### Retention (D6, D20, D21)
+
+- [x] `anonymiseEvent()`: clears names, emails, guardian emails and account
+  links, revokes tokens and codes, deletes preferences, waitlist entries,
+  email deliveries, run snapshots in R2 and exports; keeps anonymous
+  assignments and check-ins for statistics; sets `event.data_deleted_at`;
+  audit entry by `system`. Chunked (500 rows per statement, no `IN` lists),
+  idempotent, and safe to re-run after a partial failure.
+- [x] Daily cron in `jobs`: every event whose `ends_on + retention_days` has
+  passed. Tested end to end, including R2 snapshots.
+- [x] Overview shows "Participant data will be anonymised on …" and
+  "Anonymise now" (event delete permission, session under 12 hours old).
+- [x] Organizer screens (check-in, allocation, participants) say the data
+  has been anonymised; revoked participant links answer "This link no longer
+  works".
+
+### Audit log
+
+- [x] Owners only (`audit: read`): organization-wide log, newest first,
+  filtered by event, kind of action and person, paged; plain-language action
+  names in English and Dutch.
+
+### Security checklist (security-privacy.md)
+
+- [x] Security headers on every Worker; CSP with a per-request nonce on `web`
+  (`strict-dynamic`, Turnstile allowed), `Permissions-Policy: camera=(self)`.
+- [x] Production Turnstile widget `event-web` (invisible, hostnames
+  `event-web.zias.workers.dev` and `zias.workers.dev` for previews) and
+  `TURNSTILE_SECRET`; Turnstile on organizer sign-up and magic link requests
+  (Better Auth captcha plugin) as tabled. Widgets reset after each submit:
+  tokens work once.
+- [x] Rate limits from the table with the Workers rate limiting binding.
+- [x] Dependabot alert #1: `esbuild` under `drizzle-kit` pinned to ≥ 0.25.
+- [x] Review against security-privacy.md, results recorded below.
+
+### Accessibility (WCAG 2.2 AA)
+
+- [x] Audit register, rank, my day, booking, allocation review and check-in
+  with the `a11y-feature-audit` skill; fix P0 and P1; list the rest.
+
+### Security review against security-privacy.md (2026-10-30)
+
+Done in M5 or earlier: tenant isolation tests (new check-in, export,
+retention and audit functions included); token-to-cookie exchange; security
+headers on all four Workers and a nonce CSP on `web` (verified on a production
+build: scripts carry the nonce, no violations); CSRF via TanStack Start's
+`createCsrfMiddleware` on every non-GET request (the doc asked to verify what
+server functions do by default: nothing, so it's added); rate limits as tabled
+(Workers rate limiting binding, plus Better Auth rules per IP for sign-in and
+sign-up); Turnstile as tabled, except code entry has it always rather than
+after 3 failures; CSV injection guard (also tab and carriage return); exports
+through 15-minute HMAC links after a session check; staff WebSocket channel
+checks the organizer; per-IP-and-event WebSocket connect limit; retention
+tested end to end including R2 snapshots; esbuild alert fixed.
+
+Open, none blocking the pilot:
+
+- HSTS waits for the final domain (`*.workers.dev` is under the HSTS-preloaded
+  `.dev` TLD).
+- Password sign-in gets Turnstile never, not "after 2 failures"; Better Auth
+  limits it to 5 a minute per IP instead.
+- "Many code failures across an event alert the organizer" isn't built.
+- Workers Logs record request URLs, which include `/r/<token>` on first use.
+  Tokens are swapped for a cookie at once, but log redaction from the doc
+  needs a Logpush filter or a shorter-lived first hop.
+- WebSocket sockets idle for over an hour aren't dropped by the object yet
+  (hibernation keeps them cheap).
+- Blocked on the owner: SPF, DKIM and DMARC (no sending domain), GDPR
+  documents (S1), upload pipeline (no uploads yet).
+
+### Accessibility audit (WCAG 2.2 AA, 2026-10-30)
+
+axe-core 4.12 on every reached state at 390 and 1280 px, plus keyboard and
+focus checks by hand; no screen reader run. No P0. Fixed:
+
+- P1: registration errors move focus to the first problem; the consent box
+  has its own linked error.
+- P1: book, cancel and waitlist actions announce what happened and keep focus
+  on that session's button (its label changes, so React remounts it: focus is
+  restored after the re-render).
+- P1: ranking keeps focus with the workshop when it's added or removed;
+  removals are announced; end-of-list and pending buttons use `aria-disabled`
+  instead of `disabled`, which dropped focus.
+- P2 also fixed: focus ring on buttons and inputs was 2.3:1 (now the global
+  3 px kelp outline); check-in keeps focus in the name list, announces undo
+  and repeated scans, camera errors are alerts; the public page has `<main>`;
+  the bot-check message no longer says to reload.
+
+Left for later (P2/P3): Programme / My day tabs use tab roles without tab
+behaviour; inline confirmations (cancel registration, publish) don't take
+focus; allocation review actions don't announce success and move errors show
+far from the row; My day jumps from h1 to h3; the register form title doesn't
+name the session; live regions use `empty:hidden`, to check with VoiceOver and
+NVDA.
+
+### Learned in M5
+
+- **TanStack Start CSP nonces** go through `ssr.nonce` on the router. The
+  nonce is made in `src/server.ts`, passed to the router as a request header
+  read with `createIsomorphicFn().server(getRequestHeader)`, and any client
+  value for that header is overwritten. Vite's dev server injects scripts
+  without a nonce, so the CSP is off in `vite dev`; test it with a build.
+- **Turnstile tokens are single use.** Forms that verified the token before
+  validating the input refused the second try; every form now resets its
+  widget after a submit (`resetKey`).
+- **Focus after a server round trip:** buttons whose label depends on state
+  are new elements after `router.invalidate()`, so `requestAnimationFrame`
+  focus lands on the old one. Keep the target in a ref and focus it from an
+  effect after the next renders.
+- **Rate limiting bindings work in Miniflare** and need no Cloudflare setup
+  beyond `ratelimits` in `wrangler.jsonc` (namespace ids are per account).
+- **Republishing an allocation deletes and re-inserts allocation places**, so
+  check-ins on those places would be lost. Don't republish on the event day;
+  preserving check-ins in `publishRun` is a follow-up.
+- **Local exports** need the api Worker beside the web dev server, sharing its
+  state: `pnpm --dir apps/api exec wrangler dev --persist-to ../web/.wrangler/state`.
+  `PORT=3001 pnpm --filter @app/web exec vite dev --port 3001` runs a second
+  checkout next to one already on 3000.
 
 ## Setup decisions (2026-10-29)
 

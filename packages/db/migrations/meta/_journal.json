@@ -29,6 +29,13 @@
       "when": 1793356162061,
       "tag": "0003_nervous_strong_guy",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1793361384960,
+      "tag": "0004_public_miracleman",
+      "breakpoints": true
     }
   ]
 }

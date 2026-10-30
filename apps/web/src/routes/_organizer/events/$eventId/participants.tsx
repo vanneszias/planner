@@ -2,6 +2,7 @@ import { Button } from '@app/ui/components/button'
 import { createFileRoute, getRouteApi, useRouter } from '@tanstack/react-router'
 import { type FormEvent, useMemo, useState } from 'react'
 import { FormError } from '#/components/auth-shell'
+import { ExportsPanel } from '#/components/event/exports-panel'
 import { RankList } from '#/components/event/rank-list'
 import { Field, FieldInput } from '#/components/field'
 import { actionMessage, fieldMessage } from '#/lib/errors'
@@ -34,7 +35,7 @@ type RankingPanel = {
 
 /** Participants (journeys.md, O4): list, add, import, code cards, guardian emails. */
 function Participants() {
-	const { participants, ageGroups, canWrite } = Route.useLoaderData()
+	const { participants, ageGroups, canWrite, canExport } = Route.useLoaderData()
 	const { event, workshops } = eventRoute.useLoaderData()
 	const router = useRouter()
 	const [ranking, setRanking] = useState<RankingPanel | null>(null)
@@ -315,7 +316,7 @@ function Participants() {
 											</td>
 										)}
 										<td className="p-3">
-											<span className="font-bold">{p.displayName}</span>
+											<span className="font-bold">{p.displayName || m.anonymous()}</span>
 											<span className="block text-muted-foreground">
 												{[
 													p.ageGroupId ? groupLabel.get(p.ageGroupId) : null,
@@ -351,6 +352,7 @@ function Participants() {
 					</div>
 				</>
 			)}
+			{canExport && <ExportsPanel eventId={event.id} />}
 		</div>
 	)
 }

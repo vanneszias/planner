@@ -33,6 +33,7 @@ import { and, eq } from 'drizzle-orm'
 import { sendEmail } from './email'
 import { newLinkEmail, promotedEmail, registrationEmail } from './participant-emails'
 import { readParticipant, setParticipantCookie } from './participant-session'
+import { clientIp, withinLimit } from './rate-limit'
 import { verifyTurnstile } from './turnstile'
 
 /*
@@ -114,6 +115,8 @@ export const registerFn = createServerFn({ method: 'POST' })
 	)
 	.handler(async ({ data }) => {
 		const meta = await eventOr404(data.eventId)
+		if (!(await withinLimit('register', `${clientIp()}:${data.eventId}`)))
+			return { ok: false as const, reason: 'busy' as const }
 		if (!(await verifyTurnstile(data.turnstileToken)))
 			return { ok: false as const, reason: 'bot' as const }
 
@@ -162,6 +165,8 @@ export const enterCodeFn = createServerFn({ method: 'POST' })
 	.validator((input: { eventId: string; code: string } & Bot) => input)
 	.handler(async ({ data }) => {
 		await eventOr404(data.eventId)
+		if (!(await withinLimit('code', `${clientIp()}:${data.eventId}`)))
+			return { ok: false as const, busy: true }
 		if (!(await verifyTurnstile(data.turnstileToken))) return { ok: false as const }
 		const context = await contextFromCode(db(), data.eventId, data.code)
 		if (!context) return { ok: false as const }
@@ -176,6 +181,11 @@ export const findProgrammeFn = createServerFn({ method: 'POST' })
 		const meta = await eventOr404(data.eventId)
 		if (!(await verifyTurnstile(data.turnstileToken))) return { ok: false as const }
 		const email = data.email.trim().toLowerCase()
+		// Over the limit: the same answer, but no email (no way to probe or flood an inbox).
+		const allowed =
+			(await withinLimit('findIp', `${clientIp()}:${data.eventId}`)) &&
+			(await withinLimit('findEmail', email))
+		if (!allowed) return { ok: true as const }
 		const [found] = await db()
 			.select({ id: schema.registration.id })
 			.from(schema.registration)
@@ -207,10 +217,15 @@ async function requireParticipant(eventId: string): Promise<ParticipantContext> 
 	return participant
 }
 
+const busy = { ok: false as const, reason: 'busy' as const }
+const bookingAllowed = (participant: ParticipantContext) =>
+	withinLimit('booking', participant.registrationId)
+
 export const bookFn = createServerFn({ method: 'POST' })
 	.validator((input: { eventId: string; sessionId: string }) => input)
 	.handler(async ({ data }) => {
 		const participant = await requireParticipant(data.eventId)
+		if (!(await bookingAllowed(participant))) return busy
 		const result: BookingResult = await coordinator(data.eventId).book(participant, data.sessionId)
 		return result
 	})
@@ -219,6 +234,7 @@ export const cancelFn = createServerFn({ method: 'POST' })
 	.validator((input: { eventId: string; sessionId: string }) => input)
 	.handler(async ({ data }) => {
 		const participant = await requireParticipant(data.eventId)
+		if (!(await bookingAllowed(participant))) return busy
 		const result: CancelResult = await coordinator(data.eventId).cancel(participant, data.sessionId)
 		if (result.ok && result.promoted) await notifyPromotions(data.eventId, [result.promoted])
 		return result.ok ? { ok: true as const } : result
@@ -228,6 +244,7 @@ export const joinWaitlistFn = createServerFn({ method: 'POST' })
 	.validator((input: { eventId: string; sessionId: string }) => input)
 	.handler(async ({ data }) => {
 		const participant = await requireParticipant(data.eventId)
+		if (!(await bookingAllowed(participant))) return busy
 		const result: WaitlistResult = await coordinator(data.eventId).joinWaitlist(
 			participant,
 			data.sessionId,
@@ -239,6 +256,7 @@ export const leaveWaitlistFn = createServerFn({ method: 'POST' })
 	.validator((input: { eventId: string; sessionId: string }) => input)
 	.handler(async ({ data }) => {
 		const participant = await requireParticipant(data.eventId)
+		if (!(await bookingAllowed(participant))) return busy
 		await coordinator(data.eventId).leaveWaitlist(participant, data.sessionId)
 		return { ok: true as const }
 	})
@@ -291,6 +309,7 @@ export const savePreferencesFn = createServerFn({ method: 'POST' })
 	.validator((input: { eventId: string; workshopIds: string[] }) => input)
 	.handler(async ({ data }) => {
 		const participant = await requireParticipant(data.eventId)
+		if (!(await withinLimit('ranking', participant.registrationId))) return busy
 		const result: RankingResult = await savePreferences(db(), participant, data.workshopIds)
 		return result
 	})

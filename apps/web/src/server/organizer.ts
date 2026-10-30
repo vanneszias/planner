@@ -11,6 +11,7 @@ import {
 import { redirect } from '@tanstack/react-router'
 import { getRequestHeaders } from '@tanstack/react-start/server'
 import { getAuth } from './auth'
+import { withinLimit } from './rate-limit'
 
 /**
  * Resolves the signed-in organizer and their organization for a server
@@ -45,4 +46,21 @@ export async function action<T>(run: () => Promise<T>): Promise<ActionResult<T>>
 		if (error instanceof DomainError) return { ok: false, code: error.code, issues: error.issues }
 		throw error
 	}
+}
+
+/** Bulk work (CSV import, exports, code cards, guardian emails): 5 a minute per organization. */
+export async function limitBulk(ctx: OrganizerContext): Promise<void> {
+	if (!(await withinLimit('bulk', ctx.organizationId))) {
+		throw new DomainError('rate_limited', 'Too many requests')
+	}
+}
+
+/**
+ * Sensitive actions (anonymising an event) need a sign-in under 12 hours old
+ * (security-privacy.md, "Authentication").
+ */
+export async function requireFreshSignIn(): Promise<void> {
+	const session = await getAuth().api.getSession({ headers: getRequestHeaders() })
+	const age = session ? Date.now() - new Date(session.session.createdAt).getTime() : Infinity
+	if (age > 12 * 60 * 60 * 1000) throw new DomainError('reauthenticate', 'Sign in again')
 }

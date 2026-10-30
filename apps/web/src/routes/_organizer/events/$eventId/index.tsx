@@ -4,10 +4,15 @@ import { cn } from 'cn'
 import { useState } from 'react'
 import { FormError } from '#/components/auth-shell'
 import { actionMessage } from '#/lib/errors'
+import { formatDateRange } from '#/lib/format'
 import { m } from '#/paraglide/messages'
+import { anonymiseNowFn, getRetentionFn } from '#/server/event-day'
 import { setEventStatusFn } from '#/server/events'
 
-export const Route = createFileRoute('/_organizer/events/$eventId/')({ component: Overview })
+export const Route = createFileRoute('/_organizer/events/$eventId/')({
+	loader: ({ params }) => getRetentionFn({ data: params.eventId }),
+	component: Overview,
+})
 const eventRoute = getRouteApi('/_organizer/events/$eventId')
 
 /** Checklist that ticks itself off (journeys.md, O1 step 3). */
@@ -98,7 +103,67 @@ function Overview() {
 				)}
 				<FormError message={error} />
 			</section>
+
+			<Retention eventId={event.id} />
 		</div>
+	)
+}
+
+/** When participant data goes (D6, D20), and "Anonymise now" (journeys.md, O9). */
+function Retention({ eventId }: { eventId: string }) {
+	const retention = Route.useLoaderData()
+	const router = useRouter()
+	const [confirming, setConfirming] = useState(false)
+	const [error, setError] = useState<string | null>(null)
+	const [pending, setPending] = useState(false)
+	const day = (date: string) => formatDateRange(date, date)
+
+	async function anonymise() {
+		setError(null)
+		setPending(true)
+		const result = await anonymiseNowFn({ data: eventId })
+		setPending(false)
+		setConfirming(false)
+		if (!result.ok) return setError(actionMessage(result))
+		await router.invalidate()
+	}
+
+	return (
+		<section aria-labelledby="retention" className="flex flex-col gap-3 rounded-xl bg-card p-5">
+			<h2 id="retention" className="text-lg font-bold">
+				{m.retention_title()}
+			</h2>
+			{retention.doneAt ? (
+				<p>
+					{m.retention_done({ date: day(new Date(retention.doneAt).toISOString().slice(0, 10)) })}
+				</p>
+			) : (
+				<>
+					<p>{m.retention_scheduled({ date: day(retention.date) })}</p>
+					{retention.canAnonymise &&
+						(confirming ? (
+							<div className="flex flex-col gap-3 rounded-lg bg-tint-warning p-4">
+								<p>{m.retention_confirm()}</p>
+								<div className="flex flex-wrap gap-2">
+									<Button variant="destructive" disabled={pending} onClick={anonymise}>
+										{m.retention_anonymise_now()}
+									</Button>
+									<Button variant="ghost" onClick={() => setConfirming(false)}>
+										{m.cancel()}
+									</Button>
+								</div>
+							</div>
+						) : (
+							<div>
+								<Button variant="outline" onClick={() => setConfirming(true)}>
+									{m.retention_anonymise_now()}
+								</Button>
+							</div>
+						))}
+				</>
+			)}
+			<FormError message={error} />
+		</section>
 	)
 }
 

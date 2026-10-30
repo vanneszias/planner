@@ -49,6 +49,9 @@ function EventLayout() {
 				<Link to="/events/$eventId/participants" params={params} className={tab}>
 					{m.nav_participants()}
 				</Link>
+				<Link to="/events/$eventId/check-in" params={params} className={tab}>
+					{m.nav_check_in()}
+				</Link>
 				<Link to="/events/$eventId/settings" params={params} className={tab}>
 					{m.nav_settings()}
 				</Link>

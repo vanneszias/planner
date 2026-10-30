@@ -5,10 +5,11 @@ import { Label } from '@app/ui/components/label'
 import { createFileRoute, Link, redirect, useNavigate } from '@tanstack/react-router'
 import { type FormEvent, useState } from 'react'
 import { AuthShell, FormError } from '#/components/auth-shell'
+import { Turnstile } from '#/components/event/turnstile'
 import { authErrorMessage } from '#/lib/auth-errors'
 import { safeRedirect } from '#/lib/redirect'
 import { m } from '#/paraglide/messages'
-import { getSessionUser } from '#/server/session'
+import { getSessionUser, getSignInOptions } from '#/server/session'
 
 export const Route = createFileRoute('/sign-up')({
 	validateSearch: (search: Record<string, unknown>): { redirect?: string } => ({
@@ -17,6 +18,7 @@ export const Route = createFileRoute('/sign-up')({
 	beforeLoad: async ({ search }) => {
 		if (await getSessionUser()) throw redirect({ href: search.redirect ?? '/home' })
 	},
+	loader: () => getSignInOptions(),
 	component: SignUp,
 })
 
@@ -28,13 +30,21 @@ function SignUp() {
 	const [password, setPassword] = useState('')
 	const [error, setError] = useState<string | null>(null)
 	const [pending, setPending] = useState(false)
+	const { turnstileSiteKey } = Route.useLoaderData()
+	const [captcha, setCaptcha] = useState<string>()
+	const [attempt, setAttempt] = useState(0)
 
 	async function submit(event: FormEvent) {
 		event.preventDefault()
 		setError(null)
 		setPending(true)
-		const result = await authClient.signUp.email({ name, email, password })
+		// Sign-up carries a Turnstile token (security-privacy.md); it works once.
+		const result = await authClient.signUp.email(
+			{ name, email, password },
+			{ headers: captcha ? { 'x-captcha-response': captcha } : {} },
+		)
 		setPending(false)
+		setAttempt((n) => n + 1)
 		if (result.error) return setError(authErrorMessage(result.error))
 		await navigate({ href: next })
 	}
@@ -94,6 +104,7 @@ function SignUp() {
 						{m.password_hint()}
 					</p>
 				</div>
+				<Turnstile siteKey={turnstileSiteKey} onToken={setCaptcha} resetKey={attempt} />
 				<FormError message={error} />
 				<Button type="submit" disabled={pending}>
 					{m.sign_up_submit()}

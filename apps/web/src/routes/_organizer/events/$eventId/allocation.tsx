@@ -37,7 +37,7 @@ const moveErrors: Record<string, () => string> = {
 
 /** Draft, review, adjust and publish (journeys.md, O6). */
 function Allocation() {
-	const { progress, review, names } = Route.useLoaderData()
+	const { progress, review, names, anonymised } = Route.useLoaderData()
 	const { event, workshops, sessions, canPublish, canEdit } = eventRoute.useLoaderData()
 	const router = useRouter()
 	const [strategy, setStrategy] = useState(event.allocationStrategy)
@@ -53,6 +53,7 @@ function Allocation() {
 	if (event.mode !== 'ranking') {
 		return <p className="rounded-xl bg-card p-6">{m.allocation_booking_mode()}</p>
 	}
+	if (anonymised) return <p className="rounded-xl bg-tint-warning p-6">{m.data_deleted()}</p>
 
 	const workshopById = new Map(workshops.map((w) => [w.id, w]))
 	const sessionById = new Map(sessions.map((s) => [s.id, s]))

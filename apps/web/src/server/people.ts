@@ -1,6 +1,7 @@
 import { env } from 'cloudflare:workers'
 import { createDb } from '@app/db'
 import {
+	can,
 	getOrganization,
 	invitationFor,
 	listMembers,
@@ -38,6 +39,7 @@ export const getMyOrganizations = createServerFn({ method: 'GET' }).handler(asyn
 	return {
 		organizations: await listUserOrganizations(db, ctx.userId),
 		activeId: ctx.organizationId,
+		canAudit: can(ctx, { audit: ['read'] }),
 	}
 })
 

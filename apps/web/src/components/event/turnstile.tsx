@@ -11,6 +11,7 @@ type TurnstileApi = {
 		},
 	) => string
 	remove: (widgetId: string) => void
+	reset: (widgetId: string) => void
 }
 
 declare global {
@@ -36,17 +37,27 @@ function loadScript(): Promise<void> {
 /**
  * Cloudflare Turnstile, shown only if Cloudflare needs an interaction
  * (security-privacy.md). Renders nothing when no site key is configured.
+ * Tokens work once: change `resetKey` after each submit to get a fresh one.
  */
 export function Turnstile({
 	siteKey,
 	onToken,
+	resetKey = 0,
 }: {
 	siteKey: string | null
 	onToken: (token: string | undefined) => void
+	resetKey?: number
 }) {
 	const container = useRef<HTMLDivElement>(null)
+	const widget = useRef<string | undefined>(undefined)
 	const callback = useRef(onToken)
 	callback.current = onToken
+
+	useEffect(() => {
+		if (resetKey === 0 || !widget.current) return
+		callback.current(undefined)
+		window.turnstile?.reset(widget.current)
+	}, [resetKey])
 
 	useEffect(() => {
 		if (!siteKey) return
@@ -55,7 +66,7 @@ export function Turnstile({
 		loadScript()
 			.then(() => {
 				if (cancelled || !container.current || !window.turnstile) return
-				widgetId = window.turnstile.render(container.current, {
+				widgetId = widget.current = window.turnstile.render(container.current, {
 					sitekey: siteKey,
 					callback: (token) => callback.current(token),
 					'expired-callback': () => callback.current(undefined),

@@ -4,8 +4,12 @@ import {
 	type BookingResult,
 	bookSession,
 	type CancelResult,
+	type CheckInInput,
+	type CheckInResult,
 	cancelBooking,
 	cancelRegistration,
+	checkIn,
+	checkInCounts,
 	joinWaitlist,
 	leaveWaitlist,
 	type OrganizerContext,
@@ -13,8 +17,9 @@ import {
 	type Promotion,
 	publishRun,
 	seatCounts,
+	undoCheckIn,
 } from '@app/domain'
-import { r2RunStorage } from '@app/platform'
+import { apiSecurityHeaders, r2RunStorage } from '@app/platform'
 
 /**
  * One instance per event (see docs/architecture.md). Every booking write for
@@ -103,9 +108,43 @@ export class EventCoordinator extends DurableObject<Env> {
 		})
 	}
 
-	/** Sends a message to every connected browser. Messages never carry personal data. */
-	broadcast(message: string): number {
-		const sockets = this.ctx.getWebSockets()
+	/**
+	 * Event day check-in (O8). Serialised with bookings, since "check in
+	 * anyway" adds a place; organizer screens get the new counts.
+	 */
+	async checkIn(
+		context: OrganizerContext,
+		eventId: string,
+		input: CheckInInput,
+	): Promise<CheckInResult> {
+		return this.serialized(async () => {
+			const result = await checkIn(this.db(), context, eventId, input)
+			if (result.ok) {
+				await this.broadcastCheckIns(eventId)
+				if (input.force) await this.broadcastSeats(eventId)
+			}
+			return result
+		})
+	}
+
+	async undoCheckIn(
+		context: OrganizerContext,
+		eventId: string,
+		sessionId: string | null,
+		registrationId: string,
+	): Promise<void> {
+		return this.serialized(async () => {
+			await undoCheckIn(this.db(), context, eventId, sessionId, registrationId)
+			await this.broadcastCheckIns(eventId)
+		})
+	}
+
+	/**
+	 * Sends a message to connected browsers: everyone, or only organizer
+	 * screens (`staff`). Messages never carry personal data.
+	 */
+	broadcast(message: string, tag?: 'staff'): number {
+		const sockets = this.ctx.getWebSockets(tag)
 		for (const socket of sockets) {
 			try {
 				socket.send(message)
@@ -116,19 +155,30 @@ export class EventCoordinator extends DurableObject<Env> {
 		return sockets.length
 	}
 
+	private async broadcastCheckIns(eventId: string) {
+		if (this.ctx.getWebSockets('staff').length === 0) return
+		const counts = await checkInCounts(this.db(), eventId)
+		this.broadcast(JSON.stringify({ type: 'checkins', counts }), 'staff')
+	}
+
 	private async broadcastSeats(eventId: string) {
 		if (this.ctx.getWebSockets().length === 0) return
 		this.broadcast(JSON.stringify({ type: 'seats', seats: await seatCounts(this.db(), eventId) }))
 	}
 
-	/** Accepts a WebSocket. The caller (`web`) checks the event is public before forwarding. */
+	/**
+	 * Accepts a WebSocket. The caller (`web`) checks the event is public, or
+	 * for `X-Live-Channel: staff` that the user is one of its organizers,
+	 * before forwarding; this object has no public route.
+	 */
 	override async fetch(request: Request): Promise<Response> {
 		if (request.headers.get('Upgrade') !== 'websocket') {
 			return new Response('Expected a WebSocket upgrade', { status: 426 })
 		}
 		const { 0: client, 1: server } = new WebSocketPair()
+		const staff = request.headers.get('X-Live-Channel') === 'staff'
 		// Hibernatable: the object isn't billed while sockets sit idle.
-		this.ctx.acceptWebSocket(server)
+		this.ctx.acceptWebSocket(server, staff ? ['staff'] : ['public'])
 		return new Response(null, { status: 101, webSocket: client })
 	}
 
@@ -149,5 +199,5 @@ export class EventCoordinator extends DurableObject<Env> {
 
 // No public routes: other Workers reach the object through its binding.
 export default {
-	fetch: () => new Response('Not found', { status: 404 }),
+	fetch: () => new Response('Not found', { status: 404, headers: apiSecurityHeaders }),
 } satisfies ExportedHandler<Env>

@@ -31,4 +31,27 @@ describe('EventCoordinator', () => {
 		await expect(stub.broadcast('{"type":"seats"}')).resolves.toBe(1)
 		await expect(received).resolves.toBe('{"type":"seats"}')
 	})
+
+	it('sends staff messages to organizer sockets only', async () => {
+		const stub = stubFor('event-3')
+		const open = async (staff: boolean) => {
+			const response = await stub.fetch('https://coordinator/live', {
+				headers: { Upgrade: 'websocket', ...(staff ? { 'X-Live-Channel': 'staff' } : {}) },
+			})
+			const socket = response.webSocket
+			if (!socket) throw new Error('No WebSocket in response')
+			socket.accept()
+			const messages: string[] = []
+			socket.addEventListener('message', (event) => messages.push(String(event.data)))
+			return messages
+		}
+		const publicMessages = await open(false)
+		const staffMessages = await open(true)
+
+		await expect(stub.broadcast('{"type":"checkins"}', 'staff')).resolves.toBe(1)
+		await expect(stub.broadcast('{"type":"seats"}')).resolves.toBe(2)
+		await new Promise((resolve) => setTimeout(resolve, 50))
+		expect(publicMessages).toEqual(['{"type":"seats"}'])
+		expect(staffMessages).toEqual(['{"type":"checkins"}', '{"type":"seats"}'])
+	})
 })

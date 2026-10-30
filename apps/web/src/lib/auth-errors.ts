@@ -13,6 +13,10 @@ export function authErrorMessage(error: { code?: string; status?: number } | nul
 		case 'USER_ALREADY_EXISTS':
 		case 'USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL':
 			return m.error_user_exists()
+		// Turnstile (the captcha plugin) didn't pass or the token was missing.
+		case 'VERIFICATION_FAILED':
+		case 'MISSING_RESPONSE':
+			return m.refusal_bot()
 		default:
 			return m.error_generic()
 	}

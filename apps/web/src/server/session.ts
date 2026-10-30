@@ -10,7 +10,11 @@ export const getSessionUser = createServerFn({ method: 'GET' }).handler(async ()
 	return { id: session.user.id, name: session.user.name, email: session.user.email }
 })
 
-/** Whether the Google button should show: only when credentials are configured. */
+/**
+ * What the sign-in and sign-up pages offer: Google only when credentials are
+ * configured; the Turnstile site key only when the secret is set too.
+ */
 export const getSignInOptions = createServerFn({ method: 'GET' }).handler(async () => ({
 	google: Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET),
+	turnstileSiteKey: env.TURNSTILE_SECRET ? env.TURNSTILE_SITE_KEY || null : null,
 }))

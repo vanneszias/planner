@@ -58,11 +58,32 @@ export function RankList({
 						position: String(position),
 						count: String(next.length),
 					})
-				: '',
+				: m.removed_from_ranking({ workshop: title(moved) }),
 		)
 	}
 
+	/** Focus follows the workshop to where it went (ranked list or the rest). */
+	const focusLater = (selector: string) =>
+		requestAnimationFrame(() => document.querySelector<HTMLElement>(selector)?.focus())
+
+	function add(id: string) {
+		if (ranked.length >= rules.max) {
+			return setAnnouncement(m.ranking_too_many({ max: String(rules.max) }))
+		}
+		update([...ranked, id], id)
+		focusLater(`[data-rank-remove="${id}"]`)
+	}
+
+	function remove(id: string) {
+		update(
+			ranked.filter((r) => r !== id),
+			id,
+		)
+		focusLater(`[data-rank-add="${id}"]`)
+	}
+
 	function move(index: number, by: -1 | 1) {
+		if (index + by < 0 || index + by >= ranked.length) return
 		const next = [...ranked]
 		const [item] = next.splice(index, 1)
 		if (!item) return
@@ -71,6 +92,7 @@ export function RankList({
 	}
 
 	async function save() {
+		if (pending) return
 		setError(null)
 		if (ranked.length < rules.min) return setError(m.ranking_too_few({ min: String(rules.min) }))
 		if (ranked.length > rules.max) return setError(m.ranking_too_many({ max: String(rules.max) }))
@@ -90,7 +112,7 @@ export function RankList({
 				<p className="text-muted-foreground">
 					{m.rank_intro({ min: String(rules.min), max: String(rules.max) })}
 				</p>
-				<p className="mt-1 font-mono text-sm">
+				<p className="mt-1 font-mono text-sm" aria-live="polite">
 					{m.rank_count({ count: String(ranked.length), max: String(rules.max) })}
 				</p>
 			</div>
@@ -112,7 +134,7 @@ export function RankList({
 								variant="outline"
 								size="icon"
 								aria-label={m.move_up({ workshop: workshop.title })}
-								disabled={index === 0}
+								aria-disabled={index === 0 || undefined}
 								onClick={() => move(index, -1)}
 							>
 								<span aria-hidden="true">↑</span>
@@ -121,7 +143,7 @@ export function RankList({
 								variant="outline"
 								size="icon"
 								aria-label={m.move_down({ workshop: workshop.title })}
-								disabled={index === ranked.length - 1}
+								aria-disabled={index === ranked.length - 1 || undefined}
 								onClick={() => move(index, 1)}
 							>
 								<span aria-hidden="true">↓</span>
@@ -130,12 +152,8 @@ export function RankList({
 								variant="ghost"
 								size="icon"
 								aria-label={m.remove_from_ranking({ workshop: workshop.title })}
-								onClick={() =>
-									update(
-										ranked.filter((r) => r !== id),
-										id,
-									)
-								}
+								data-rank-remove={id}
+								onClick={() => remove(id)}
 							>
 								<span aria-hidden="true">×</span>
 							</Button>
@@ -161,8 +179,9 @@ export function RankList({
 									variant="outline"
 									size="icon"
 									aria-label={m.add_to_ranking({ workshop: workshop.title })}
-									disabled={ranked.length >= rules.max}
-									onClick={() => update([...ranked, workshop.id], workshop.id)}
+									aria-disabled={ranked.length >= rules.max || undefined}
+									data-rank-add={workshop.id}
+									onClick={() => add(workshop.id)}
 								>
 									<span aria-hidden="true">+</span>
 								</Button>
@@ -177,7 +196,7 @@ export function RankList({
 				{saved}
 			</p>
 			<div className="sticky bottom-3">
-				<Button className="w-full shadow-md" disabled={pending} onClick={save}>
+				<Button className="w-full shadow-md" aria-disabled={pending || undefined} onClick={save}>
 					{saveLabel}
 				</Button>
 			</div>

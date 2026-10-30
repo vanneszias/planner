@@ -45,6 +45,9 @@ export const registration = sqliteTable(
 		status: text('status', { enum: ['active', 'cancelled'] })
 			.notNull()
 			.default('active'),
+		/** Event-wide check-in (O8); per-session check-in lives on the assignment. */
+		checkedInAt: integer('checked_in_at', { mode: 'timestamp_ms' }),
+		checkedInBy: text('checked_in_by'),
 		createdAt: createdAt(),
 		anonymisedAt: integer('anonymised_at', { mode: 'timestamp_ms' }),
 	},
@@ -128,3 +131,31 @@ export const emailDelivery = sqliteTable('email_delivery', {
 	createdAt: createdAt(),
 	sentAt: integer('sent_at', { mode: 'timestamp_ms' }),
 })
+
+export const exportKinds = ['participants', 'programmes', 'attendance'] as const
+
+/**
+ * A CSV the jobs Worker builds into R2 (journeys.md, O9). The file holds
+ * personal data, so it expires: the daily cron deletes it after `expires_at`.
+ */
+export const exportJob = sqliteTable(
+	'export_job',
+	{
+		id: id(),
+		organizationId: organizationId(),
+		eventId: eventId(),
+		kind: text('kind', { enum: exportKinds }).notNull(),
+		status: text('status', { enum: ['pending', 'ready', 'failed', 'expired'] })
+			.notNull()
+			.default('pending'),
+		r2Key: text('r2_key'),
+		rows: integer('rows'),
+		requestedBy: text('requested_by').references(() => user.id, { onDelete: 'set null' }),
+		createdAt: createdAt(),
+		expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
+	},
+	(table) => [
+		index('export_job_event_idx').on(table.eventId, table.createdAt),
+		index('export_job_expires_idx').on(table.status, table.expiresAt),
+	],
+)
