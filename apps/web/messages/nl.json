@@ -180,5 +180,15 @@
 	"invitation_expired": "Deze uitnodiging is verlopen of al gebruikt. Vraag een nieuwe.",
 	"switch_organization": "Organisatie",
 	"error_already_member": "Deze persoon zit al in je team.",
-	"error_already_invited": "Deze persoon heeft al een uitnodiging openstaan."
+	"error_already_invited": "Deze persoon heeft al een uitnodiging openstaan.",
+	"web_address_label": "Webadres",
+	"web_address_hint": "Oude links en QR-codes blijven werken als je dit aanpast.",
+	"save_address": "Webadres opslaan",
+	"address_saved": "Webadres opgeslagen.",
+	"field_taken": "Dit adres is al in gebruik. Probeer een ander.",
+	"field_reserved": "Dit adres is gereserveerd. Probeer een ander.",
+	"organization_section": "Organisatie",
+	"organization_name_label": "Naam van de organisatie",
+	"save_organization": "Organisatie opslaan",
+	"organization_saved": "Organisatie opgeslagen."
 }

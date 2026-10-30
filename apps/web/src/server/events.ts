@@ -14,6 +14,7 @@ import {
 	listEvents,
 	listSessions,
 	listWorkshops,
+	renameEventSlug,
 	roomConflicts,
 	setEventStatus,
 	type UpdateEventInput,
@@ -132,4 +133,11 @@ export const deleteSessionFn = createServerFn({ method: 'POST' })
 	.handler(async ({ data: sessionId }) => {
 		const { db, ctx } = await requireOrganizer()
 		return action(() => deleteSession(db, ctx, sessionId))
+	})
+
+export const renameEventSlugFn = createServerFn({ method: 'POST' })
+	.validator((input: { eventId: string; slug: string }) => input)
+	.handler(async ({ data }) => {
+		const { db, ctx } = await requireOrganizer()
+		return action(() => renameEventSlug(db, ctx, data.eventId, data.slug))
 	})

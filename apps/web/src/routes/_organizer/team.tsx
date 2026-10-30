@@ -6,8 +6,9 @@ import { type FormEvent, useState } from 'react'
 import { FormError } from '#/components/auth-shell'
 import { Field, FieldInput } from '#/components/field'
 import { RadioCards } from '#/components/radio-cards'
+import { actionMessage } from '#/lib/errors'
 import { m } from '#/paraglide/messages'
-import { getTeam } from '#/server/people'
+import { getTeam, updateOrganizationFn } from '#/server/people'
 
 export const Route = createFileRoute('/_organizer/team')({
 	loader: () => getTeam(),
@@ -114,6 +115,7 @@ function Team() {
 			)}
 
 			<FormError message={error} />
+			{canManage && organization && <OrganizationForm organization={organization} />}
 			{canManage && organization && <InviteForm organizationId={organization.id} />}
 		</div>
 	)
@@ -180,6 +182,76 @@ function InviteForm({ organizationId }: { organizationId: string }) {
 			<div className="flex flex-wrap items-center gap-4">
 				<Button type="submit" disabled={pending}>
 					{m.invite_submit()}
+				</Button>
+				<p aria-live="polite" className="font-bold empty:hidden">
+					{status}
+				</p>
+			</div>
+		</form>
+	)
+}
+
+/** Organization name and address. Renaming keeps old event links working (D19). */
+function OrganizationForm({ organization }: { organization: { name: string; slug: string } }) {
+	const router = useRouter()
+	const [name, setName] = useState(organization.name)
+	const [slug, setSlug] = useState(organization.slug)
+	const [issues, setIssues] = useState<Record<string, string>>({})
+	const [error, setError] = useState<string | null>(null)
+	const [status, setStatus] = useState<string | null>(null)
+	const [pending, setPending] = useState(false)
+
+	async function submit(event: FormEvent) {
+		event.preventDefault()
+		setIssues({})
+		setError(null)
+		setStatus(null)
+		setPending(true)
+		const result = await updateOrganizationFn({ data: { name, slug } })
+		setPending(false)
+		if (!result.ok) {
+			if (result.issues) setIssues(result.issues)
+			else setError(actionMessage(result))
+			return
+		}
+		setSlug(result.data.slug)
+		setStatus(m.organization_saved())
+		await router.invalidate()
+	}
+
+	return (
+		<form onSubmit={submit} noValidate className="flex flex-col gap-4 rounded-xl bg-card p-5">
+			<h2 className="text-lg font-bold">{m.organization_section()}</h2>
+			<Field id="org-name" label={m.organization_name_label()} error={issues.name}>
+				<FieldInput
+					id="org-name"
+					error={issues.name}
+					value={name}
+					onChange={(e) => setName(e.target.value)}
+				/>
+			</Field>
+			<Field
+				id="org-slug"
+				label={m.web_address_label()}
+				hint={m.web_address_hint()}
+				error={issues.slug}
+			>
+				<div className="flex items-center gap-1">
+					<span className="font-mono text-muted-foreground">/</span>
+					<FieldInput
+						id="org-slug"
+						hint
+						error={issues.slug}
+						className="font-mono"
+						value={slug}
+						onChange={(e) => setSlug(e.target.value)}
+					/>
+				</div>
+			</Field>
+			<FormError message={error} />
+			<div className="flex flex-wrap items-center gap-4">
+				<Button type="submit" variant="outline" disabled={pending}>
+					{m.save_organization()}
 				</Button>
 				<p aria-live="polite" className="font-bold empty:hidden">
 					{status}

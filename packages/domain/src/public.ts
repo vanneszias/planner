@@ -72,17 +72,37 @@ export async function getPublicEvent(db: Db, orgSlug: string, eventSlug: string)
 
 export type PublicEvent = NonNullable<Awaited<ReturnType<typeof getPublicEvent>>>
 
-/** Where an old public path now lives, after a slug rename (D19). */
+/**
+ * Where an old public path now lives, after a slug rename (D19). Event renames
+ * record the full old path; organization renames record just "/old-org", which
+ * covers every event under it.
+ */
 export async function findRedirect(db: Db, path: string): Promise<string | null> {
-	const [found] = await db
-		.select({ organizationSlug: schema.organization.slug, eventSlug: schema.event.slug })
-		.from(schema.slugRedirect)
-		.innerJoin(schema.organization, eq(schema.organization.id, schema.slugRedirect.organizationId))
-		.leftJoin(schema.event, eq(schema.event.id, schema.slugRedirect.eventId))
-		.where(eq(schema.slugRedirect.oldPath, path))
-		.limit(1)
-	if (!found) return null
-	return found.eventSlug
-		? `/${found.organizationSlug}/${found.eventSlug}`
-		: `/${found.organizationSlug}`
+	const lookup = async (oldPath: string) => {
+		const [found] = await db
+			.select({ organizationSlug: schema.organization.slug, eventSlug: schema.event.slug })
+			.from(schema.slugRedirect)
+			.innerJoin(
+				schema.organization,
+				eq(schema.organization.id, schema.slugRedirect.organizationId),
+			)
+			.leftJoin(schema.event, eq(schema.event.id, schema.slugRedirect.eventId))
+			.where(eq(schema.slugRedirect.oldPath, oldPath))
+			.limit(1)
+		return found
+	}
+
+	const exact = await lookup(path)
+	if (exact) {
+		return exact.eventSlug
+			? `/${exact.organizationSlug}/${exact.eventSlug}`
+			: `/${exact.organizationSlug}`
+	}
+
+	const [, firstSegment, ...rest] = path.split('/')
+	const renamedOrganization = firstSegment ? await lookup(`/${firstSegment}`) : undefined
+	if (renamedOrganization && !renamedOrganization.eventSlug) {
+		return [`/${renamedOrganization.organizationSlug}`, ...rest].join('/')
+	}
+	return null
 }

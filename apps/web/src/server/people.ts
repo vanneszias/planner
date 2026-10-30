@@ -6,12 +6,14 @@ import {
 	listMembers,
 	listPendingInvitations,
 	listUserOrganizations,
+	type OrganizationInput,
+	updateOrganization,
 } from '@app/domain'
 import { redirect } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
 import { getRequestHeaders } from '@tanstack/react-start/server'
 import { getAuth } from './auth'
-import { requireOrganizer } from './organizer'
+import { action, requireOrganizer } from './organizer'
 
 /** The team screen. Only owners may invite or remove (D14); Better Auth enforces it too. */
 export const getTeam = createServerFn({ method: 'GET' }).handler(async () => {
@@ -48,4 +50,11 @@ export const getInvitation = createServerFn({ method: 'GET' })
 			throw redirect({ to: '/sign-in', search: { redirect: `/invitations/${invitationId}` } })
 		}
 		return invitationFor(createDb(env.DB), invitationId, session.user.email)
+	})
+
+export const updateOrganizationFn = createServerFn({ method: 'POST' })
+	.validator((input: OrganizationInput) => input)
+	.handler(async ({ data }) => {
+		const { db, ctx } = await requireOrganizer()
+		return action(() => updateOrganization(db, ctx, data))
 	})

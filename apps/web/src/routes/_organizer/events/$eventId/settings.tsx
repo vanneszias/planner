@@ -8,7 +8,7 @@ import { RadioCards } from '#/components/radio-cards'
 import { actionMessage, fieldMessage } from '#/lib/errors'
 import { timeZones } from '#/lib/time-zones'
 import { m } from '#/paraglide/messages'
-import { updateEventFn } from '#/server/events'
+import { renameEventSlugFn, updateEventFn } from '#/server/events'
 
 export const Route = createFileRoute('/_organizer/events/$eventId/settings')({
 	component: Settings,
@@ -74,240 +74,243 @@ function Settings() {
 	}
 
 	return (
-		<form onSubmit={submit} noValidate className="flex flex-col gap-6">
-			<fieldset disabled={!canEdit} className="contents">
-				<Section title={m.settings_basics()}>
-					<Field id="name" label={m.event_name_label()} error={issues.name}>
-						<FieldInput
-							id="name"
-							error={issues.name}
-							value={values.name}
-							onChange={(e) => set('name', e.target.value)}
-						/>
-					</Field>
-					<Field id="description" label={m.description_label()} error={issues.description}>
-						<textarea
-							id="description"
-							rows={4}
-							className="rounded-md border border-input bg-card px-3 py-2"
-							value={values.description}
-							onChange={(e) => set('description', e.target.value)}
-						/>
-					</Field>
-					<div className="grid gap-4 sm:grid-cols-2">
-						<Field id="startsOn" label={m.starts_on_label()} error={issues.startsOn}>
+		<div className="flex flex-col gap-6">
+			{canEdit && <WebAddressForm />}
+			<form onSubmit={submit} noValidate className="flex flex-col gap-6">
+				<fieldset disabled={!canEdit} className="contents">
+					<Section title={m.settings_basics()}>
+						<Field id="name" label={m.event_name_label()} error={issues.name}>
 							<FieldInput
-								id="startsOn"
-								type="date"
-								error={issues.startsOn}
-								value={values.startsOn}
-								onChange={(e) => set('startsOn', e.target.value)}
+								id="name"
+								error={issues.name}
+								value={values.name}
+								onChange={(e) => set('name', e.target.value)}
 							/>
 						</Field>
-						<Field id="endsOn" label={m.ends_on_label()} error={issues.endsOn}>
-							<FieldInput
-								id="endsOn"
-								type="date"
-								error={issues.endsOn}
-								value={values.endsOn}
-								onChange={(e) => set('endsOn', e.target.value)}
+						<Field id="description" label={m.description_label()} error={issues.description}>
+							<textarea
+								id="description"
+								rows={4}
+								className="rounded-md border border-input bg-card px-3 py-2"
+								value={values.description}
+								onChange={(e) => set('description', e.target.value)}
 							/>
 						</Field>
-					</div>
-					<div className="grid gap-4 sm:grid-cols-2">
-						<Field id="timezone" label={m.timezone_label()} error={issues.timezone}>
-							<select
-								id="timezone"
-								className="h-11 rounded-md border border-input bg-card px-3"
-								value={values.timezone}
-								onChange={(e) => set('timezone', e.target.value)}
-							>
-								{[...new Set([values.timezone, ...timeZones])].map((zone) => (
-									<option key={zone} value={zone}>
-										{zone.replace('_', ' ')}
-									</option>
-								))}
-							</select>
-						</Field>
-						<Field
-							id="defaultLocale"
-							label={m.content_language_label()}
-							hint={m.content_language_hint()}
-						>
-							<select
+						<div className="grid gap-4 sm:grid-cols-2">
+							<Field id="startsOn" label={m.starts_on_label()} error={issues.startsOn}>
+								<FieldInput
+									id="startsOn"
+									type="date"
+									error={issues.startsOn}
+									value={values.startsOn}
+									onChange={(e) => set('startsOn', e.target.value)}
+								/>
+							</Field>
+							<Field id="endsOn" label={m.ends_on_label()} error={issues.endsOn}>
+								<FieldInput
+									id="endsOn"
+									type="date"
+									error={issues.endsOn}
+									value={values.endsOn}
+									onChange={(e) => set('endsOn', e.target.value)}
+								/>
+							</Field>
+						</div>
+						<div className="grid gap-4 sm:grid-cols-2">
+							<Field id="timezone" label={m.timezone_label()} error={issues.timezone}>
+								<select
+									id="timezone"
+									className="h-11 rounded-md border border-input bg-card px-3"
+									value={values.timezone}
+									onChange={(e) => set('timezone', e.target.value)}
+								>
+									{[...new Set([values.timezone, ...timeZones])].map((zone) => (
+										<option key={zone} value={zone}>
+											{zone.replace('_', ' ')}
+										</option>
+									))}
+								</select>
+							</Field>
+							<Field
 								id="defaultLocale"
-								aria-describedby="defaultLocale-hint"
-								className="h-11 rounded-md border border-input bg-card px-3"
-								value={values.defaultLocale}
-								onChange={(e) => set('defaultLocale', e.target.value as 'en' | 'nl')}
+								label={m.content_language_label()}
+								hint={m.content_language_hint()}
 							>
-								<option value="en">{m.language_en()}</option>
-								<option value="nl">{m.language_nl()}</option>
-							</select>
-						</Field>
-					</div>
-				</Section>
+								<select
+									id="defaultLocale"
+									aria-describedby="defaultLocale-hint"
+									className="h-11 rounded-md border border-input bg-card px-3"
+									value={values.defaultLocale}
+									onChange={(e) => set('defaultLocale', e.target.value as 'en' | 'nl')}
+								>
+									<option value="en">{m.language_en()}</option>
+									<option value="nl">{m.language_nl()}</option>
+								</select>
+							</Field>
+						</div>
+					</Section>
 
-				<Section title={m.settings_participation()}>
-					<RadioCards
-						name="mode"
-						legend={m.create_mode_question()}
-						hideLegend
-						value={values.mode}
-						onChange={(mode) => set('mode', mode)}
-						options={[
-							{ value: 'booking', title: m.mode_booking_title(), body: m.mode_booking_body() },
-							{ value: 'ranking', title: m.mode_ranking_title(), body: m.mode_ranking_body() },
-						]}
-					/>
-					<Field
-						id="sessionsPerParticipant"
-						label={m.sessions_per_participant_label()}
-						error={issues.sessionsPerParticipant}
-					>
-						<FieldInput
-							id="sessionsPerParticipant"
-							type="number"
-							inputMode="numeric"
-							min={1}
-							max={20}
-							className="max-w-32"
-							error={issues.sessionsPerParticipant}
-							value={values.sessionsPerParticipant}
-							onChange={(e) => set('sessionsPerParticipant', Number(e.target.value))}
+					<Section title={m.settings_participation()}>
+						<RadioCards
+							name="mode"
+							legend={m.create_mode_question()}
+							hideLegend
+							value={values.mode}
+							onChange={(mode) => set('mode', mode)}
+							options={[
+								{ value: 'booking', title: m.mode_booking_title(), body: m.mode_booking_body() },
+								{ value: 'ranking', title: m.mode_ranking_title(), body: m.mode_ranking_body() },
+							]}
 						/>
-					</Field>
-				</Section>
-
-				<Section title={m.settings_window()} hint={m.window_hint()}>
-					<MomentFields
-						id="opens"
-						label={m.opens_label()}
-						value={opens}
-						onChange={setOpens}
-						error={issues.opens}
-					/>
-					<MomentFields
-						id="closes"
-						label={m.closes_label()}
-						value={closes}
-						onChange={setCloses}
-						error={issues.closes}
-					/>
-				</Section>
-
-				<details className="rounded-xl bg-card p-5 [&_summary]:cursor-pointer">
-					<summary className="min-h-11 content-center text-lg font-bold">
-						{m.more_options()}
-					</summary>
-					<div className="mt-4 flex flex-col gap-6">
-						{values.mode === 'ranking' ? (
-							<>
-								<div className="grid gap-4 sm:grid-cols-2">
-									<Field id="rankLimit" label={m.rank_limit_label()} error={issues.rankLimit}>
-										<FieldInput
-											id="rankLimit"
-											type="number"
-											inputMode="numeric"
-											min={1}
-											max={20}
-											className="max-w-32"
-											error={issues.rankLimit}
-											value={values.rankLimit}
-											onChange={(e) => set('rankLimit', Number(e.target.value))}
-										/>
-									</Field>
-									<Field
-										id="rankMinimum"
-										label={m.rank_minimum_label()}
-										hint={m.rank_minimum_hint()}
-										error={issues.rankMinimum}
-									>
-										<FieldInput
-											id="rankMinimum"
-											type="number"
-											inputMode="numeric"
-											min={1}
-											max={20}
-											hint
-											className="max-w-32"
-											error={issues.rankMinimum}
-											value={values.rankMinimum ?? ''}
-											onChange={(e) =>
-												set('rankMinimum', e.target.value === '' ? null : Number(e.target.value))
-											}
-										/>
-									</Field>
-								</div>
-								<Checkbox
-									id="showTimesWhileRanking"
-									label={m.show_times_label()}
-									checked={values.showTimesWhileRanking}
-									onChange={(checked) => set('showTimesWhileRanking', checked)}
-								/>
-								<Checkbox
-									id="showExplanations"
-									label={m.show_explanations_label()}
-									checked={values.showExplanations}
-									onChange={(checked) => set('showExplanations', checked)}
-								/>
-								<RadioCards
-									name="fillUnassigned"
-									legend={m.empty_slots_legend()}
-									value={values.fillUnassigned}
-									onChange={(fill) => set('fillUnassigned', fill)}
-									options={[
-										{ value: 'none', title: m.fill_none() },
-										{ value: 'any-open', title: m.fill_any_open() },
-									]}
-								/>
-								<RadioCards
-									name="allocationStrategy"
-									legend={m.strategy_legend()}
-									value={values.allocationStrategy}
-									onChange={(strategy) => set('allocationStrategy', strategy)}
-									options={[
-										{
-											value: 'take-turns',
-											title: m.strategy_take_turns(),
-											body: m.strategy_take_turns_body(),
-										},
-										{
-											value: 'early-birds',
-											title: m.strategy_early_birds(),
-											body: m.strategy_early_birds_body(),
-										},
-									]}
-								/>
-							</>
-						) : (
-							<RadioCards
-								name="changeCutoff"
-								legend={m.cutoff_legend()}
-								value={values.changeCutoff}
-								onChange={(cutoff) => set('changeCutoff', cutoff)}
-								options={[
-									{ value: 'booking-closes', title: m.cutoff_booking_closes() },
-									{ value: 'session-start', title: m.cutoff_session_start() },
-								]}
+						<Field
+							id="sessionsPerParticipant"
+							label={m.sessions_per_participant_label()}
+							error={issues.sessionsPerParticipant}
+						>
+							<FieldInput
+								id="sessionsPerParticipant"
+								type="number"
+								inputMode="numeric"
+								min={1}
+								max={20}
+								className="max-w-32"
+								error={issues.sessionsPerParticipant}
+								value={values.sessionsPerParticipant}
+								onChange={(e) => set('sessionsPerParticipant', Number(e.target.value))}
 							/>
-						)}
-					</div>
-				</details>
-			</fieldset>
+						</Field>
+					</Section>
 
-			{canEdit && (
-				<div className="flex flex-wrap items-center gap-4">
-					<Button type="submit" disabled={pending}>
-						{m.save_settings()}
-					</Button>
-					<p aria-live="polite" className="font-bold empty:hidden">
-						{status}
-					</p>
-				</div>
-			)}
-			<FormError message={error} />
-		</form>
+					<Section title={m.settings_window()} hint={m.window_hint()}>
+						<MomentFields
+							id="opens"
+							label={m.opens_label()}
+							value={opens}
+							onChange={setOpens}
+							error={issues.opens}
+						/>
+						<MomentFields
+							id="closes"
+							label={m.closes_label()}
+							value={closes}
+							onChange={setCloses}
+							error={issues.closes}
+						/>
+					</Section>
+
+					<details className="rounded-xl bg-card p-5 [&_summary]:cursor-pointer">
+						<summary className="min-h-11 content-center text-lg font-bold">
+							{m.more_options()}
+						</summary>
+						<div className="mt-4 flex flex-col gap-6">
+							{values.mode === 'ranking' ? (
+								<>
+									<div className="grid gap-4 sm:grid-cols-2">
+										<Field id="rankLimit" label={m.rank_limit_label()} error={issues.rankLimit}>
+											<FieldInput
+												id="rankLimit"
+												type="number"
+												inputMode="numeric"
+												min={1}
+												max={20}
+												className="max-w-32"
+												error={issues.rankLimit}
+												value={values.rankLimit}
+												onChange={(e) => set('rankLimit', Number(e.target.value))}
+											/>
+										</Field>
+										<Field
+											id="rankMinimum"
+											label={m.rank_minimum_label()}
+											hint={m.rank_minimum_hint()}
+											error={issues.rankMinimum}
+										>
+											<FieldInput
+												id="rankMinimum"
+												type="number"
+												inputMode="numeric"
+												min={1}
+												max={20}
+												hint
+												className="max-w-32"
+												error={issues.rankMinimum}
+												value={values.rankMinimum ?? ''}
+												onChange={(e) =>
+													set('rankMinimum', e.target.value === '' ? null : Number(e.target.value))
+												}
+											/>
+										</Field>
+									</div>
+									<Checkbox
+										id="showTimesWhileRanking"
+										label={m.show_times_label()}
+										checked={values.showTimesWhileRanking}
+										onChange={(checked) => set('showTimesWhileRanking', checked)}
+									/>
+									<Checkbox
+										id="showExplanations"
+										label={m.show_explanations_label()}
+										checked={values.showExplanations}
+										onChange={(checked) => set('showExplanations', checked)}
+									/>
+									<RadioCards
+										name="fillUnassigned"
+										legend={m.empty_slots_legend()}
+										value={values.fillUnassigned}
+										onChange={(fill) => set('fillUnassigned', fill)}
+										options={[
+											{ value: 'none', title: m.fill_none() },
+											{ value: 'any-open', title: m.fill_any_open() },
+										]}
+									/>
+									<RadioCards
+										name="allocationStrategy"
+										legend={m.strategy_legend()}
+										value={values.allocationStrategy}
+										onChange={(strategy) => set('allocationStrategy', strategy)}
+										options={[
+											{
+												value: 'take-turns',
+												title: m.strategy_take_turns(),
+												body: m.strategy_take_turns_body(),
+											},
+											{
+												value: 'early-birds',
+												title: m.strategy_early_birds(),
+												body: m.strategy_early_birds_body(),
+											},
+										]}
+									/>
+								</>
+							) : (
+								<RadioCards
+									name="changeCutoff"
+									legend={m.cutoff_legend()}
+									value={values.changeCutoff}
+									onChange={(cutoff) => set('changeCutoff', cutoff)}
+									options={[
+										{ value: 'booking-closes', title: m.cutoff_booking_closes() },
+										{ value: 'session-start', title: m.cutoff_session_start() },
+									]}
+								/>
+							)}
+						</div>
+					</details>
+				</fieldset>
+
+				{canEdit && (
+					<div className="flex flex-wrap items-center gap-4">
+						<Button type="submit" disabled={pending}>
+							{m.save_settings()}
+						</Button>
+						<p aria-live="polite" className="font-bold empty:hidden">
+							{status}
+						</p>
+					</div>
+				)}
+				<FormError message={error} />
+			</form>
+		</div>
 	)
 }
 
@@ -389,5 +392,54 @@ function Checkbox({
 			/>
 			{label}
 		</label>
+	)
+}
+
+/** The event's public address. Renaming keeps old links and QR codes working (D19). */
+function WebAddressForm() {
+	const { event, organizationSlug } = eventRoute.useLoaderData()
+	const router = useRouter()
+	const [slug, setSlug] = useState(event.slug)
+	const [issue, setIssue] = useState<string | undefined>()
+	const [status, setStatus] = useState<string | null>(null)
+	const [pending, setPending] = useState(false)
+
+	async function submit(formEvent: FormEvent) {
+		formEvent.preventDefault()
+		setIssue(undefined)
+		setStatus(null)
+		setPending(true)
+		const result = await renameEventSlugFn({ data: { eventId: event.id, slug } })
+		setPending(false)
+		if (!result.ok) return setIssue(result.issues?.slug ?? 'required')
+		setSlug(result.data)
+		setStatus(m.address_saved())
+		await router.invalidate()
+	}
+
+	return (
+		<form onSubmit={submit} noValidate className="flex flex-col gap-4 rounded-xl bg-card p-5">
+			<Field id="slug" label={m.web_address_label()} hint={m.web_address_hint()} error={issue}>
+				<div className="flex items-center gap-1">
+					<span className="font-mono text-muted-foreground">/{organizationSlug}/</span>
+					<FieldInput
+						id="slug"
+						hint
+						error={issue}
+						className="font-mono"
+						value={slug}
+						onChange={(e) => setSlug(e.target.value)}
+					/>
+				</div>
+			</Field>
+			<div className="flex flex-wrap items-center gap-4">
+				<Button type="submit" variant="outline" disabled={pending || slug === event.slug}>
+					{m.save_address()}
+				</Button>
+				<p aria-live="polite" className="font-bold empty:hidden">
+					{status}
+				</p>
+			</div>
+		</form>
 	)
 }

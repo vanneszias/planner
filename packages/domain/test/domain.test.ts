@@ -5,15 +5,18 @@ import {
 	createEvent,
 	createSessions,
 	createWorkshop,
+	findRedirect,
 	getEvent,
 	getPublicEvent,
 	listSessions,
 	markerFor,
+	renameEventSlug,
 	roomConflicts,
 	sessionSlot,
 	setEventStatus,
 	slugify,
 	updateEvent,
+	updateOrganization,
 	utcToZoned,
 	zonedToUtc,
 } from '../src/index.ts'
@@ -217,5 +220,50 @@ describe('helpers', () => {
 			}),
 		)
 		expect(pairs.size).toBe(64)
+	})
+})
+
+describe('renames keep old links working (D19)', () => {
+	it('redirects an old event path after an event slug change', async () => {
+		const ctx = await seedOrganization('owner', `org-rename-${Date.now()}`)
+		const event = await createEvent(db, ctx, summerCamp)
+		await setEventStatus(db, ctx, event.id, 'published')
+		const renamed = await renameEventSlug(db, ctx, event.id, 'Zomerkamp Gent')
+		expect(renamed).toBe('zomerkamp-gent')
+		expect(await findRedirect(db, `/${ctx.slug}/${event.slug}`)).toBe(`/${ctx.slug}/zomerkamp-gent`)
+		expect(await getPublicEvent(db, ctx.slug, 'zomerkamp-gent')).not.toBeNull()
+	})
+
+	it('redirects every event path after an organization slug change', async () => {
+		const ctx = await seedOrganization('owner', `old-org-${Date.now()}`)
+		const event = await createEvent(db, ctx, summerCamp)
+		const newSlug = `new-org-${Date.now()}`
+		await updateOrganization(db, ctx, { name: 'Scouts Gent', slug: newSlug })
+		expect(await findRedirect(db, `/${ctx.slug}/${event.slug}`)).toBe(`/${newSlug}/${event.slug}`)
+	})
+
+	it('refuses reserved and taken slugs, and non-owners', async () => {
+		const ctx = await seedOrganization('owner')
+		const other = await seedOrganization('owner')
+		await expect(updateOrganization(db, ctx, { name: 'X', slug: 'api' })).rejects.toMatchObject({
+			issues: { slug: 'reserved' },
+		})
+		await expect(
+			updateOrganization(db, ctx, { name: 'X', slug: other.slug }),
+		).rejects.toMatchObject({
+			issues: { slug: 'taken' },
+		})
+		const editor = await addMember(ctx.organizationId, 'editor')
+		await expect(
+			updateOrganization(db, editor, { name: 'X', slug: 'fine-slug' }),
+		).rejects.toMatchObject({
+			code: 'forbidden',
+		})
+
+		const first = await createEvent(db, ctx, summerCamp)
+		const second = await createEvent(db, ctx, { ...summerCamp, name: 'Other' })
+		await expect(renameEventSlug(db, ctx, second.id, first.slug)).rejects.toMatchObject({
+			issues: { slug: 'taken' },
+		})
 	})
 })

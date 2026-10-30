@@ -180,5 +180,15 @@
 	"invitation_expired": "This invitation has expired or was already used. Ask for a new one.",
 	"switch_organization": "Organization",
 	"error_already_member": "This person is already on your team.",
-	"error_already_invited": "This person already has an invitation waiting."
+	"error_already_invited": "This person already has an invitation waiting.",
+	"web_address_label": "Web address",
+	"web_address_hint": "Old links and QR codes keep working after you change this.",
+	"save_address": "Save web address",
+	"address_saved": "Web address saved.",
+	"field_taken": "This address is already in use. Try another.",
+	"field_reserved": "This address is reserved. Try another.",
+	"organization_section": "Organization",
+	"organization_name_label": "Organization name",
+	"save_organization": "Save organization",
+	"organization_saved": "Organization saved."
 }

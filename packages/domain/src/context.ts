@@ -16,6 +16,7 @@ export type OrganizerContext = {
 }
 
 type Permission = {
+	organization?: ('update' | 'delete')[]
 	event?: ('create' | 'update' | 'delete' | 'allocate' | 'publish')[]
 	participant?: ('read' | 'write' | 'export')[]
 }
