@@ -240,9 +240,16 @@ the link.
 
 ### M3b: organizer side
 
-- [ ] Participant list with filters; add a minor by hand (D2).
-- [ ] CSV import of minors with per-row errors (O4).
-- [ ] Printable code cards with QR codes; email links to guardians (D24).
+- [x] Participant list with filters (age group, no sessions yet, on a waitlist);
+  every read is audit-logged (D14). Add a minor by hand (D2).
+- [x] CSV import of minors with per-row errors; nothing is imported until every
+  row is valid (O4).
+- [x] Printable code cards with QR codes; email links to guardians (D24).
+  Codes are stored hashed, so printing or emailing issues fresh ones and
+  earlier cards stop working; the screen warns before continuing.
+- [x] Root error screen with a retry button.
+- [ ] Print layout checked only by page count (one A4 page for four cards); the
+  hidden app chrome on paper still needs a look in a real print preview.
 
 ## M4 to M5 (outline)
 

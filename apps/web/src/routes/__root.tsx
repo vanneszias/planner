@@ -1,5 +1,6 @@
 import { brand } from '@app/brand'
-import { createRootRoute, HeadContent, Scripts } from '@tanstack/react-router'
+import { Button } from '@app/ui/components/button'
+import { createRootRoute, HeadContent, Scripts, useRouter } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 import { m } from '#/paraglide/messages'
 import { getLocale } from '#/paraglide/runtime'
@@ -18,7 +19,22 @@ export const Route = createRootRoute({
 	}),
 	shellComponent: RootDocument,
 	notFoundComponent: NotFound,
+	errorComponent: ErrorPage,
 })
+
+/** Anything that failed to load: say what to do, offer a retry. */
+function ErrorPage() {
+	const router = useRouter()
+	return (
+		<main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-3 px-4">
+			<h1 className="font-display text-2xl font-semibold">{m.error_page_title()}</h1>
+			<p className="text-muted-foreground">{m.error_page_body()}</p>
+			<div>
+				<Button onClick={() => router.invalidate()}>{m.try_again()}</Button>
+			</div>
+		</main>
+	)
+}
 
 /** Unknown paths and unpublished event links: say what to do, don't apologise. */
 function NotFound() {

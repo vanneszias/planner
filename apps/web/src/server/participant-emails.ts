@@ -74,3 +74,27 @@ export function promotedEmail(input: {
 		text: `A place opened up. You're now booked for ${workshop} (${when}) at ${eventName}.\n\nYour programme: ${eventUrl}\n\n${brand.name}`,
 	}
 }
+
+/** A minor's private link, sent to their guardian (D24). */
+export function guardianLinkEmail(input: {
+	to: string
+	locale: Locale
+	name: string
+	eventName: string
+	link: string
+	code: string
+}): OutgoingEmail {
+	const { locale, name, eventName, link, code } = input
+	if (locale === 'nl') {
+		return {
+			to: input.to,
+			subject: `De link van ${name} voor ${eventName}`,
+			text: `Hallo,\n\n${name} is ingeschreven voor ${eventName}. Met deze link kiezen jullie workshops en zien jullie het programma:\n\n${link}\n\nOf typ de code ${code} op de evenementpagina.\n\nOudere links en codes voor ${name} werken niet meer.\n\n${brand.name}`,
+		}
+	}
+	return {
+		to: input.to,
+		subject: `${name}'s link for ${eventName}`,
+		text: `Hello,\n\n${name} is registered for ${eventName}. This link lets you choose workshops and see the programme:\n\n${link}\n\nOr type the code ${code} on the event page.\n\nOlder links and codes for ${name} no longer work.\n\n${brand.name}`,
+	}
+}
