@@ -153,5 +153,6 @@
 	"save_settings": "Save settings",
 	"settings_saved": "Settings saved.",
 	"language_en": "English",
-	"language_nl": "Dutch"
+	"language_nl": "Dutch",
+	"save_session": "Save session"
 }

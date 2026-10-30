@@ -1,4 +1,5 @@
 import type { CreateSessionsInput } from '@app/domain'
+import { utcToZoned } from '@app/domain/time'
 import { Button } from '@app/ui/components/button'
 import { Marker } from '@app/ui/components/marker'
 import { createFileRoute, getRouteApi, Link, useRouter } from '@tanstack/react-router'
@@ -8,7 +9,7 @@ import { Field, FieldInput } from '#/components/field'
 import { actionMessage, fieldMessage } from '#/lib/errors'
 import { formatTime, groupByDay } from '#/lib/format'
 import { m } from '#/paraglide/messages'
-import { createSessionsFn, deleteSessionFn } from '#/server/events'
+import { createSessionsFn, deleteSessionFn, updateSessionFn } from '#/server/events'
 
 export const Route = createFileRoute('/_organizer/events/$eventId/schedule')({
 	component: Schedule,
@@ -19,6 +20,7 @@ function Schedule() {
 	const { event, workshops, sessions, conflicts, canEdit } = eventRoute.useLoaderData()
 	const router = useRouter()
 	const [adding, setAdding] = useState(false)
+	const [editing, setEditing] = useState<string | null>(null)
 
 	const titles = new Map(sessions.map((s) => [s.id, s.workshopTitle]))
 	const conflictsOf = new Map<string, string[]>()
@@ -73,6 +75,20 @@ function Schedule() {
 					<ul className="flex flex-col gap-2">
 						{day.items.map((session) => {
 							const clashes = conflictsOf.get(session.id)
+							const label = `${session.workshopTitle} ${formatTime(session.startsAt, event.timezone)}`
+							if (editing === session.id) {
+								return (
+									<li key={session.id}>
+										<EditSessionForm
+											session={session}
+											onDone={async (saved) => {
+												setEditing(null)
+												if (saved) await router.invalidate()
+											}}
+										/>
+									</li>
+								)
+							}
 							return (
 								<li key={session.id} className="flex flex-col gap-2 rounded-xl bg-card p-4">
 									<div className="flex items-center justify-between gap-3">
@@ -81,14 +97,24 @@ function Schedule() {
 											{formatTime(session.endsAt, event.timezone)}
 										</span>
 										{canEdit && (
-											<Button
-												variant="ghost"
-												className="-my-2 px-2"
-												aria-label={`${m.delete()}: ${session.workshopTitle} ${formatTime(session.startsAt, event.timezone)}`}
-												onClick={() => remove(session.id)}
-											>
-												{m.delete()}
-											</Button>
+											<span className="-my-2 flex">
+												<Button
+													variant="ghost"
+													className="px-2"
+													aria-label={`${m.edit()}: ${label}`}
+													onClick={() => setEditing(session.id)}
+												>
+													{m.edit()}
+												</Button>
+												<Button
+													variant="ghost"
+													className="px-2"
+													aria-label={`${m.delete()}: ${label}`}
+													onClick={() => remove(session.id)}
+												>
+													{m.delete()}
+												</Button>
+											</span>
 										)}
 									</div>
 									<div className="flex items-start gap-3">
@@ -265,6 +291,114 @@ function AddSessionsForm({ onDone }: { onDone: (saved: boolean) => Promise<void>
 			<div className="flex gap-2">
 				<Button type="submit" disabled={pending}>
 					{m.save_sessions()}
+				</Button>
+				<Button type="button" variant="ghost" onClick={() => onDone(false)}>
+					{m.cancel()}
+				</Button>
+			</div>
+		</form>
+	)
+}
+
+type SessionRow = ReturnType<typeof eventRoute.useLoaderData>['sessions'][number]
+
+/** Changes one session's time, room or places. Times are shown in the event's timezone. */
+function EditSessionForm({
+	session,
+	onDone,
+}: {
+	session: SessionRow
+	onDone: (saved: boolean) => Promise<void>
+}) {
+	const { event } = eventRoute.useLoaderData()
+	const start = utcToZoned(session.startsAt, event.timezone)
+	const [slot, setSlot] = useState<Slot>({
+		date: start.date,
+		start: start.time,
+		end: utcToZoned(session.endsAt, event.timezone).time,
+	})
+	const [room, setRoom] = useState(session.room ?? '')
+	const [capacity, setCapacity] = useState(session.capacity)
+	const [issues, setIssues] = useState<Record<string, string>>({})
+	const [error, setError] = useState<string | null>(null)
+	const [pending, setPending] = useState(false)
+	const id = `edit-${session.id}`
+
+	async function submit(formEvent: FormEvent) {
+		formEvent.preventDefault()
+		setError(null)
+		setPending(true)
+		const result = await updateSessionFn({
+			data: { sessionId: session.id, values: { room, capacity, slot } },
+		})
+		setPending(false)
+		if (result.ok) return onDone(true)
+		if (result.issues) setIssues(result.issues)
+		else setError(actionMessage(result))
+	}
+
+	const slotError = issues['slot.date'] ?? issues['slot.end'] ?? issues['slots.0.date']
+	return (
+		<form onSubmit={submit} noValidate className="flex flex-col gap-4 rounded-xl bg-card p-5">
+			<p className="flex items-center gap-3 font-bold">
+				<Marker color={session.markerColor} shape={session.markerShape} />
+				{session.workshopTitle}
+			</p>
+			<div className="flex flex-wrap items-end gap-3">
+				<Field id={`${id}-date`} label={m.date_label()}>
+					<FieldInput
+						id={`${id}-date`}
+						type="date"
+						min={event.startsOn}
+						max={event.endsOn}
+						value={slot.date}
+						onChange={(e) => setSlot({ ...slot, date: e.target.value })}
+					/>
+				</Field>
+				<Field id={`${id}-start`} label={m.start_label()}>
+					<FieldInput
+						id={`${id}-start`}
+						type="time"
+						value={slot.start}
+						onChange={(e) => setSlot({ ...slot, start: e.target.value })}
+					/>
+				</Field>
+				<Field id={`${id}-end`} label={m.end_label()}>
+					<FieldInput
+						id={`${id}-end`}
+						type="time"
+						value={slot.end}
+						onChange={(e) => setSlot({ ...slot, end: e.target.value })}
+					/>
+				</Field>
+			</div>
+			{slotError && <p className="text-sm font-bold text-destructive">{fieldMessage(slotError)}</p>}
+			<div className="grid gap-4 sm:grid-cols-2">
+				<Field id={`${id}-room`} label={m.room_label()} error={issues.room}>
+					<FieldInput
+						id={`${id}-room`}
+						error={issues.room}
+						value={room}
+						onChange={(e) => setRoom(e.target.value)}
+					/>
+				</Field>
+				<Field id={`${id}-capacity`} label={m.capacity_label()} error={issues.capacity}>
+					<FieldInput
+						id={`${id}-capacity`}
+						type="number"
+						inputMode="numeric"
+						min={0}
+						className="max-w-32"
+						error={issues.capacity}
+						value={capacity}
+						onChange={(e) => setCapacity(Number(e.target.value))}
+					/>
+				</Field>
+			</div>
+			<FormError message={error} />
+			<div className="flex gap-2">
+				<Button type="submit" disabled={pending}>
+					{m.save_session()}
 				</Button>
 				<Button type="button" variant="ghost" onClick={() => onDone(false)}>
 					{m.cancel()}
