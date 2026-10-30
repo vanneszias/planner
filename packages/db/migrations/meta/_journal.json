@@ -15,6 +15,13 @@
       "when": 1793349199701,
       "tag": "0001_misty_hellion",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1793353441520,
+      "tag": "0002_unique_triton",
+      "breakpoints": true
     }
   ]
 }

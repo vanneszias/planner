@@ -196,7 +196,35 @@ usable from a script for concierge runs.
   on the M4 review screen (D27).
 - [ ] Swap pass: after the M4 review screen (D28).
 
-## M3 to M5 (outline)
+## M3: Registration and booking
+
+Exit: adults self-register, organizers import minors, participants book with
+live seat counts and waitlists, and the concurrency test passes.
+
+### M3a: participants
+
+- [ ] Schema: `registration`, `assignment`, `waitlist_entry`, `email_delivery`.
+- [ ] Tokens: 128-bit private link token and 6-character short code per
+  registration, stored as SHA-256 hashes; link exchanged for an `HttpOnly`
+  cookie, then redirect to the clean URL (security-privacy.md).
+- [ ] Domain: register (adult self-registration, D23), participant context,
+  book, cancel (change cut-off, D22), waitlist join and promotion. Guarded
+  insert enforces capacity, overlap and the per-person limit in one statement.
+- [ ] EventCoordinator: every booking write for an event goes through its
+  Durable Object; broadcasts seat counts to connected browsers (A5).
+- [ ] Concurrency test: hundreds of parallel bookings on one session, through
+  the Durable Object and straight against D1; never overbooked.
+- [ ] Public event page: register, book, cancel, waitlist, live seats, "My day"
+  strip, "I have a code", confirmation email with the private link.
+- [ ] Turnstile on registration and code entry (Cloudflare test keys locally).
+
+### M3b: organizer side
+
+- [ ] Participant list with filters; add a minor by hand (D2).
+- [ ] CSV import of minors with per-row errors (O4).
+- [ ] Printable code cards with QR codes; email links to guardians (D24).
+
+## M4 to M5 (outline)
 
 | Milestone                   | First tasks                                                                                                               |
 | --------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
