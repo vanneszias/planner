@@ -10,7 +10,6 @@ dist-ssr
 coverage
 
 # Generated
-routeTree.gen.ts
 **/src/paraglide
 
 # Local secrets
