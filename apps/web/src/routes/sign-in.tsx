@@ -6,12 +6,16 @@ import { createFileRoute, Link, redirect, useNavigate } from '@tanstack/react-ro
 import { type FormEvent, useState } from 'react'
 import { AuthShell, FormError } from '#/components/auth-shell'
 import { authErrorMessage } from '#/lib/auth-errors'
+import { safeRedirect } from '#/lib/redirect'
 import { m } from '#/paraglide/messages'
 import { getSessionUser, getSignInOptions } from '#/server/session'
 
 export const Route = createFileRoute('/sign-in')({
-	beforeLoad: async () => {
-		if (await getSessionUser()) throw redirect({ to: '/home' })
+	validateSearch: (search: Record<string, unknown>): { redirect?: string } => ({
+		redirect: safeRedirect(search.redirect),
+	}),
+	beforeLoad: async ({ search }) => {
+		if (await getSessionUser()) throw redirect({ href: search.redirect ?? '/home' })
 	},
 	loader: () => getSignInOptions(),
 	component: SignIn,
@@ -20,6 +24,7 @@ export const Route = createFileRoute('/sign-in')({
 function SignIn() {
 	const options = Route.useLoaderData()
 	const navigate = useNavigate()
+	const { redirect: next = '/home' } = Route.useSearch()
 	const [mode, setMode] = useState<'link' | 'password'>('link')
 	const [email, setEmail] = useState('')
 	const [password, setPassword] = useState('')
@@ -33,19 +38,19 @@ function SignIn() {
 		setPending(true)
 		const result =
 			mode === 'link'
-				? await authClient.signIn.magicLink({ email, callbackURL: '/home' })
+				? await authClient.signIn.magicLink({ email, callbackURL: next })
 				: await authClient.signIn.email({ email, password })
 		setPending(false)
 		if (result.error) return setError(authErrorMessage(result.error))
 		if (mode === 'link') setSentTo(email)
-		else await navigate({ to: '/home' })
+		else await navigate({ href: next })
 	}
 
 	async function signInWithPasskey() {
 		setError(null)
 		const result = await authClient.signIn.passkey()
 		if (result?.error) return setError(m.error_passkey())
-		await navigate({ to: '/home' })
+		await navigate({ href: next })
 	}
 
 	if (sentTo) {
@@ -66,7 +71,11 @@ function SignIn() {
 			footer={
 				<p className="text-sm">
 					{m.no_account()}{' '}
-					<Link to="/sign-up" className="font-bold text-primary underline underline-offset-4">
+					<Link
+						to="/sign-up"
+						search={{ redirect: next === '/home' ? undefined : next }}
+						className="font-bold text-primary underline underline-offset-4"
+					>
 						{m.create_account_link()}
 					</Link>
 				</p>
@@ -125,7 +134,7 @@ function SignIn() {
 					<Button
 						type="button"
 						variant="outline"
-						onClick={() => authClient.signIn.social({ provider: 'google', callbackURL: '/home' })}
+						onClick={() => authClient.signIn.social({ provider: 'google', callbackURL: next })}
 					>
 						{m.sign_in_with_google()}
 					</Button>

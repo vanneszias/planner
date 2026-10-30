@@ -1,0 +1,21 @@
+/** Timezones offered in event forms: the EU-first audience, plus UTC. */
+export const timeZones = [
+	'Europe/Brussels',
+	'Europe/Amsterdam',
+	'Europe/Luxembourg',
+	'Europe/Paris',
+	'Europe/Berlin',
+	'Europe/London',
+	'Europe/Dublin',
+	'Europe/Lisbon',
+	'Europe/Madrid',
+	'Europe/Rome',
+	'Europe/Vienna',
+	'Europe/Copenhagen',
+	'Europe/Stockholm',
+	'Europe/Helsinki',
+	'Europe/Warsaw',
+	'Europe/Prague',
+	'Europe/Athens',
+	'UTC',
+]

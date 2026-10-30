@@ -10,25 +10,34 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as OrganizerRouteImport } from './routes/_organizer'
 import { Route as HealthRouteImport } from './routes/health'
-import { Route as HomeRouteImport } from './routes/home'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as SignUpRouteImport } from './routes/sign-up'
+import { Route as OrgEventRouteImport } from './routes/$org/$event'
+import { Route as OrganizerHomeRouteImport } from './routes/_organizer/home'
+import { Route as OrganizerTeamRouteImport } from './routes/_organizer/team'
+import { Route as InvitationsInvitationIdRouteImport } from './routes/invitations/$invitationId'
+import { Route as OrganizerEventsEventIdRouteRouteImport } from './routes/_organizer/events/$eventId/route'
+import { Route as OrganizerEventsNewRouteImport } from './routes/_organizer/events/new'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as OrganizerEventsEventIdIndexRouteImport } from './routes/_organizer/events/$eventId/index'
+import { Route as OrganizerEventsEventIdScheduleRouteImport } from './routes/_organizer/events/$eventId/schedule'
+import { Route as OrganizerEventsEventIdSettingsRouteImport } from './routes/_organizer/events/$eventId/settings'
+import { Route as OrganizerEventsEventIdWorkshopsRouteImport } from './routes/_organizer/events/$eventId/workshops'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OrganizerRoute = OrganizerRouteImport.update({
+  id: '/_organizer',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HealthRoute = HealthRouteImport.update({
   id: '/health',
   path: '/health',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HomeRoute = HomeRouteImport.update({
-  id: '/home',
-  path: '/home',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SignInRoute = SignInRouteImport.update({
@@ -41,58 +50,181 @@ const SignUpRoute = SignUpRouteImport.update({
   path: '/sign-up',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OrgEventRoute = OrgEventRouteImport.update({
+  id: '/$org/$event',
+  path: '/$org/$event',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrganizerHomeRoute = OrganizerHomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => OrganizerRoute,
+} as any)
+const OrganizerTeamRoute = OrganizerTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => OrganizerRoute,
+} as any)
+const InvitationsInvitationIdRoute = InvitationsInvitationIdRouteImport.update({
+  id: '/invitations/$invitationId',
+  path: '/invitations/$invitationId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrganizerEventsEventIdRouteRoute =
+  OrganizerEventsEventIdRouteRouteImport.update({
+    id: '/events/$eventId',
+    path: '/events/$eventId',
+    getParentRoute: () => OrganizerRoute,
+  } as any)
+const OrganizerEventsNewRoute = OrganizerEventsNewRouteImport.update({
+  id: '/events/new',
+  path: '/events/new',
+  getParentRoute: () => OrganizerRoute,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OrganizerEventsEventIdIndexRoute =
+  OrganizerEventsEventIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => OrganizerEventsEventIdRouteRoute,
+  } as any)
+const OrganizerEventsEventIdScheduleRoute =
+  OrganizerEventsEventIdScheduleRouteImport.update({
+    id: '/schedule',
+    path: '/schedule',
+    getParentRoute: () => OrganizerEventsEventIdRouteRoute,
+  } as any)
+const OrganizerEventsEventIdSettingsRoute =
+  OrganizerEventsEventIdSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => OrganizerEventsEventIdRouteRoute,
+  } as any)
+const OrganizerEventsEventIdWorkshopsRoute =
+  OrganizerEventsEventIdWorkshopsRouteImport.update({
+    id: '/workshops',
+    path: '/workshops',
+    getParentRoute: () => OrganizerEventsEventIdRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/health': typeof HealthRoute
-  '/home': typeof HomeRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
+  '/$org/$event': typeof OrgEventRoute
+  '/home': typeof OrganizerHomeRoute
+  '/team': typeof OrganizerTeamRoute
+  '/invitations/$invitationId': typeof InvitationsInvitationIdRoute
+  '/events/$eventId': typeof OrganizerEventsEventIdRouteRouteWithChildren
+  '/events/new': typeof OrganizerEventsNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/events/$eventId/schedule': typeof OrganizerEventsEventIdScheduleRoute
+  '/events/$eventId/settings': typeof OrganizerEventsEventIdSettingsRoute
+  '/events/$eventId/workshops': typeof OrganizerEventsEventIdWorkshopsRoute
+  '/events/$eventId/': typeof OrganizerEventsEventIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/health': typeof HealthRoute
-  '/home': typeof HomeRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
+  '/$org/$event': typeof OrgEventRoute
+  '/home': typeof OrganizerHomeRoute
+  '/team': typeof OrganizerTeamRoute
+  '/invitations/$invitationId': typeof InvitationsInvitationIdRoute
+  '/events/new': typeof OrganizerEventsNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/events/$eventId/schedule': typeof OrganizerEventsEventIdScheduleRoute
+  '/events/$eventId/settings': typeof OrganizerEventsEventIdSettingsRoute
+  '/events/$eventId/workshops': typeof OrganizerEventsEventIdWorkshopsRoute
+  '/events/$eventId': typeof OrganizerEventsEventIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_organizer': typeof OrganizerRouteWithChildren
   '/health': typeof HealthRoute
-  '/home': typeof HomeRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
+  '/$org/$event': typeof OrgEventRoute
+  '/_organizer/home': typeof OrganizerHomeRoute
+  '/_organizer/team': typeof OrganizerTeamRoute
+  '/invitations/$invitationId': typeof InvitationsInvitationIdRoute
+  '/_organizer/events/$eventId': typeof OrganizerEventsEventIdRouteRouteWithChildren
+  '/_organizer/events/new': typeof OrganizerEventsNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/_organizer/events/$eventId/schedule': typeof OrganizerEventsEventIdScheduleRoute
+  '/_organizer/events/$eventId/settings': typeof OrganizerEventsEventIdSettingsRoute
+  '/_organizer/events/$eventId/workshops': typeof OrganizerEventsEventIdWorkshopsRoute
+  '/_organizer/events/$eventId/': typeof OrganizerEventsEventIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/health' | '/home' | '/sign-in' | '/sign-up' | '/api/auth/$'
+  fullPaths:
+    | '/'
+    | '/health'
+    | '/sign-in'
+    | '/sign-up'
+    | '/$org/$event'
+    | '/home'
+    | '/team'
+    | '/invitations/$invitationId'
+    | '/events/$eventId'
+    | '/events/new'
+    | '/api/auth/$'
+    | '/events/$eventId/schedule'
+    | '/events/$eventId/settings'
+    | '/events/$eventId/workshops'
+    | '/events/$eventId/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/health' | '/home' | '/sign-in' | '/sign-up' | '/api/auth/$'
+  to:
+    | '/'
+    | '/health'
+    | '/sign-in'
+    | '/sign-up'
+    | '/$org/$event'
+    | '/home'
+    | '/team'
+    | '/invitations/$invitationId'
+    | '/events/new'
+    | '/api/auth/$'
+    | '/events/$eventId/schedule'
+    | '/events/$eventId/settings'
+    | '/events/$eventId/workshops'
+    | '/events/$eventId'
   id:
     | '__root__'
     | '/'
+    | '/_organizer'
     | '/health'
-    | '/home'
     | '/sign-in'
     | '/sign-up'
+    | '/$org/$event'
+    | '/_organizer/home'
+    | '/_organizer/team'
+    | '/invitations/$invitationId'
+    | '/_organizer/events/$eventId'
+    | '/_organizer/events/new'
     | '/api/auth/$'
+    | '/_organizer/events/$eventId/schedule'
+    | '/_organizer/events/$eventId/settings'
+    | '/_organizer/events/$eventId/workshops'
+    | '/_organizer/events/$eventId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  OrganizerRoute: typeof OrganizerRouteWithChildren
   HealthRoute: typeof HealthRoute
-  HomeRoute: typeof HomeRoute
   SignInRoute: typeof SignInRoute
   SignUpRoute: typeof SignUpRoute
+  OrgEventRoute: typeof OrgEventRoute
+  InvitationsInvitationIdRoute: typeof InvitationsInvitationIdRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
@@ -105,18 +237,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_organizer': {
+      id: '/_organizer'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof OrganizerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/health': {
       id: '/health'
       path: '/health'
       fullPath: '/health'
       preLoaderRoute: typeof HealthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/home': {
-      id: '/home'
-      path: '/home'
-      fullPath: '/home'
-      preLoaderRoute: typeof HomeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sign-in': {
@@ -133,6 +265,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignUpRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$org/$event': {
+      id: '/$org/$event'
+      path: '/$org/$event'
+      fullPath: '/$org/$event'
+      preLoaderRoute: typeof OrgEventRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_organizer/home': {
+      id: '/_organizer/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof OrganizerHomeRouteImport
+      parentRoute: typeof OrganizerRoute
+    }
+    '/_organizer/team': {
+      id: '/_organizer/team'
+      path: '/team'
+      fullPath: '/team'
+      preLoaderRoute: typeof OrganizerTeamRouteImport
+      parentRoute: typeof OrganizerRoute
+    }
+    '/invitations/$invitationId': {
+      id: '/invitations/$invitationId'
+      path: '/invitations/$invitationId'
+      fullPath: '/invitations/$invitationId'
+      preLoaderRoute: typeof InvitationsInvitationIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_organizer/events/$eventId': {
+      id: '/_organizer/events/$eventId'
+      path: '/events/$eventId'
+      fullPath: '/events/$eventId'
+      preLoaderRoute: typeof OrganizerEventsEventIdRouteRouteImport
+      parentRoute: typeof OrganizerRoute
+    }
+    '/_organizer/events/new': {
+      id: '/_organizer/events/new'
+      path: '/events/new'
+      fullPath: '/events/new'
+      preLoaderRoute: typeof OrganizerEventsNewRouteImport
+      parentRoute: typeof OrganizerRoute
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -140,15 +314,84 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_organizer/events/$eventId/': {
+      id: '/_organizer/events/$eventId/'
+      path: '/'
+      fullPath: '/events/$eventId/'
+      preLoaderRoute: typeof OrganizerEventsEventIdIndexRouteImport
+      parentRoute: typeof OrganizerEventsEventIdRouteRoute
+    }
+    '/_organizer/events/$eventId/schedule': {
+      id: '/_organizer/events/$eventId/schedule'
+      path: '/schedule'
+      fullPath: '/events/$eventId/schedule'
+      preLoaderRoute: typeof OrganizerEventsEventIdScheduleRouteImport
+      parentRoute: typeof OrganizerEventsEventIdRouteRoute
+    }
+    '/_organizer/events/$eventId/settings': {
+      id: '/_organizer/events/$eventId/settings'
+      path: '/settings'
+      fullPath: '/events/$eventId/settings'
+      preLoaderRoute: typeof OrganizerEventsEventIdSettingsRouteImport
+      parentRoute: typeof OrganizerEventsEventIdRouteRoute
+    }
+    '/_organizer/events/$eventId/workshops': {
+      id: '/_organizer/events/$eventId/workshops'
+      path: '/workshops'
+      fullPath: '/events/$eventId/workshops'
+      preLoaderRoute: typeof OrganizerEventsEventIdWorkshopsRouteImport
+      parentRoute: typeof OrganizerEventsEventIdRouteRoute
+    }
   }
 }
 
+interface OrganizerEventsEventIdRouteRouteChildren {
+  OrganizerEventsEventIdScheduleRoute: typeof OrganizerEventsEventIdScheduleRoute
+  OrganizerEventsEventIdSettingsRoute: typeof OrganizerEventsEventIdSettingsRoute
+  OrganizerEventsEventIdWorkshopsRoute: typeof OrganizerEventsEventIdWorkshopsRoute
+  OrganizerEventsEventIdIndexRoute: typeof OrganizerEventsEventIdIndexRoute
+}
+
+const OrganizerEventsEventIdRouteRouteChildren: OrganizerEventsEventIdRouteRouteChildren =
+  {
+    OrganizerEventsEventIdScheduleRoute: OrganizerEventsEventIdScheduleRoute,
+    OrganizerEventsEventIdSettingsRoute: OrganizerEventsEventIdSettingsRoute,
+    OrganizerEventsEventIdWorkshopsRoute: OrganizerEventsEventIdWorkshopsRoute,
+    OrganizerEventsEventIdIndexRoute: OrganizerEventsEventIdIndexRoute,
+  }
+
+const OrganizerEventsEventIdRouteRouteWithChildren =
+  OrganizerEventsEventIdRouteRoute._addFileChildren(
+    OrganizerEventsEventIdRouteRouteChildren,
+  )
+
+interface OrganizerRouteChildren {
+  OrganizerHomeRoute: typeof OrganizerHomeRoute
+  OrganizerTeamRoute: typeof OrganizerTeamRoute
+  OrganizerEventsEventIdRouteRoute: typeof OrganizerEventsEventIdRouteRouteWithChildren
+  OrganizerEventsNewRoute: typeof OrganizerEventsNewRoute
+}
+
+const OrganizerRouteChildren: OrganizerRouteChildren = {
+  OrganizerHomeRoute: OrganizerHomeRoute,
+  OrganizerTeamRoute: OrganizerTeamRoute,
+  OrganizerEventsEventIdRouteRoute:
+    OrganizerEventsEventIdRouteRouteWithChildren,
+  OrganizerEventsNewRoute: OrganizerEventsNewRoute,
+}
+
+const OrganizerRouteWithChildren = OrganizerRoute._addFileChildren(
+  OrganizerRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  OrganizerRoute: OrganizerRouteWithChildren,
   HealthRoute: HealthRoute,
-  HomeRoute: HomeRoute,
   SignInRoute: SignInRoute,
   SignUpRoute: SignUpRoute,
+  OrgEventRoute: OrgEventRoute,
+  InvitationsInvitationIdRoute: InvitationsInvitationIdRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport

@@ -49,6 +49,7 @@ cp apps/web/.dev.vars.example apps/web/.dev.vars   # add a secret: openssl rand 
 pnpm --filter @app/db migrate:local
 pnpm dev                                            # http://localhost:3000, all four Workers
 pnpm lint && pnpm typecheck && pnpm test
+pnpm --filter @app/web seed you@example.com   # demo event for a local account
 ```
 
 Sign-in emails print to the dev server console locally.
@@ -120,15 +121,61 @@ production; sign-in works with all four methods; UI renders in English and Dutch
 - **shadcn `dark:` styles follow the OS setting** by default; tied to a `.dark`
   class until dark mode exists.
 
-## M1 to M5 (outline)
+## M1: Organizer setup
 
-| Milestone                   | First tasks                                                                                                                                                              |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| M1 Organizer setup          | Remaining schema (events through sessions), tenant-scoped helpers with the isolation test suite, guided event creation, workshops and sessions editor, public event page |
-| M2 Allocation engine        | `packages/allocation` with property tests, snake draft, both strategies, traces, benchmark script for the three sizes                                                    |
-| M3 Registration and booking | Registration and tokens, guarded booking SQL, EventCoordinator booking path, waitlist, live seat counts, concurrency test                                                |
-| M4 Ranking and publishing   | Ranking UI, draft runs, review screen, publish through the coordinator, email via `jobs`                                                                                 |
-| M5 Event day and pilot      | QR check-in, exports, retention job, audit log, security checklist, accessibility audit                                                                                  |
+Exit: an organizer creates an organization, invites an editor, builds an event
+with 20 workshops and 60 sessions, and publishes its page.
+
+- [x] **Schema:** `event`, `age_group`, `location`, `workshop`,
+  `workshop_age_group`, `event_session`, `slug_redirect`, `audit_log`
+  (migration `0001`, applied locally; remote on next deploy).
+- [x] **`packages/domain`:** organizer context, role checks, tenant-scoped
+  events, workshops and sessions, public event read, slugs, timezone
+  conversion, audit entries. Field errors are codes the UI translates.
+- [x] **Tenant isolation suite** (`packages/domain/test/tenant-isolation.test.ts`):
+  a second organization tries every read and write; verified it fails when the
+  organization filter is removed. 19 domain tests in total.
+- [x] **Personal organization on sign-up** (journey O1), via a Better Auth hook.
+- [x] **Screens:** events dashboard, guided creation (4 steps), event overview
+  with checklist and publish, workshops editor with markers, schedule editor
+  (several times at once, rooms reused by name, room clashes flagged), public
+  event page at `/{org}/{event}`, 404 page. English and Dutch.
+- [x] Another organization's event URL shows the 404 page.
+- [x] Event settings: description, dates, content language, mode, booking window
+  (stored as UTC), and D7–D10 options behind "More options".
+- [x] Edit an existing session (time, room, places).
+- [x] Team (O3): owners invite owners, editors or viewers; invitees sign in or
+  sign up and return to the invitation; organization switcher in the header.
+  Reserved slugs are also refused when created through the auth API.
+- [x] Rename event and organization addresses; old paths answer 301 to the new
+  ones (organization renames cover every event path under them).
+- [x] Age groups per event and workshop eligibility; shown on the public page.
+- [x] Exit-criterion check with `pnpm --filter @app/web seed <email>`: 20
+  workshops and 60 sessions seeded in about 0.6 s; organizer pages answer in
+  45–60 ms and the public page is about 52 KB locally; no false room clashes.
+- [ ] Long schedules are one long list on phones; consider a workshop filter
+  or compact view once real organizers try it.
+
+### Learned in M1
+
+- **Better Auth owns a `session` table**, so workshop sessions are
+  `event_session` / `eventSession`.
+- **`@cloudflare/vitest-plugin` sometimes logs "Expected global Vitest state"**
+  during teardown. Tests still pass; running packages in parallel once turned it
+  into a failure, so the root `pnpm test` runs packages one at a time.
+- **D1 enforces foreign keys** (cascade verified in tests).
+- **Node runs scripts as TypeScript only for erasable syntax** (no parameter
+  properties, enums or namespaces). `erasableSyntaxOnly` in the shared tsconfig
+  catches it at typecheck.
+
+## M2 to M5 (outline)
+
+| Milestone                   | First tasks                                                                                                               |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| M2 Allocation engine        | `packages/allocation` with property tests, snake draft, both strategies, traces, benchmark script for the three sizes     |
+| M3 Registration and booking | Registration and tokens, guarded booking SQL, EventCoordinator booking path, waitlist, live seat counts, concurrency test |
+| M4 Ranking and publishing   | Ranking UI, draft runs, review screen, publish through the coordinator, email via `jobs`                                  |
+| M5 Event day and pilot      | QR check-in, exports, retention job, audit log, security checklist, accessibility audit                                   |
 
 ## Setup decisions (2026-10-29)
 

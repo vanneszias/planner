@@ -21,14 +21,14 @@ organization ─┬─ member ── user ─┬─ passkey / account / session 
                   └─ audit_log ─────────────────────────────────┘
 ```
 
-| Brief term   | Table          | Notes                                                                           |
-| ------------ | -------------- | ------------------------------------------------------------------------------- |
-| Workshop     | `workshop`     | What participants want to attend.                                               |
-| Session      | `session`      | A scheduled occurrence: time, room, capacity.                                   |
-| Registration | `registration` | A participant's enrolment in one event. Not a user: minors have no user.        |
-| Preference   | `preference`   | Ranked interest in a workshop.                                                  |
-| Assignment   | `assignment`   | A place in a session, from booking, allocation or an organizer. Holds check-in. |
-| Itinerary    | _(derived)_    | `assignment` joined to `session`, `workshop`, `location`. Not stored.           |
+| Brief term   | Table           | Notes                                                                           |
+| ------------ | --------------- | ------------------------------------------------------------------------------- |
+| Workshop     | `workshop`      | What participants want to attend.                                               |
+| Session      | `event_session` | A scheduled occurrence: time, room, capacity.                                   |
+| Registration | `registration`  | A participant's enrolment in one event. Not a user: minors have no user.        |
+| Preference   | `preference`    | Ranked interest in a workshop.                                                  |
+| Assignment   | `assignment`    | A place in a session, from booking, allocation or an organizer. Holds check-in. |
+| Itinerary    | _(derived)_     | `assignment` joined to `event_session`, `workshop`, `location`. Not stored.     |
 
 ## Conventions
 
@@ -114,20 +114,26 @@ one.
 
 ### workshop, workshop_age_group
 
-| Column                    | Type    | Notes                                         |
-| ------------------------- | ------- | --------------------------------------------- |
-| id                        | text PK |                                               |
-| organization_id, event_id | text FK |                                               |
-| title, description        | text    |                                               |
-| image_key                 | text ?  | R2 key                                        |
-| facilitator_name          | text ?  | Free text, no facilitator accounts in the MVP |
-| category                  | text ?  |                                               |
-| sort_order                | int     |                                               |
+| Column                     | Type    | Notes                                          |
+| -------------------------- | ------- | ---------------------------------------------- |
+| id                         | text PK |                                                |
+| organization_id, event_id  | text FK |                                                |
+| title, description         | text    |                                                |
+| image_key                  | text ?  | R2 key                                         |
+| facilitator_name           | text ?  | Free text, no facilitator accounts in the MVP  |
+| category                   | text ?  |                                                |
+| marker_color, marker_shape | text    | Assigned in order on create (design-system.md) |
+| sort_order                 | int     |                                                |
 
 `workshop_age_group (workshop_id, age_group_id)`, PK on both. No rows means
 open to every age group.
 
-### session
+### event_session
+
+Named `event_session` (Drizzle: `eventSession`) because Better Auth already owns
+a `session` table for sign-in sessions. "Session" elsewhere in these docs means
+this table. Rooms are typed by organizers and matched to a `location` by name,
+case-insensitively.
 
 | Column                    | Type      | Notes                       |
 | ------------------------- | --------- | --------------------------- |
@@ -248,7 +254,7 @@ field names, never names or emails, so the log survives retention cleanup intact
 | -------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
 | event          | unique `(organization_id, slug)`; `(organization_id, starts_on)`                                                    | Public page; organizer event list                |
 | workshop       | `(event_id, sort_order)`                                                                                            | Workshop list                                    |
-| session        | `(event_id, starts_at)`; `(workshop_id)`                                                                            | Schedule grid; workshop detail                   |
+| event_session  | `(event_id, starts_at)`; `(workshop_id)`                                                                            | Schedule grid; workshop detail                   |
 | registration   | unique `(access_token_hash)`; unique `(feed_token_hash)`; `(event_id, status)`; `(user_id)`; `(managed_by_user_id)` | Token lookup; participant lists; "my events"     |
 | preference     | PK covers `(registration_id, …)`; `(event_id)`                                                                      | Engine snapshot load                             |
 | assignment     | unique `(registration_id, session_id)`; `(session_id)`; `(event_id)`                                                | Capacity count; overlap check; itinerary; roster |
@@ -304,6 +310,6 @@ Organizers can trigger the same process early per event.
 
 ## To verify
 
-- D1 enforces foreign keys and supports partial unique indexes as SQLite does.
+- ~~D1 enforces foreign keys~~ verified in M1 (organization delete cascades in tests). Partial unique indexes still to verify (M4, published runs).
 - Better Auth organization plugin with custom roles on D1 via Drizzle.
 - Time Travel restore window on the Workers Paid plan, for the backup story.
