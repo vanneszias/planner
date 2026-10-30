@@ -20,6 +20,12 @@ importers:
       '@app/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@app/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      '@app/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
       '@cloudflare/vitest-plugin':
         specifier: ^1.4.11
         version: 1.4.11(@cloudflare/workers-types@5.20261029.1)(@types/node@26.6.6)(vitest@5.0.5(@types/node@26.6.6)(vite@8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)))
@@ -63,6 +69,12 @@ importers:
       '@app/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@app/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      '@app/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
       '@cloudflare/vitest-plugin':
         specifier: ^1.4.11
         version: 1.4.11(@cloudflare/workers-types@5.20261029.1)(@types/node@26.6.6)(vitest@5.0.5(@types/node@26.6.6)(vite@8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)))

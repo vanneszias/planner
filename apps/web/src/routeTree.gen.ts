@@ -18,10 +18,13 @@ import { Route as OrgEventRouteImport } from './routes/$org/$event'
 import { Route as OrganizerHomeRouteImport } from './routes/_organizer/home'
 import { Route as OrganizerTeamRouteImport } from './routes/_organizer/team'
 import { Route as InvitationsInvitationIdRouteImport } from './routes/invitations/$invitationId'
+import { Route as RTokenRouteImport } from './routes/r/$token'
 import { Route as OrganizerEventsEventIdRouteRouteImport } from './routes/_organizer/events/$eventId/route'
 import { Route as OrganizerEventsNewRouteImport } from './routes/_organizer/events/new'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as ApiLiveEventIdRouteImport } from './routes/api/live/$eventId'
 import { Route as OrganizerEventsEventIdIndexRouteImport } from './routes/_organizer/events/$eventId/index'
+import { Route as OrganizerEventsEventIdParticipantsRouteImport } from './routes/_organizer/events/$eventId/participants'
 import { Route as OrganizerEventsEventIdScheduleRouteImport } from './routes/_organizer/events/$eventId/schedule'
 import { Route as OrganizerEventsEventIdSettingsRouteImport } from './routes/_organizer/events/$eventId/settings'
 import { Route as OrganizerEventsEventIdWorkshopsRouteImport } from './routes/_organizer/events/$eventId/workshops'
@@ -70,6 +73,11 @@ const InvitationsInvitationIdRoute = InvitationsInvitationIdRouteImport.update({
   path: '/invitations/$invitationId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RTokenRoute = RTokenRouteImport.update({
+  id: '/r/$token',
+  path: '/r/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OrganizerEventsEventIdRouteRoute =
   OrganizerEventsEventIdRouteRouteImport.update({
     id: '/events/$eventId',
@@ -86,10 +94,21 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiLiveEventIdRoute = ApiLiveEventIdRouteImport.update({
+  id: '/api/live/$eventId',
+  path: '/api/live/$eventId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OrganizerEventsEventIdIndexRoute =
   OrganizerEventsEventIdIndexRouteImport.update({
     id: '/',
     path: '/',
+    getParentRoute: () => OrganizerEventsEventIdRouteRoute,
+  } as any)
+const OrganizerEventsEventIdParticipantsRoute =
+  OrganizerEventsEventIdParticipantsRouteImport.update({
+    id: '/participants',
+    path: '/participants',
     getParentRoute: () => OrganizerEventsEventIdRouteRoute,
   } as any)
 const OrganizerEventsEventIdScheduleRoute =
@@ -120,9 +139,12 @@ export interface FileRoutesByFullPath {
   '/home': typeof OrganizerHomeRoute
   '/team': typeof OrganizerTeamRoute
   '/invitations/$invitationId': typeof InvitationsInvitationIdRoute
+  '/r/$token': typeof RTokenRoute
   '/events/$eventId': typeof OrganizerEventsEventIdRouteRouteWithChildren
   '/events/new': typeof OrganizerEventsNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/live/$eventId': typeof ApiLiveEventIdRoute
+  '/events/$eventId/participants': typeof OrganizerEventsEventIdParticipantsRoute
   '/events/$eventId/schedule': typeof OrganizerEventsEventIdScheduleRoute
   '/events/$eventId/settings': typeof OrganizerEventsEventIdSettingsRoute
   '/events/$eventId/workshops': typeof OrganizerEventsEventIdWorkshopsRoute
@@ -137,8 +159,11 @@ export interface FileRoutesByTo {
   '/home': typeof OrganizerHomeRoute
   '/team': typeof OrganizerTeamRoute
   '/invitations/$invitationId': typeof InvitationsInvitationIdRoute
+  '/r/$token': typeof RTokenRoute
   '/events/new': typeof OrganizerEventsNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/live/$eventId': typeof ApiLiveEventIdRoute
+  '/events/$eventId/participants': typeof OrganizerEventsEventIdParticipantsRoute
   '/events/$eventId/schedule': typeof OrganizerEventsEventIdScheduleRoute
   '/events/$eventId/settings': typeof OrganizerEventsEventIdSettingsRoute
   '/events/$eventId/workshops': typeof OrganizerEventsEventIdWorkshopsRoute
@@ -155,9 +180,12 @@ export interface FileRoutesById {
   '/_organizer/home': typeof OrganizerHomeRoute
   '/_organizer/team': typeof OrganizerTeamRoute
   '/invitations/$invitationId': typeof InvitationsInvitationIdRoute
+  '/r/$token': typeof RTokenRoute
   '/_organizer/events/$eventId': typeof OrganizerEventsEventIdRouteRouteWithChildren
   '/_organizer/events/new': typeof OrganizerEventsNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/live/$eventId': typeof ApiLiveEventIdRoute
+  '/_organizer/events/$eventId/participants': typeof OrganizerEventsEventIdParticipantsRoute
   '/_organizer/events/$eventId/schedule': typeof OrganizerEventsEventIdScheduleRoute
   '/_organizer/events/$eventId/settings': typeof OrganizerEventsEventIdSettingsRoute
   '/_organizer/events/$eventId/workshops': typeof OrganizerEventsEventIdWorkshopsRoute
@@ -174,9 +202,12 @@ export interface FileRouteTypes {
     | '/home'
     | '/team'
     | '/invitations/$invitationId'
+    | '/r/$token'
     | '/events/$eventId'
     | '/events/new'
     | '/api/auth/$'
+    | '/api/live/$eventId'
+    | '/events/$eventId/participants'
     | '/events/$eventId/schedule'
     | '/events/$eventId/settings'
     | '/events/$eventId/workshops'
@@ -191,8 +222,11 @@ export interface FileRouteTypes {
     | '/home'
     | '/team'
     | '/invitations/$invitationId'
+    | '/r/$token'
     | '/events/new'
     | '/api/auth/$'
+    | '/api/live/$eventId'
+    | '/events/$eventId/participants'
     | '/events/$eventId/schedule'
     | '/events/$eventId/settings'
     | '/events/$eventId/workshops'
@@ -208,9 +242,12 @@ export interface FileRouteTypes {
     | '/_organizer/home'
     | '/_organizer/team'
     | '/invitations/$invitationId'
+    | '/r/$token'
     | '/_organizer/events/$eventId'
     | '/_organizer/events/new'
     | '/api/auth/$'
+    | '/api/live/$eventId'
+    | '/_organizer/events/$eventId/participants'
     | '/_organizer/events/$eventId/schedule'
     | '/_organizer/events/$eventId/settings'
     | '/_organizer/events/$eventId/workshops'
@@ -225,7 +262,9 @@ export interface RootRouteChildren {
   SignUpRoute: typeof SignUpRoute
   OrgEventRoute: typeof OrgEventRoute
   InvitationsInvitationIdRoute: typeof InvitationsInvitationIdRoute
+  RTokenRoute: typeof RTokenRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiLiveEventIdRoute: typeof ApiLiveEventIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -293,6 +332,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InvitationsInvitationIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/r/$token': {
+      id: '/r/$token'
+      path: '/r/$token'
+      fullPath: '/r/$token'
+      preLoaderRoute: typeof RTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_organizer/events/$eventId': {
       id: '/_organizer/events/$eventId'
       path: '/events/$eventId'
@@ -314,11 +360,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/live/$eventId': {
+      id: '/api/live/$eventId'
+      path: '/api/live/$eventId'
+      fullPath: '/api/live/$eventId'
+      preLoaderRoute: typeof ApiLiveEventIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_organizer/events/$eventId/': {
       id: '/_organizer/events/$eventId/'
       path: '/'
       fullPath: '/events/$eventId/'
       preLoaderRoute: typeof OrganizerEventsEventIdIndexRouteImport
+      parentRoute: typeof OrganizerEventsEventIdRouteRoute
+    }
+    '/_organizer/events/$eventId/participants': {
+      id: '/_organizer/events/$eventId/participants'
+      path: '/participants'
+      fullPath: '/events/$eventId/participants'
+      preLoaderRoute: typeof OrganizerEventsEventIdParticipantsRouteImport
       parentRoute: typeof OrganizerEventsEventIdRouteRoute
     }
     '/_organizer/events/$eventId/schedule': {
@@ -346,6 +406,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface OrganizerEventsEventIdRouteRouteChildren {
+  OrganizerEventsEventIdParticipantsRoute: typeof OrganizerEventsEventIdParticipantsRoute
   OrganizerEventsEventIdScheduleRoute: typeof OrganizerEventsEventIdScheduleRoute
   OrganizerEventsEventIdSettingsRoute: typeof OrganizerEventsEventIdSettingsRoute
   OrganizerEventsEventIdWorkshopsRoute: typeof OrganizerEventsEventIdWorkshopsRoute
@@ -354,6 +415,8 @@ interface OrganizerEventsEventIdRouteRouteChildren {
 
 const OrganizerEventsEventIdRouteRouteChildren: OrganizerEventsEventIdRouteRouteChildren =
   {
+    OrganizerEventsEventIdParticipantsRoute:
+      OrganizerEventsEventIdParticipantsRoute,
     OrganizerEventsEventIdScheduleRoute: OrganizerEventsEventIdScheduleRoute,
     OrganizerEventsEventIdSettingsRoute: OrganizerEventsEventIdSettingsRoute,
     OrganizerEventsEventIdWorkshopsRoute: OrganizerEventsEventIdWorkshopsRoute,
@@ -392,7 +455,9 @@ const rootRouteChildren: RootRouteChildren = {
   SignUpRoute: SignUpRoute,
   OrgEventRoute: OrgEventRoute,
   InvitationsInvitationIdRoute: InvitationsInvitationIdRoute,
+  RTokenRoute: RTokenRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiLiveEventIdRoute: ApiLiveEventIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
