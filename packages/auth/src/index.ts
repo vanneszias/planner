@@ -18,9 +18,11 @@ export type AuthOptions = {
 	sendEmail: (email: AuthEmail) => Promise<void>
 	/** Google sign-in is only enabled when both values are set (implementation-plan.md). */
 	google?: { clientId?: string; clientSecret?: string }
+	/** Runs after a user is created, e.g. to give them a personal organization. */
+	onUserCreated?: (user: { id: string; name: string; email: string }) => Promise<void>
 }
 
-export function createAuth({ db, baseURL, secret, sendEmail, google }: AuthOptions) {
+export function createAuth({ db, baseURL, secret, sendEmail, google, onUserCreated }: AuthOptions) {
 	const googleEnabled = Boolean(google?.clientId && google?.clientSecret)
 
 	return betterAuth({
@@ -29,6 +31,15 @@ export function createAuth({ db, baseURL, secret, sendEmail, google }: AuthOptio
 		secret,
 		database: drizzleAdapter(db, { provider: 'sqlite' }),
 		advanced: { cookiePrefix: brand.slug },
+		databaseHooks: {
+			user: {
+				create: {
+					after: async (user) => {
+						await onUserCreated?.({ id: user.id, name: user.name, email: user.email })
+					},
+				},
+			},
+		},
 		// Workers isolates don't share memory, so in-memory counters would be useless.
 		rateLimit: { enabled: true, storage: 'database' },
 		session: {

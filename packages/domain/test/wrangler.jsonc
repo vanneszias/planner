@@ -1,0 +1,9 @@
+// Test-only Worker config: a local D1 database with the real migrations applied (see setup.ts).
+{
+	"name": "domain-test",
+	"compatibility_date": "2026-10-23",
+	"compatibility_flags": ["nodejs_compat"],
+	"d1_databases": [
+		{ "binding": "DB", "database_name": "domain-test", "database_id": "domain-test" }
+	]
+}
