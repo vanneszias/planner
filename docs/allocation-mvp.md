@@ -137,7 +137,8 @@ generating the synthetic event). Workers Paid allows 30 s by default, up to
   session per pick); still under 10% of the default limit.
 - **With "leave empty", many slots stay empty** once popular workshops fill:
   13% at the target size with five choices. Organizers using the default would
-  have a lot to resolve by hand. See the open question in decisions.md.
+  have a lot to resolve by hand, so the review screen gets a one-click "Fill all
+  empty places" (D27).
 
 The temporary benchmark Worker (`event-allocation-bench`) was deleted after
 the run.
@@ -151,8 +152,9 @@ the engine on an organizer's spreadsheets locally and writes `programme.csv`
 
 ### Not built yet
 
-- **Swap pass** (D11, stretch): pairwise trades that help someone and hurt
-  nobody. Indexing by session keeps it near-linear; not needed to ship M2.
+- **Swap pass** (D11): pairwise trades that help someone and hurt nobody.
+  Indexing by session keeps it near-linear. Waits until after the M4 review
+  screen (D28).
 
 ## Data model sketch
 

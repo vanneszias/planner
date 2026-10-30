@@ -192,8 +192,9 @@ usable from a script for concierge runs.
   default.
 - [x] **Concierge CLI** (`pnpm --filter @app/allocation concierge`): organizer
   spreadsheets in, programme and roster CSVs out, locally.
-- [ ] Swap pass (D11, stretch).
-- [ ] Decide the default for empty slots (see open question in decisions.md).
+- [x] Default for empty slots decided: leave empty, with "Fill all empty places"
+  on the M4 review screen (D27).
+- [ ] Swap pass: after the M4 review screen (D28).
 
 ## M3 to M5 (outline)
 
