@@ -47,7 +47,8 @@ function OrganizerLayout() {
 	return (
 		<div className="min-h-dvh">
 			<header className="border-b border-border bg-card">
-				<div className="mx-auto flex max-w-4xl flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2">
+				{/* Row 1: where you can go. Row 2: context (organization, language). */}
+				<div className="mx-auto flex max-w-4xl items-center gap-3 px-4 pt-2">
 					<Link to="/home" className="font-display text-base font-semibold">
 						{brand.name}
 					</Link>
@@ -59,17 +60,16 @@ function OrganizerLayout() {
 							{m.nav_team()}
 						</Link>
 					</nav>
-					<LanguageSwitch />
 					<Button variant="ghost" className="px-2" onClick={signOut}>
 						{m.sign_out()}
 					</Button>
 				</div>
-				{organizations.length > 1 && (
-					<div className="mx-auto max-w-4xl px-4 pb-2">
+				<div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-2 px-4 pb-2">
+					{organizations.length > 1 ? (
 						<label className="flex items-center gap-2 text-sm text-muted-foreground">
 							{m.switch_organization()}
 							<select
-								className="min-h-11 rounded-md border border-input bg-card px-2 text-foreground"
+								className="min-h-11 max-w-48 rounded-md border border-input bg-card px-2 text-foreground"
 								value={activeId}
 								onChange={(event) => switchOrganization(event.target.value)}
 							>
@@ -80,8 +80,11 @@ function OrganizerLayout() {
 								))}
 							</select>
 						</label>
-					</div>
-				)}
+					) : (
+						<span />
+					)}
+					<LanguageSwitch />
+				</div>
 			</header>
 			<main className="mx-auto max-w-4xl px-4 py-8">
 				<Outlet />

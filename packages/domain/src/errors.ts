@@ -5,14 +5,15 @@ export type DomainErrorCode = 'not_found' | 'forbidden' | 'invalid' | 'conflict'
  * another organization: never reveal that it exists.
  */
 export class DomainError extends Error {
-	constructor(
-		readonly code: DomainErrorCode,
-		message: string,
-		/** Field-level problems for forms, keyed by field name. */
-		readonly issues?: Record<string, string>,
-	) {
+	readonly code: DomainErrorCode
+	/** Field-level problems for forms, keyed by field name. */
+	readonly issues?: Record<string, string>
+
+	constructor(code: DomainErrorCode, message: string, issues?: Record<string, string>) {
 		super(message)
 		this.name = 'DomainError'
+		this.code = code
+		this.issues = issues
 	}
 }
 

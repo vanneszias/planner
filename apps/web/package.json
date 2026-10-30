@@ -11,6 +11,7 @@
 		"preview": "pnpm run build && vite preview",
 		"deploy": "pnpm run build && wrangler deploy",
 		"typecheck": "tsc --noEmit",
+		"seed": "node scripts/seed.ts",
 		"cf-typegen": "wrangler types --strict-vars=false -c wrangler.jsonc -c ../coordinator/wrangler.jsonc"
 	},
 	"dependencies": {
@@ -36,6 +37,7 @@
 		"@types/react": "^19.2.0",
 		"@types/react-dom": "^19.2.0",
 		"@vitejs/plugin-react": "^6.0.1",
+		"drizzle-orm": "^0.45.4",
 		"typescript": "^6.0.2",
 		"vite": "^8.0.0",
 		"vitest": "^5.0.5",

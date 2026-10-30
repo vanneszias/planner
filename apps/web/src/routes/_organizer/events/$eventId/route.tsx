@@ -28,7 +28,10 @@ function EventLayout() {
 				</div>
 				<p className="text-muted-foreground">{formatDateRange(event.startsOn, event.endsOn)}</p>
 			</div>
-			<nav aria-label={event.name} className="flex gap-6 border-b border-border">
+			<nav
+				aria-label={event.name}
+				className="-mx-4 flex gap-5 overflow-x-auto border-b border-border px-4 whitespace-nowrap"
+			>
 				<Link to="/events/$eventId" params={params} activeOptions={{ exact: true }} className={tab}>
 					{m.nav_overview()}
 				</Link>

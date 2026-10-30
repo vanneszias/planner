@@ -49,6 +49,7 @@ cp apps/web/.dev.vars.example apps/web/.dev.vars   # add a secret: openssl rand 
 pnpm --filter @app/db migrate:local
 pnpm dev                                            # http://localhost:3000, all four Workers
 pnpm lint && pnpm typecheck && pnpm test
+pnpm --filter @app/web seed you@example.com   # demo event for a local account
 ```
 
 Sign-in emails print to the dev server console locally.
@@ -140,12 +141,20 @@ with 20 workshops and 60 sessions, and publishes its page.
   (several times at once, rooms reused by name, room clashes flagged), public
   event page at `/{org}/{event}`, 404 page. English and Dutch.
 - [x] Another organization's event URL shows the 404 page.
-- [ ] Event settings screen (description, D7–D10 options, booking window).
-- [ ] Edit an existing session (the domain supports it; no UI yet).
-- [ ] Invite collaborators (O3) and switch organization.
-- [ ] Rename organization or event slug (writes `slug_redirect`).
-- [ ] Age groups and workshop eligibility.
-- [ ] Load test of the exit criterion (20 workshops, 60 sessions).
+- [x] Event settings: description, dates, content language, mode, booking window
+  (stored as UTC), and D7–D10 options behind "More options".
+- [x] Edit an existing session (time, room, places).
+- [x] Team (O3): owners invite owners, editors or viewers; invitees sign in or
+  sign up and return to the invitation; organization switcher in the header.
+  Reserved slugs are also refused when created through the auth API.
+- [x] Rename event and organization addresses; old paths answer 301 to the new
+  ones (organization renames cover every event path under them).
+- [x] Age groups per event and workshop eligibility; shown on the public page.
+- [x] Exit-criterion check with `pnpm --filter @app/web seed <email>`: 20
+  workshops and 60 sessions seeded in about 0.6 s; organizer pages answer in
+  45–60 ms and the public page is about 52 KB locally; no false room clashes.
+- [ ] Long schedules are one long list on phones; consider a workshop filter
+  or compact view once real organizers try it.
 
 ### Learned in M1
 
@@ -155,6 +164,9 @@ with 20 workshops and 60 sessions, and publishes its page.
   during teardown. Tests still pass; running packages in parallel once turned it
   into a failure, so the root `pnpm test` runs packages one at a time.
 - **D1 enforces foreign keys** (cascade verified in tests).
+- **Node runs scripts as TypeScript only for erasable syntax** (no parameter
+  properties, enums or namespaces). `erasableSyntaxOnly` in the shared tsconfig
+  catches it at typecheck.
 
 ## M2 to M5 (outline)
 
