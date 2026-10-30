@@ -8,6 +8,13 @@
       "when": 1793314515561,
       "tag": "0000_careful_veda",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1793349199701,
+      "tag": "0001_misty_hellion",
+      "breakpoints": true
     }
   ]
 }
