@@ -1,10 +1,10 @@
-import { brand } from '@app/brand'
 import { cloudflare } from '@cloudflare/vite-plugin'
 import { paraglideVitePlugin } from '@inlang/paraglide-js'
 import tailwindcss from '@tailwindcss/vite'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import viteReact from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
+import { paraglideOptions } from './paraglide.config'
 
 export default defineConfig(({ command }) => {
 	// workerd doesn't implement Durable Object jurisdictions, so local dev runs
@@ -36,14 +36,7 @@ export default defineConfig(({ command }) => {
 					{ configPath: '../api/wrangler.jsonc', config: local },
 				],
 			}),
-			paraglideVitePlugin({
-				project: './project.inlang',
-				outdir: './src/paraglide',
-				emitTsDeclarations: true,
-				cookieName: `${brand.slug}.locale`,
-				// No locale in URLs: event links are shared across languages.
-				strategy: ['cookie', 'preferredLanguage', 'baseLocale'],
-			}),
+			paraglideVitePlugin(paraglideOptions),
 			tailwindcss(),
 			tanstackStart(),
 			viteReact(),
