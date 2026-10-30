@@ -1,7 +1,7 @@
 import { env } from 'cloudflare:workers'
 import { type Auth, type AuthEmail, createAuth } from '@app/auth'
 import { createDb } from '@app/db'
-import { createPersonalOrganization } from '@app/domain'
+import { createPersonalOrganization, reservedSlugs } from '@app/domain'
 
 let auth: Auth | undefined
 
@@ -16,6 +16,7 @@ export function getAuth(): Auth {
 		onUserCreated: async (user) => {
 			await createPersonalOrganization(createDb(env.DB), user)
 		},
+		isReservedSlug: (slug) => reservedSlugs.has(slug),
 	})
 	return auth
 }

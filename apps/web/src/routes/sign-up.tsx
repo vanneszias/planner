@@ -6,18 +6,23 @@ import { createFileRoute, Link, redirect, useNavigate } from '@tanstack/react-ro
 import { type FormEvent, useState } from 'react'
 import { AuthShell, FormError } from '#/components/auth-shell'
 import { authErrorMessage } from '#/lib/auth-errors'
+import { safeRedirect } from '#/lib/redirect'
 import { m } from '#/paraglide/messages'
 import { getSessionUser } from '#/server/session'
 
 export const Route = createFileRoute('/sign-up')({
-	beforeLoad: async () => {
-		if (await getSessionUser()) throw redirect({ to: '/home' })
+	validateSearch: (search: Record<string, unknown>): { redirect?: string } => ({
+		redirect: safeRedirect(search.redirect),
+	}),
+	beforeLoad: async ({ search }) => {
+		if (await getSessionUser()) throw redirect({ href: search.redirect ?? '/home' })
 	},
 	component: SignUp,
 })
 
 function SignUp() {
 	const navigate = useNavigate()
+	const { redirect: next = '/home' } = Route.useSearch()
 	const [name, setName] = useState('')
 	const [email, setEmail] = useState('')
 	const [password, setPassword] = useState('')
@@ -31,7 +36,7 @@ function SignUp() {
 		const result = await authClient.signUp.email({ name, email, password })
 		setPending(false)
 		if (result.error) return setError(authErrorMessage(result.error))
-		await navigate({ to: '/home' })
+		await navigate({ href: next })
 	}
 
 	return (
@@ -41,7 +46,11 @@ function SignUp() {
 			footer={
 				<p className="text-sm">
 					{m.have_account()}{' '}
-					<Link to="/sign-in" className="font-bold text-primary underline underline-offset-4">
+					<Link
+						to="/sign-in"
+						search={{ redirect: next === '/home' ? undefined : next }}
+						className="font-bold text-primary underline underline-offset-4"
+					>
 						{m.sign_in_link()}
 					</Link>
 				</p>

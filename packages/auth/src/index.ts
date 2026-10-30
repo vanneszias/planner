@@ -3,6 +3,7 @@ import type { Db } from '@app/db'
 import { drizzleAdapter } from '@better-auth/drizzle-adapter'
 import { passkey } from '@better-auth/passkey'
 import { betterAuth } from 'better-auth'
+import { APIError } from 'better-auth/api'
 import { haveIBeenPwned, magicLink, organization } from 'better-auth/plugins'
 import { tanstackStartCookies } from 'better-auth/tanstack-start'
 import { ac, roles } from './permissions.ts'
@@ -20,9 +21,25 @@ export type AuthOptions = {
 	google?: { clientId?: string; clientSecret?: string }
 	/** Runs after a user is created, e.g. to give them a personal organization. */
 	onUserCreated?: (user: { id: string; name: string; email: string }) => Promise<void>
+	/** Slugs organizations may not use (app routes). Checked on create and rename. */
+	isReservedSlug?: (slug: string) => boolean
 }
 
-export function createAuth({ db, baseURL, secret, sendEmail, google, onUserCreated }: AuthOptions) {
+export function createAuth({
+	db,
+	baseURL,
+	secret,
+	sendEmail,
+	google,
+	onUserCreated,
+	isReservedSlug = () => false,
+}: AuthOptions) {
+	const checkSlug = async ({ organization }: { organization: { slug?: string } }) => {
+		if (organization.slug && isReservedSlug(organization.slug)) {
+			throw new APIError('BAD_REQUEST', { message: 'SLUG_RESERVED' })
+		}
+	}
+
 	const googleEnabled = Boolean(google?.clientId && google?.clientSecret)
 
 	return betterAuth({
@@ -89,6 +106,10 @@ export function createAuth({ db, baseURL, secret, sendEmail, google, onUserCreat
 				ac,
 				roles,
 				creatorRole: 'owner',
+				organizationHooks: {
+					beforeCreateOrganization: checkSlug,
+					beforeUpdateOrganization: checkSlug,
+				},
 				sendInvitationEmail: ({ email, organization, inviter, id }) =>
 					sendEmail({
 						to: email,
