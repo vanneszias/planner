@@ -112,20 +112,49 @@ the MVP:
 - Introduce a Workflow when allocation or publishing outgrows a request, or when
   we need waiting steps such as "publish at 18:00".
 
-### Benchmark before trusting this
+### Benchmark (measured 2026-10-30)
 
-Generate synthetic events and measure CPU time in `wrangler dev` and in a
-deployed Worker:
+Synthetic events from `packages/allocation/bench` (`pnpm --filter
+@app/allocation bench`): seats about 10% above demand, Zipf-skewed
+popularity, five ranked workshops each (all ones the participant may join), a
+third of workshops limited to one of two age groups, 3 sessions per person.
 
-| Size       | Participants | Workshops | Sessions |
-| ---------- | ------------ | --------- | -------- |
-| Target     | 200          | 20        | 60       |
-| Large camp | 2,000        | 100       | 400      |
-| Stress     | 10,000       | 300       | 1,200    |
+CPU time per request in a **deployed Worker** (from `wrangler tail`; includes
+generating the synthetic event). Workers Paid allows 30 s by default, up to
+5 min, and 128 MB of memory
+([limits](https://developers.cloudflare.com/workers/platform/limits/)).
 
-If the stress case exceeds the Worker CPU limit, that's when a Workflow step
-(or later a container for a solver) comes in. Check current Worker CPU limits
-before the benchmark (**unverified** here).
+| Size       | Participants | Sessions | CPU, empty slots left | CPU, empty slots filled | First choice | Empty slots left (fill off) |
+| ---------- | ------------ | -------- | --------------------- | ----------------------- | ------------ | --------------------------- |
+| Target     | 200          | 60       | 13–29 ms              | 13–29 ms                | 98%          | 76 of 600 (13%)             |
+| Large camp | 2,000        | 400      | 118–152 ms            | 172–227 ms              | 74%          | 1,391 of 6,000 (23%)        |
+| Stress     | 10,000       | 1,200    | 253–490 ms            | 1.4–2.8 s               | 60%          | 9,738 of 30,000 (32%)       |
+
+- **Running inside the organizer's request is fine** at every size, with no
+  memory problems. No Workflow or container needed for this engine.
+- Results were identical in Node and in the deployed Worker.
+- Filling empty slots is the slowest part at stress size (it scans every
+  session per pick); still under 10% of the default limit.
+- **With "leave empty", many slots stay empty** once popular workshops fill:
+  13% at the target size with five choices. Organizers using the default would
+  have a lot to resolve by hand, so the review screen gets a one-click "Fill all
+  empty places" (D27).
+
+The temporary benchmark Worker (`event-allocation-bench`) was deleted after
+the run.
+
+### Concierge runs (D18)
+
+`pnpm --filter @app/allocation concierge sessions.csv participants.csv` runs
+the engine on an organizer's spreadsheets locally and writes `programme.csv`
+(per participant) and `rosters.csv` (per session). Formats and examples are in
+`packages/allocation/examples`; semicolon exports from Dutch spreadsheets work.
+
+### Not built yet
+
+- **Swap pass** (D11): pairwise trades that help someone and hurt nobody.
+  Indexing by session keeps it near-linear. Waits until after the M4 review
+  screen (D28).
 
 ## Data model sketch
 

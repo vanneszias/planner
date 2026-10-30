@@ -1,0 +1,21 @@
+{
+	"name": "@app/allocation",
+	"private": true,
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"scripts": {
+		"typecheck": "tsc --noEmit",
+		"test": "vitest run",
+		"bench": "node bench/run.ts",
+		"concierge": "node cli/run.ts"
+	},
+	"devDependencies": {
+		"@app/config": "workspace:*",
+		"@types/node": "^22.10.2",
+		"fast-check": "^4.3.0",
+		"typescript": "^6.0.2",
+		"vitest": "^5.0.5"
+	}
+}
