@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  CLOUDFLARE_ACCOUNT_ID: 6495d15c9d09b19ddc65f0a01892a183
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm --filter @app/web build
+
+  # Pull requests: upload a preview version of web. Preview URLs share production
+  # bindings (docs/implementation-plan.md), so migrations must stay additive.
+  preview:
+    needs: check
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @app/web build
+      - name: Upload preview version
+        working-directory: apps/web
+        run: pnpm exec wrangler versions upload --preview-alias pr-${{ github.event.pull_request.number }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+  # main: migrate, then deploy in dependency order (the coordinator defines the
+  # Durable Object class the others bind to).
+  deploy:
+    needs: check
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    concurrency: production
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Apply D1 migrations
+        working-directory: apps/web
+        run: pnpm exec wrangler d1 migrations apply DB --remote
+      - name: Deploy coordinator
+        working-directory: apps/coordinator
+        run: pnpm exec wrangler deploy
+      - name: Deploy jobs
+        working-directory: apps/jobs
+        run: pnpm exec wrangler deploy
+      - name: Deploy api
+        working-directory: apps/api
+        run: pnpm exec wrangler deploy
+      - name: Build and deploy web
+        working-directory: apps/web
+        run: pnpm build && pnpm exec wrangler deploy
+      - name: Smoke test
+        run: curl --fail --retry 3 --retry-delay 5 https://event-web.zias.workers.dev/health
