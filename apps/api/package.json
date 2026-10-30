@@ -11,6 +11,8 @@
 	},
 	"devDependencies": {
 		"@app/config": "workspace:*",
+		"@app/db": "workspace:*",
+		"@app/domain": "workspace:*",
 		"@cloudflare/vitest-plugin": "^1.4.11",
 		"typescript": "^6.0.2",
 		"vitest": "^5.0.5",

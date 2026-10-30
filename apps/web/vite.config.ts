@@ -17,6 +17,7 @@ export default defineConfig(({ command }) => {
 						COORDINATOR_JURISDICTION: '',
 						BETTER_AUTH_URL: 'http://localhost:3000',
 						EMAIL_DELIVERY: 'console',
+						TURNSTILE_SITE_KEY: '1x00000000000000000000BB',
 					},
 				}
 			: {}

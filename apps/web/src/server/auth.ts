@@ -1,7 +1,8 @@
 import { env } from 'cloudflare:workers'
-import { type Auth, type AuthEmail, createAuth } from '@app/auth'
+import { type Auth, createAuth } from '@app/auth'
 import { createDb } from '@app/db'
 import { createPersonalOrganization, reservedSlugs } from '@app/domain'
+import { sendEmail } from './email'
 
 let auth: Auth | undefined
 
@@ -19,13 +20,4 @@ export function getAuth(): Auth {
 		isReservedSlug: (slug) => reservedSlugs.has(slug),
 	})
 	return auth
-}
-
-async function sendEmail(email: AuthEmail): Promise<void> {
-	if (env.EMAIL_DELIVERY === 'console') {
-		// Local dev only: emails contain sign-in links, so this must never run deployed.
-		console.log(`\n✉️  To: ${email.to}\nSubject: ${email.subject}\n\n${email.text}\n`)
-		return
-	}
-	await env.JOBS.send({ kind: 'email', ...email })
 }

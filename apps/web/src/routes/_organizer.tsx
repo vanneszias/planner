@@ -46,7 +46,7 @@ function OrganizerLayout() {
 
 	return (
 		<div className="min-h-dvh">
-			<header className="border-b border-border bg-card">
+			<header className="border-b border-border bg-card print:hidden">
 				{/* Row 1: where you can go. Row 2: context (organization, language). */}
 				<div className="mx-auto flex max-w-4xl items-center gap-3 px-4 pt-2">
 					<Link to="/home" className="font-display text-base font-semibold">

@@ -196,7 +196,62 @@ usable from a script for concierge runs.
   on the M4 review screen (D27).
 - [ ] Swap pass: after the M4 review screen (D28).
 
-## M3 to M5 (outline)
+## M3: Registration and booking
+
+Exit: adults self-register, organizers import minors, participants book with
+live seat counts and waitlists, and the concurrency test passes.
+
+### M3a: participants
+
+- [x] Schema: `registration`, `assignment`, `waitlist_entry`, `email_delivery` (migration `0002`).
+- [x] Tokens: 128-bit private link token and 6-character short code per
+  registration, stored as SHA-256 hashes; link exchanged for an `HttpOnly`
+  cookie, then redirect to the clean URL (security-privacy.md).
+- [x] Domain: register (adult self-registration, D23), participant context,
+  book, cancel (change cut-off, D22), waitlist join and promotion. Guarded
+  insert enforces capacity, overlap and the per-person limit in one statement.
+- [x] EventCoordinator: every booking write for an event goes through its
+  Durable Object; broadcasts seat counts to connected browsers (A5).
+- [x] Concurrency test: hundreds of parallel bookings on one session, through
+  the Durable Object and straight against D1; never overbooked.
+- [x] Public event page: register, book, cancel, waitlist, live seats, "My day"
+  strip, "I have a code", confirmation email with the private link.
+- [x] Turnstile on registration, code entry and "Find my programme" (Cloudflare
+  test keys locally; skipped in production until real keys exist).
+
+Tested in the browser: register and book in one step (Dutch confirmation email
+with link, code and cancel link), overlaps and per-person count, "My day"
+strip, private link swapped for a cookie with a clean URL, code typed in
+lower case with a space, wrong code, waitlist and promotion with email, live
+seat counts over WebSocket, and "Not you? Cancel this registration" revoking
+the link.
+
+### Learned in M3a
+
+- **Durable Objects interleave at every await**, D1 calls included, so the
+  coordinator chains writes in a promise queue.
+- **Values returned over Durable Object RPC are typed with `Disposable`**,
+  which TanStack Start won't serialize; annotate them with the domain type.
+- **TanStack Router validates search params twice**, the second time with
+  the first result, so `validateSearch` must accept its own output.
+- **WebSocket close code 1005 is reported, never sent**; echoing it throws.
+- **`/vitest-plugin` wants a `main` entry** even for tests that
+  only call functions; without it, it logs uncaught service-binding errors.
+
+### M3b: organizer side
+
+- [x] Participant list with filters (age group, no sessions yet, on a waitlist);
+  every read is audit-logged (D14). Add a minor by hand (D2).
+- [x] CSV import of minors with per-row errors; nothing is imported until every
+  row is valid (O4).
+- [x] Printable code cards with QR codes; email links to guardians (D24).
+  Codes are stored hashed, so printing or emailing issues fresh ones and
+  earlier cards stop working; the screen warns before continuing.
+- [x] Root error screen with a retry button.
+- [ ] Print layout checked only by page count (one A4 page for four cards); the
+  hidden app chrome on paper still needs a look in a real print preview.
+
+## M4 to M5 (outline)
 
 | Milestone                   | First tasks                                                                                                               |
 | --------------------------- | ------------------------------------------------------------------------------------------------------------------------- |

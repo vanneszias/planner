@@ -13,7 +13,9 @@
 		// Set to the deployed origin per environment.
 		"BETTER_AUTH_URL": "https://event-web.zias.workers.dev",
 		// "queue" when deployed; "console" only in local dev (sign-in links are printed).
-		"EMAIL_DELIVERY": "queue"
+		"EMAIL_DELIVERY": "queue",
+		// Public Turnstile site key; empty until production keys exist (security checklist).
+		"TURNSTILE_SITE_KEY": ""
 	},
 	"upload_source_maps": true,
 	"d1_databases": [

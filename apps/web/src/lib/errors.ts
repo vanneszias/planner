@@ -26,6 +26,12 @@ export function fieldMessage(code: string | undefined): string | null {
 			return m.field_taken()
 		case 'reserved':
 			return m.field_reserved()
+		case 'email':
+			return m.field_email()
+		case 'not_found':
+			return m.field_not_found()
+		case 'too_many':
+			return m.field_too_many()
 		case 'outside_event':
 			return m.field_outside_event()
 		case 'number':

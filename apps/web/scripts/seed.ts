@@ -2,7 +2,7 @@
  * Local demo data: the M1 exit-criterion event (20 workshops, 60 sessions,
  * 10 rooms, 2 days), owned by an existing local account.
  *
- *   pnpm --filter @app/web seed organizer@example.com
+ *   pnpm --filter @app/web seed organizer@example.com [booking]
  *
  * Writes to the local D1 database only (Wrangler's platform proxy).
  */
@@ -19,6 +19,7 @@ import { eq } from 'drizzle-orm'
 import { getPlatformProxy } from 'wrangler'
 
 const email = process.argv[2]
+const mode = process.argv[3] === 'booking' ? 'booking' : 'ranking'
 if (!email) {
 	console.error('Usage: pnpm --filter @app/web seed <email of a local account>')
 	process.exit(1)
@@ -82,11 +83,11 @@ try {
 
 	const started = performance.now()
 	const event = await createEvent(db, ctx, {
-		name: 'Zomerkamp 2027 (demo)',
+		name: mode === 'booking' ? 'Zomerkamp 2027 (booking demo)' : 'Zomerkamp 2027 (demo)',
 		startsOn: '2027-07-12',
 		endsOn: '2027-07-13',
 		timezone: 'Europe/Brussels',
-		mode: 'ranking',
+		mode,
 		defaultLocale: 'nl',
 		sessionsPerParticipant: 3,
 	})

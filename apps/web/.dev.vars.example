@@ -4,3 +4,5 @@ BETTER_AUTH_SECRET=
 # Optional: Google sign-in only appears when both are set.
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
+# Optional locally: Cloudflare's always-pass test secret enables the bot check.
+TURNSTILE_SECRET=

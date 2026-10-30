@@ -19,7 +19,7 @@ function EventLayout() {
 
 	return (
 		<div className="flex flex-col gap-6">
-			<div>
+			<div className="print:hidden">
 				<div className="flex flex-wrap items-center gap-3">
 					<h1 className="font-display text-[clamp(1.5rem,5vw,2.25rem)] leading-tight font-semibold hyphens-auto">
 						{event.name}
@@ -30,7 +30,7 @@ function EventLayout() {
 			</div>
 			<nav
 				aria-label={event.name}
-				className="-mx-4 flex gap-5 overflow-x-auto border-b border-border px-4 whitespace-nowrap"
+				className="print:hidden -mx-4 flex gap-5 overflow-x-auto border-b border-border px-4 whitespace-nowrap"
 			>
 				<Link to="/events/$eventId" params={params} activeOptions={{ exact: true }} className={tab}>
 					{m.nav_overview()}
@@ -40,6 +40,9 @@ function EventLayout() {
 				</Link>
 				<Link to="/events/$eventId/schedule" params={params} className={tab}>
 					{m.nav_schedule()}
+				</Link>
+				<Link to="/events/$eventId/participants" params={params} className={tab}>
+					{m.nav_participants()}
 				</Link>
 				<Link to="/events/$eventId/settings" params={params} className={tab}>
 					{m.nav_settings()}
