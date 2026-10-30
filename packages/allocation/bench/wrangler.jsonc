@@ -1,0 +1,10 @@
+// Temporary benchmark Worker. Deploy, measure, then `wrangler delete`.
+// No bindings, no user data: it generates synthetic events in memory.
+{
+	"name": "event-allocation-bench",
+	"main": "worker.ts",
+	"compatibility_date": "2026-10-23",
+	"workers_dev": true,
+	"preview_urls": false,
+	"observability": { "enabled": true }
+}
