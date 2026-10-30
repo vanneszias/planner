@@ -1,0 +1,19 @@
+{
+	"name": "@app/api",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "wrangler dev",
+		"deploy": "wrangler deploy",
+		"typecheck": "tsc --noEmit",
+		"test": "vitest run",
+		"cf-typegen": "wrangler types --strict-vars=false -c wrangler.jsonc -c ../coordinator/wrangler.jsonc"
+	},
+	"devDependencies": {
+		"@app/config": "workspace:*",
+		"@cloudflare/vitest-plugin": "^1.4.11",
+		"typescript": "^6.0.2",
+		"vitest": "^5.0.5",
+		"wrangler": "^4.156.0"
+	}
+}

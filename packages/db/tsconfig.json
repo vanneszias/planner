@@ -1,0 +1,7 @@
+{
+	"extends": "@app/config/tsconfig.base.json",
+	"compilerOptions": {
+		"types": ["@cloudflare/workers-types"]
+	},
+	"include": ["src", "drizzle.config.ts"]
+}

@@ -1,0 +1,38 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "event-web",
+	"main": "./src/server.ts",
+	"compatibility_date": "2026-10-23",
+	"compatibility_flags": ["nodejs_compat"],
+	"observability": { "enabled": true },
+	"workers_dev": true,
+	"preview_urls": true,
+	// Always "eu" when deployed. Local dev clears it (see apps/web/vite.config.ts).
+	"vars": {
+		"COORDINATOR_JURISDICTION": "eu",
+		// Set to the deployed origin per environment.
+		"BETTER_AUTH_URL": "https://event-web.zias.workers.dev",
+		// "queue" when deployed; "console" only in local dev (sign-in links are printed).
+		"EMAIL_DELIVERY": "queue"
+	},
+	"upload_source_maps": true,
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "event-db",
+			"database_id": "3fa4e246-fd9c-4bcd-ae38-d3285b83d627",
+			"migrations_dir": "../../packages/db/migrations"
+		}
+	],
+	"r2_buckets": [{ "binding": "FILES", "bucket_name": "event-files", "jurisdiction": "eu" }],
+	"queues": { "producers": [{ "binding": "JOBS", "queue": "event-jobs" }] },
+	"durable_objects": {
+		"bindings": [
+			{
+				"name": "EVENT_COORDINATOR",
+				"class_name": "EventCoordinator",
+				"script_name": "event-coordinator"
+			}
+		]
+	}
+}

@@ -1,0 +1,38 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "event-jobs",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-10-23",
+	"compatibility_flags": ["nodejs_compat"],
+	"observability": { "enabled": true },
+	// No public URL: reached only through bindings.
+	"workers_dev": false,
+	"preview_urls": false,
+	// Always "eu" when deployed. Local dev clears it (see apps/web/vite.config.ts).
+	"vars": { "COORDINATOR_JURISDICTION": "eu" },
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "event-db",
+			"database_id": "3fa4e246-fd9c-4bcd-ae38-d3285b83d627",
+			"migrations_dir": "../../packages/db/migrations"
+		}
+	],
+	"r2_buckets": [{ "binding": "FILES", "bucket_name": "event-files", "jurisdiction": "eu" }],
+	"queues": {
+		"consumers": [
+			{ "queue": "event-jobs", "max_retries": 5, "dead_letter_queue": "event-jobs-dlq" }
+		]
+	},
+	"durable_objects": {
+		"bindings": [
+			{
+				"name": "EVENT_COORDINATOR",
+				"class_name": "EventCoordinator",
+				"script_name": "event-coordinator"
+			}
+		]
+	},
+	// Daily at 03:00 UTC: retention cleanup (docs/domain-model.md).
+	"triggers": { "crons": ["0 3 * * *"] }
+}

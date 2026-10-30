@@ -1,0 +1,44 @@
+{
+	"$schema": "https://inlang.com/schema/inlang-message-format",
+	"language_switch": "Language",
+
+	"sign_in_title": "Sign in",
+	"sign_in_intro": "For organizers. Participants don't need an account: use the link from your organizer.",
+	"email_label": "Email",
+	"password_label": "Password",
+	"name_label": "Your name",
+	"send_link": "Email me a sign-in link",
+	"use_password": "Use a password instead",
+	"use_link": "Use an email link instead",
+	"sign_in_with_password": "Sign in",
+	"sign_in_with_passkey": "Sign in with a passkey",
+	"sign_in_with_google": "Continue with Google",
+	"or": "or",
+	"no_account": "New here?",
+	"create_account_link": "Create an organizer account",
+
+	"link_sent_title": "Check your email",
+	"link_sent_body": "We sent a sign-in link to {email}. It works once and expires in 15 minutes.",
+	"link_sent_again": "Use a different email",
+
+	"sign_up_title": "Create an organizer account",
+	"sign_up_intro": "Set up events, workshops and sessions. You can invite others later.",
+	"password_hint": "At least 10 characters.",
+	"sign_up_submit": "Create account",
+	"have_account": "Already have an account?",
+	"sign_in_link": "Sign in",
+
+	"home_title": "Welcome, {name}",
+	"home_body": "Your events will appear here.",
+	"add_passkey": "Add a passkey for faster sign-in",
+	"passkey_added": "Passkey added. Next time, sign in with it.",
+	"sign_out": "Sign out",
+
+	"error_invalid_credentials": "That email and password don't match. Check them, or sign in with an email link.",
+	"error_password_compromised": "This password has appeared in a data breach. Choose a different one.",
+	"error_password_too_short": "Use at least 10 characters for your password.",
+	"error_user_exists": "There's already an account with this email. Sign in instead.",
+	"error_rate_limited": "Too many attempts. Wait a minute, then try again.",
+	"error_passkey": "The passkey didn't work. Try again, or sign in with an email link.",
+	"error_generic": "That didn't work. Try again in a moment."
+}

@@ -1,0 +1,138 @@
+/*
+ * Design tokens (docs/design-system.md). Contrast ratios are measured against
+ * --paper; don't change a colour without re-measuring.
+ *
+ * Fonts are self-hosted through Fontsource: no Google Fonts CDN (GDPR).
+ */
+@import "@fontsource-variable/unbounded";
+@import "@fontsource-variable/atkinson-hyperlegible-next";
+@import "@fontsource-variable/atkinson-hyperlegible-mono";
+
+/*
+ * No dark mode in the MVP (design-system.md). shadcn components ship `dark:`
+ * styles that would otherwise follow the OS setting; tie them to a class we
+ * never set until dark tokens exist.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+	/* Base */
+	--ink: #1c1e33; /* 15.3:1 on paper */
+	--paper: #f6f7f9;
+	--card: #ffffff;
+	--muted: #565b70; /* 6.3:1 */
+	--edge: #7c8296; /* 3.6:1, control boundaries */
+	--line: #d5d9e2; /* decorative only */
+	--kelp: #0e6b5c; /* platform brand, 6.0:1; packages/brand overrides */
+	--danger: #b42a1b;
+	--success: #1d7536;
+	--tint-success: #e8f3f1;
+	--tint-danger: #fbe9e7;
+	--tint-warning: #fff4d6;
+
+	/* Workshop markers: glyphs always carry an ink outline (WCAG 1.4.11) */
+	--marker-tomato: #d63b2f;
+	--marker-sun: #d99a00;
+	--marker-grass: #2f8a41;
+	--marker-sea: #1f7fb8;
+	--marker-grape: #7a4fc9;
+	--marker-bubblegum: #cf3f86;
+	--marker-sky: #2a95c2;
+	--marker-moss: #6b7a2e;
+
+	/* shadcn/ui semantic variables */
+	--background: var(--paper);
+	--foreground: var(--ink);
+	--card-foreground: var(--ink);
+	--popover: var(--card);
+	--popover-foreground: var(--ink);
+	--primary: var(--kelp);
+	--primary-foreground: #ffffff;
+	--secondary: var(--card);
+	--secondary-foreground: var(--ink);
+	--muted-foreground: var(--muted);
+	--accent: #e9ecf1;
+	--accent-foreground: var(--ink);
+	--destructive: var(--danger);
+	--border: var(--line);
+	--input: var(--edge);
+	--ring: var(--kelp);
+	--radius: 0.625rem;
+}
+
+@theme inline {
+	--font-display: "Unbounded Variable", ui-sans-serif, sans-serif;
+	--font-sans: "Atkinson Hyperlegible Next Variable", ui-sans-serif, system-ui, sans-serif;
+	--font-mono: "Atkinson Hyperlegible Mono Variable", ui-monospace, monospace;
+
+	--color-ink: var(--ink);
+	--color-paper: var(--paper);
+	--color-edge: var(--edge);
+	--color-line: var(--line);
+	--color-kelp: var(--kelp);
+	--color-success: var(--success);
+	--color-tint-success: var(--tint-success);
+	--color-tint-danger: var(--tint-danger);
+	--color-tint-warning: var(--tint-warning);
+	--color-marker-tomato: var(--marker-tomato);
+	--color-marker-sun: var(--marker-sun);
+	--color-marker-grass: var(--marker-grass);
+	--color-marker-sea: var(--marker-sea);
+	--color-marker-grape: var(--marker-grape);
+	--color-marker-bubblegum: var(--marker-bubblegum);
+	--color-marker-sky: var(--marker-sky);
+	--color-marker-moss: var(--marker-moss);
+
+	--color-background: var(--background);
+	--color-foreground: var(--foreground);
+	--color-card: var(--card);
+	--color-card-foreground: var(--card-foreground);
+	--color-popover: var(--popover);
+	--color-popover-foreground: var(--popover-foreground);
+	--color-primary: var(--primary);
+	--color-primary-foreground: var(--primary-foreground);
+	--color-secondary: var(--secondary);
+	--color-secondary-foreground: var(--secondary-foreground);
+	--color-muted: var(--accent);
+	--color-muted-foreground: var(--muted-foreground);
+	--color-accent: var(--accent);
+	--color-accent-foreground: var(--accent-foreground);
+	--color-destructive: var(--destructive);
+	--color-border: var(--border);
+	--color-input: var(--input);
+	--color-ring: var(--ring);
+
+	--radius-sm: calc(var(--radius) - 4px);
+	--radius-md: var(--radius);
+	--radius-lg: calc(var(--radius) + 2px);
+	--radius-xl: calc(var(--radius) + 6px);
+}
+
+@layer base {
+	* {
+		@apply border-border;
+	}
+	html {
+		/* Sticky bars must never cover the focused element (WCAG 2.4.11). */
+		scroll-padding-block: 5rem;
+	}
+	body {
+		@apply bg-background font-sans text-foreground antialiased;
+		font-size: 1rem;
+		line-height: 1.55;
+	}
+	:focus-visible {
+		outline: 3px solid var(--ring);
+		outline-offset: 2px;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		*,
+		*::before,
+		*::after {
+			/* biome-ignore lint/complexity/noImportantStyles: reduced motion must win over every component's own timing */
+			animation-duration: 0.01ms !important;
+			/* biome-ignore lint/complexity/noImportantStyles: same as above */
+			transition-duration: 0.01ms !important;
+		}
+	}
+}
