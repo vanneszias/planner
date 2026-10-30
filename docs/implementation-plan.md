@@ -168,11 +168,37 @@ with 20 workshops and 60 sessions, and publishes its page.
   properties, enums or namespaces). `erasableSyntaxOnly` in the shared tsconfig
   catches it at typecheck.
 
-## M2 to M5 (outline)
+## M2: Allocation engine
+
+Exit: `packages/allocation` passes property tests and the benchmark, and is
+usable from a script for concierge runs.
+
+- [x] **Engine** (`allocate()`): pure TypeScript, no Cloudflare imports. Snake
+  draft with "Take turns" (seeded random order) and "Early birds first"
+  (submission time, seeded tie-break); session choice keeps other ranked
+  workshops possible, then the emptiest, then the earliest; locked placements;
+  age-group eligibility; optional fill of empty slots (D10); per-participant
+  traces as codes that never mention others (D9); metrics; warnings.
+- [x] **Deterministic:** same input, seed and `ENGINE_VERSION` give the same
+  result, whatever the order of the input arrays. `inputHash()` (SHA-256 of
+  a canonical form) identifies the snapshot.
+- [x] **Tests:** 22, including six property tests over 400 random events each
+  (capacity, no overlaps, no duplicate workshops, eligibility, rankings,
+  quotas, locks kept, determinism, no skipped choice that would have fit).
+  Breaking the capacity or overlap check makes them fail.
+- [x] **Benchmark** at all three sizes, in Node and a temporary deployed
+  Worker: results and numbers in [allocation-mvp.md](allocation-mvp.md).
+  Worst case 2.8 s CPU (10,000 participants, filling on), far under the 30 s
+  default.
+- [x] **Concierge CLI** (`pnpm --filter @app/allocation concierge`): organizer
+  spreadsheets in, programme and roster CSVs out, locally.
+- [ ] Swap pass (D11, stretch).
+- [ ] Decide the default for empty slots (see open question in decisions.md).
+
+## M3 to M5 (outline)
 
 | Milestone                   | First tasks                                                                                                               |
 | --------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| M2 Allocation engine        | `packages/allocation` with property tests, snake draft, both strategies, traces, benchmark script for the three sizes     |
 | M3 Registration and booking | Registration and tokens, guarded booking SQL, EventCoordinator booking path, waitlist, live seat counts, concurrency test |
 | M4 Ranking and publishing   | Ranking UI, draft runs, review screen, publish through the coordinator, email via `jobs`                                  |
 | M5 Event day and pilot      | QR check-in, exports, retention job, audit log, security checklist, accessibility audit                                   |
