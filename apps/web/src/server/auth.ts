@@ -1,6 +1,7 @@
 import { env } from 'cloudflare:workers'
 import { type Auth, type AuthEmail, createAuth } from '@app/auth'
 import { createDb } from '@app/db'
+import { createPersonalOrganization } from '@app/domain'
 
 let auth: Auth | undefined
 
@@ -12,6 +13,9 @@ export function getAuth(): Auth {
 		secret: env.BETTER_AUTH_SECRET,
 		sendEmail,
 		google: { clientId: env.GOOGLE_CLIENT_ID, clientSecret: env.GOOGLE_CLIENT_SECRET },
+		onUserCreated: async (user) => {
+			await createPersonalOrganization(createDb(env.DB), user)
+		},
 	})
 	return auth
 }
