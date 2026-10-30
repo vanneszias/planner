@@ -66,8 +66,30 @@ export async function getPublicEvent(db: Db, orgSlug: string, eventSlug: string)
 			.orderBy(asc(schema.eventSession.startsAt)),
 	])
 
+	const eligibility = await db
+		.select({
+			workshopId: schema.workshopAgeGroup.workshopId,
+			label: schema.ageGroup.label,
+		})
+		.from(schema.workshopAgeGroup)
+		.innerJoin(schema.ageGroup, eq(schema.ageGroup.id, schema.workshopAgeGroup.ageGroupId))
+		.where(eq(schema.ageGroup.eventId, found.id))
+		.orderBy(asc(schema.ageGroup.sortOrder))
+	const ageGroupsOf = new Map<string, string[]>()
+	for (const row of eligibility) {
+		ageGroupsOf.set(row.workshopId, [...(ageGroupsOf.get(row.workshopId) ?? []), row.label])
+	}
+
 	const { organizationId: _, ...event } = found
-	return { event, workshops, sessions }
+	return {
+		event,
+		// Empty ageGroups means open to everyone.
+		workshops: workshops.map((workshop) => ({
+			...workshop,
+			ageGroups: ageGroupsOf.get(workshop.id) ?? [],
+		})),
+		sessions,
+	}
 }
 
 export type PublicEvent = NonNullable<Awaited<ReturnType<typeof getPublicEvent>>>

@@ -190,5 +190,16 @@
 	"organization_section": "Organization",
 	"organization_name_label": "Organization name",
 	"save_organization": "Save organization",
-	"organization_saved": "Organization saved."
+	"organization_saved": "Organization saved.",
+	"age_groups_title": "Age groups",
+	"age_groups_hint": "Optional. Use them to limit workshops to certain ages, like 12–14 or 15–18.",
+	"add_age_group": "Add age group",
+	"age_group_label": "Age group {number}",
+	"remove_age_group": "Remove",
+	"save_age_groups": "Save age groups",
+	"age_groups_saved": "Age groups saved.",
+	"who_can_join": "Who can join",
+	"everyone_hint": "Leave all unticked if everyone can join.",
+	"for_ages": "For {groups}",
+	"field_duplicate": "You already have an age group with this name."
 }

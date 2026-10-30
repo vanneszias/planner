@@ -9,15 +9,18 @@ import {
 	getEvent,
 	getPublicEvent,
 	listSessions,
+	listWorkshops,
 	markerFor,
 	renameEventSlug,
 	roomConflicts,
+	saveAgeGroups,
 	sessionSlot,
 	setEventStatus,
 	slugify,
 	updateEvent,
 	updateOrganization,
 	utcToZoned,
+	workshopAgeGroupIds,
 	zonedToUtc,
 } from '../src/index.ts'
 import { addMember, db, seedOrganization, summerCamp } from './fixtures.ts'
@@ -265,5 +268,50 @@ describe('renames keep old links working (D19)', () => {
 		await expect(renameEventSlug(db, ctx, second.id, first.slug)).rejects.toMatchObject({
 			issues: { slug: 'taken' },
 		})
+	})
+})
+
+describe('age groups', () => {
+	it('saves groups in order, links workshops and shows labels publicly', async () => {
+		const ctx = await seedOrganization('owner', `org-ages-${Date.now()}`)
+		const event = await createEvent(db, ctx, summerCamp)
+		const [young, older] = await saveAgeGroups(db, ctx, event.id, [
+			{ label: '12–14' },
+			{ label: '15–18' },
+		])
+		const workshop = await createWorkshop(db, ctx, event.id, {
+			title: 'Podcast lab',
+			ageGroupIds: [older?.id as string],
+		})
+		await createWorkshop(db, ctx, event.id, { title: 'Open to all' })
+		expect(await workshopAgeGroupIds(db, ctx, event.id)).toEqual({ [workshop.id]: [older?.id] })
+
+		await setEventStatus(db, ctx, event.id, 'published')
+		const page = await getPublicEvent(db, ctx.slug, event.slug)
+		expect(page?.workshops.map((w) => [w.title, w.ageGroups])).toEqual([
+			['Podcast lab', ['15–18']],
+			['Open to all', []],
+		])
+
+		// Removing a group removes its links; renaming keeps them.
+		await saveAgeGroups(db, ctx, event.id, [{ id: older?.id, label: '15–17' }])
+		expect(await workshopAgeGroupIds(db, ctx, event.id)).toEqual({ [workshop.id]: [older?.id] })
+		await saveAgeGroups(db, ctx, event.id, [{ id: young?.id, label: '12–14' }])
+		expect(await workshopAgeGroupIds(db, ctx, event.id)).toEqual({})
+	})
+
+	it("rejects duplicate labels and another event's groups", async () => {
+		const ctx = await seedOrganization()
+		const event = await createEvent(db, ctx, summerCamp)
+		const other = await createEvent(db, ctx, summerCamp)
+		await expect(
+			saveAgeGroups(db, ctx, event.id, [{ label: 'Kids' }, { label: 'kids' }]),
+		).rejects.toMatchObject({ issues: { '1.label': 'duplicate' } })
+		const [foreign] = await saveAgeGroups(db, ctx, other.id, [{ label: 'Teens' }])
+		await expect(
+			createWorkshop(db, ctx, event.id, { title: 'X', ageGroupIds: [foreign?.id as string] }),
+		).rejects.toMatchObject({ issues: { ageGroupIds: 'not_found' } })
+		// Nothing was saved: the failed create left no workshop behind.
+		expect(await listWorkshops(db, ctx, event.id)).toEqual([])
 	})
 })

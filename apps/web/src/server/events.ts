@@ -11,11 +11,13 @@ import {
 	type Event,
 	getEvent,
 	getOrganization,
+	listAgeGroups,
 	listEvents,
 	listSessions,
 	listWorkshops,
 	renameEventSlug,
 	roomConflicts,
+	saveAgeGroups,
 	setEventStatus,
 	type UpdateEventInput,
 	type UpdateSessionInput,
@@ -24,6 +26,7 @@ import {
 	updateWorkshop,
 	utcToZoned,
 	type WorkshopInput,
+	workshopAgeGroupIds,
 } from '@app/domain'
 import { notFound } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
@@ -61,12 +64,16 @@ export const getEventOverview = createServerFn({ method: 'GET' })
 			if (error instanceof DomainError && error.code === 'not_found') throw notFound()
 			throw error
 		})
-		const [workshops, sessions, organization] = await Promise.all([
+		const [workshops, sessions, organization, ageGroups, workshopAgeGroups] = await Promise.all([
 			listWorkshops(db, ctx, eventId),
 			listSessions(db, ctx, eventId),
 			getOrganization(db, ctx.organizationId),
+			listAgeGroups(db, ctx, eventId),
+			workshopAgeGroupIds(db, ctx, eventId),
 		])
 		return {
+			ageGroups,
+			workshopAgeGroups,
 			event,
 			workshops,
 			sessions,
@@ -140,4 +147,11 @@ export const renameEventSlugFn = createServerFn({ method: 'POST' })
 	.handler(async ({ data }) => {
 		const { db, ctx } = await requireOrganizer()
 		return action(() => renameEventSlug(db, ctx, data.eventId, data.slug))
+	})
+
+export const saveAgeGroupsFn = createServerFn({ method: 'POST' })
+	.validator((input: { eventId: string; groups: { id?: string; label: string }[] }) => input)
+	.handler(async ({ data }) => {
+		const { db, ctx } = await requireOrganizer()
+		return action(() => saveAgeGroups(db, ctx, data.eventId, data.groups))
 	})

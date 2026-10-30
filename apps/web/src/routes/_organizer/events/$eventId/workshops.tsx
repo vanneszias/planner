@@ -15,7 +15,8 @@ export const Route = createFileRoute('/_organizer/events/$eventId/workshops')({
 const eventRoute = getRouteApi('/_organizer/events/$eventId')
 
 function Workshops() {
-	const { event, workshops, canEdit } = eventRoute.useLoaderData()
+	const { event, workshops, canEdit, ageGroups, workshopAgeGroups } = eventRoute.useLoaderData()
+	const labelOf = new Map(ageGroups.map((group) => [group.id, group.label]))
 	const router = useRouter()
 	// null: no form open; 'new': adding; otherwise the workshop being edited.
 	const [editing, setEditing] = useState<'new' | Workshop | null>(null)
@@ -69,6 +70,15 @@ function Workshops() {
 								{workshop.facilitatorName && (
 									<p className="text-sm text-muted-foreground">{workshop.facilitatorName}</p>
 								)}
+								{workshopAgeGroups[workshop.id]?.length ? (
+									<p className="text-sm font-bold">
+										{m.for_ages({
+											groups: (workshopAgeGroups[workshop.id] ?? [])
+												.map((id) => labelOf.get(id))
+												.join(', '),
+										})}
+									</p>
+								) : null}
 								{workshop.description && <p className="mt-1 text-sm">{workshop.description}</p>}
 							</div>
 							{canEdit && (
@@ -106,16 +116,18 @@ function WorkshopForm({
 	workshop?: Workshop
 	onDone: () => Promise<void>
 }) {
+	const { ageGroups, workshopAgeGroups } = eventRoute.useLoaderData()
 	const [values, setValues] = useState<WorkshopInput>({
 		title: workshop?.title ?? '',
 		description: workshop?.description ?? '',
 		facilitatorName: workshop?.facilitatorName ?? '',
 		category: workshop?.category ?? '',
+		ageGroupIds: workshop ? (workshopAgeGroups[workshop.id] ?? []) : [],
 	})
 	const [issues, setIssues] = useState<Record<string, string>>({})
 	const [error, setError] = useState<string | null>(null)
 	const [pending, setPending] = useState(false)
-	const set = (key: keyof WorkshopInput, value: string) =>
+	const set = (key: Exclude<keyof WorkshopInput, 'ageGroupIds'>, value: string) =>
 		setValues((v) => ({ ...v, [key]: value }))
 
 	async function submit(event: FormEvent) {
@@ -175,6 +187,30 @@ function WorkshopForm({
 					/>
 				</Field>
 			</div>
+			{ageGroups.length > 0 && (
+				<fieldset className="flex flex-col gap-1">
+					<legend className="font-bold">{m.who_can_join()}</legend>
+					<p className="mb-1 text-sm text-muted-foreground">{m.everyone_hint()}</p>
+					{ageGroups.map((group) => (
+						<label key={group.id} className="flex min-h-11 cursor-pointer items-center gap-3">
+							<input
+								type="checkbox"
+								className="size-5 accent-[var(--kelp)]"
+								checked={values.ageGroupIds?.includes(group.id) ?? false}
+								onChange={(e) =>
+									setValues((v) => ({
+										...v,
+										ageGroupIds: e.target.checked
+											? [...(v.ageGroupIds ?? []), group.id]
+											: (v.ageGroupIds ?? []).filter((id) => id !== group.id),
+									}))
+								}
+							/>
+							{group.label}
+						</label>
+					))}
+				</fieldset>
+			)}
 			<FormError message={error} />
 			<div className="flex gap-2">
 				<Button type="submit" disabled={pending}>

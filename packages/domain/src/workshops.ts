@@ -1,6 +1,7 @@
 import { type Db, schema } from '@app/db'
 import { and, asc, count, eq } from 'drizzle-orm'
 import { z } from 'zod'
+import { assertAgeGroups, setWorkshopAgeGroups } from './age-groups.ts'
 import { auditStatement } from './audit.ts'
 import { type OrganizerContext, requirePermission } from './context.ts'
 import { notFound } from './errors.ts'
@@ -12,6 +13,8 @@ export const workshopInput = z.object({
 	description: z.string().trim().max(2000, 'too_long').default(''),
 	facilitatorName: z.string().trim().max(120, 'too_long').optional(),
 	category: z.string().trim().max(60, 'too_long').optional(),
+	/** Limits the workshop to these age groups; empty or absent means everyone. */
+	ageGroupIds: z.array(z.string()).max(20).optional(),
 })
 export type WorkshopInput = z.input<typeof workshopInput>
 export type Workshop = typeof schema.workshop.$inferSelect
@@ -36,8 +39,9 @@ export async function createWorkshop(
 	input: WorkshopInput,
 ): Promise<Workshop> {
 	requirePermission(ctx, { event: ['update'] })
-	const values = parse(workshopInput, input)
+	const { ageGroupIds, ...values } = parse(workshopInput, input)
 	await getEvent(db, ctx, eventId)
+	if (ageGroupIds) await assertAgeGroups(db, ctx, eventId, ageGroupIds)
 
 	const [existing] = await db
 		.select({ n: count() })
@@ -56,6 +60,7 @@ export async function createWorkshop(
 		})
 		.returning()
 	if (!created) throw new Error('Workshop insert returned nothing')
+	if (ageGroupIds) await setWorkshopAgeGroups(db, created, ageGroupIds)
 	await auditStatement(db, ctx, {
 		action: 'workshop.create',
 		subjectType: 'workshop',
@@ -89,7 +94,21 @@ export async function updateWorkshop(
 	input: Partial<WorkshopInput>,
 ): Promise<Workshop> {
 	requirePermission(ctx, { event: ['update'] })
-	const values = parse(workshopInput.partial(), input)
+	const { ageGroupIds, ...values } = parse(workshopInput.partial(), input)
+	if (ageGroupIds) {
+		const [current] = await db
+			.select({ eventId: schema.workshop.eventId })
+			.from(schema.workshop)
+			.where(
+				and(
+					eq(schema.workshop.id, workshopId),
+					eq(schema.workshop.organizationId, ctx.organizationId),
+				),
+			)
+			.limit(1)
+		if (!current) throw notFound('Workshop')
+		await assertAgeGroups(db, ctx, current.eventId, ageGroupIds)
+	}
 	const [updated] = await db
 		.update(schema.workshop)
 		.set(values)
@@ -101,6 +120,7 @@ export async function updateWorkshop(
 		)
 		.returning()
 	if (!updated) throw notFound('Workshop')
+	if (ageGroupIds) await setWorkshopAgeGroups(db, updated, ageGroupIds)
 	await auditStatement(db, ctx, {
 		action: 'workshop.update',
 		subjectType: 'workshop',

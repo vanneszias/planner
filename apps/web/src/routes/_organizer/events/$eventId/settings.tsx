@@ -8,7 +8,7 @@ import { RadioCards } from '#/components/radio-cards'
 import { actionMessage, fieldMessage } from '#/lib/errors'
 import { timeZones } from '#/lib/time-zones'
 import { m } from '#/paraglide/messages'
-import { renameEventSlugFn, updateEventFn } from '#/server/events'
+import { renameEventSlugFn, saveAgeGroupsFn, updateEventFn } from '#/server/events'
 
 export const Route = createFileRoute('/_organizer/events/$eventId/settings')({
 	component: Settings,
@@ -76,6 +76,7 @@ function Settings() {
 	return (
 		<div className="flex flex-col gap-6">
 			{canEdit && <WebAddressForm />}
+			{canEdit && <AgeGroupsForm />}
 			<form onSubmit={submit} noValidate className="flex flex-col gap-6">
 				<fieldset disabled={!canEdit} className="contents">
 					<Section title={m.settings_basics()}>
@@ -435,6 +436,84 @@ function WebAddressForm() {
 			<div className="flex flex-wrap items-center gap-4">
 				<Button type="submit" variant="outline" disabled={pending || slug === event.slug}>
 					{m.save_address()}
+				</Button>
+				<p aria-live="polite" className="font-bold empty:hidden">
+					{status}
+				</p>
+			</div>
+		</form>
+	)
+}
+
+/** Optional age groups (D2). Removing one also removes it from workshops. */
+function AgeGroupsForm() {
+	const { event, ageGroups } = eventRoute.useLoaderData()
+	const router = useRouter()
+	const [groups, setGroups] = useState<{ id?: string; label: string }[]>(ageGroups)
+	const [issues, setIssues] = useState<Record<string, string>>({})
+	const [status, setStatus] = useState<string | null>(null)
+	const [pending, setPending] = useState(false)
+
+	async function submit(formEvent: FormEvent) {
+		formEvent.preventDefault()
+		setIssues({})
+		setStatus(null)
+		setPending(true)
+		const kept = groups.filter((group) => group.label.trim())
+		const result = await saveAgeGroupsFn({ data: { eventId: event.id, groups: kept } })
+		setPending(false)
+		if (!result.ok) return setIssues(result.issues ?? {})
+		setGroups(result.data)
+		setStatus(m.age_groups_saved())
+		await router.invalidate()
+	}
+
+	return (
+		<form onSubmit={submit} noValidate className="flex flex-col gap-4 rounded-xl bg-card p-5">
+			<div>
+				<h2 className="text-lg font-bold">{m.age_groups_title()}</h2>
+				<p className="text-sm text-muted-foreground">{m.age_groups_hint()}</p>
+			</div>
+			{groups.map((group, index) => {
+				const id = `age-group-${index}`
+				const issue = issues[`${index}.label`]
+				return (
+					<div key={group.id ?? `new-${index}`} className="flex items-end gap-2">
+						<div className="flex-1">
+							<Field id={id} label={m.age_group_label({ number: String(index + 1) })} error={issue}>
+								<FieldInput
+									id={id}
+									error={issue}
+									value={group.label}
+									onChange={(e) =>
+										setGroups((all) =>
+											all.map((g, i) => (i === index ? { ...g, label: e.target.value } : g)),
+										)
+									}
+								/>
+							</Field>
+						</div>
+						<Button
+							type="button"
+							variant="ghost"
+							aria-label={`${m.remove_age_group()}: ${group.label || m.age_group_label({ number: String(index + 1) })}`}
+							onClick={() => setGroups((all) => all.filter((_, i) => i !== index))}
+						>
+							{m.remove_age_group()}
+						</Button>
+					</div>
+				)
+			})}
+			<div className="flex flex-wrap items-center gap-3">
+				<Button
+					type="button"
+					variant="outline"
+					onClick={() => setGroups((all) => [...all, { label: '' }])}
+				>
+					{m.add_age_group()}
+				</Button>
+				<Button type="submit" disabled={pending}>
+					{m.save_age_groups()}
 				</Button>
 				<p aria-live="polite" className="font-bold empty:hidden">
 					{status}

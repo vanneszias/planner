@@ -190,5 +190,16 @@
 	"organization_section": "Organisatie",
 	"organization_name_label": "Naam van de organisatie",
 	"save_organization": "Organisatie opslaan",
-	"organization_saved": "Organisatie opgeslagen."
+	"organization_saved": "Organisatie opgeslagen.",
+	"age_groups_title": "Leeftijdsgroepen",
+	"age_groups_hint": "Optioneel. Gebruik ze om workshops te beperken tot bepaalde leeftijden, zoals 12–14 of 15–18.",
+	"add_age_group": "Leeftijdsgroep toevoegen",
+	"age_group_label": "Leeftijdsgroep {number}",
+	"remove_age_group": "Verwijderen",
+	"save_age_groups": "Leeftijdsgroepen opslaan",
+	"age_groups_saved": "Leeftijdsgroepen opgeslagen.",
+	"who_can_join": "Wie kan meedoen",
+	"everyone_hint": "Laat alles leeg als iedereen kan meedoen.",
+	"for_ages": "Voor {groups}",
+	"field_duplicate": "Je hebt al een leeftijdsgroep met deze naam."
 }

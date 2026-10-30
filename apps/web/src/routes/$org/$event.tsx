@@ -81,6 +81,11 @@ function PublicEvent() {
 												{session.room ? `${session.room} · ` : ''}
 												{m.places({ count: String(session.capacity) })}
 											</p>
+											{workshop.ageGroups.length > 0 && (
+												<p className="text-sm font-bold" lang={event.defaultLocale}>
+													{m.for_ages({ groups: workshop.ageGroups.join(', ') })}
+												</p>
+											)}
 										</div>
 										<span className="font-mono">
 											{formatTime(session.startsAt, event.timezone)}

@@ -20,6 +20,8 @@ export function fieldMessage(code: string | undefined): string | null {
 			return m.field_time()
 		case 'time_order':
 			return m.field_time_order()
+		case 'duplicate':
+			return m.field_duplicate()
 		case 'taken':
 			return m.field_taken()
 		case 'reserved':
