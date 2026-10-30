@@ -38,6 +38,9 @@ function EventLayout() {
 				<Link to="/events/$eventId/schedule" params={params} className={tab}>
 					{m.nav_schedule()}
 				</Link>
+				<Link to="/events/$eventId/settings" params={params} className={tab}>
+					{m.nav_settings()}
+				</Link>
 			</nav>
 			<Outlet />
 		</div>

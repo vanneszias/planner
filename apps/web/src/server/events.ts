@@ -21,6 +21,7 @@ import {
 	updateEvent,
 	updateSession,
 	updateWorkshop,
+	utcToZoned,
 	type WorkshopInput,
 } from '@app/domain'
 import { notFound } from '@tanstack/react-router'
@@ -69,6 +70,11 @@ export const getEventOverview = createServerFn({ method: 'GET' })
 			workshops,
 			sessions,
 			conflicts: roomConflicts(sessions),
+			// The window as the organizer entered it, in the event's timezone.
+			window: {
+				opens: event.opensAt ? utcToZoned(event.opensAt, event.timezone) : null,
+				closes: event.closesAt ? utcToZoned(event.closesAt, event.timezone) : null,
+			},
 			organizationSlug: organization?.slug ?? '',
 			canEdit: can(ctx, { event: ['update'] }),
 			canPublish: can(ctx, { event: ['publish'] }),

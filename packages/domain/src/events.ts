@@ -5,10 +5,14 @@ import { auditStatement } from './audit.ts'
 import { type OrganizerContext, requirePermission } from './context.ts'
 import { invalid, notFound } from './errors.ts'
 import { slugify, uniqueSlug } from './slug.ts'
-import { isValidTimeZone } from './time.ts'
+import { isValidTimeZone, zonedToUtc } from './time.ts'
 import { parse } from './validation.ts'
 
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'date')
+const zonedMoment = z.object({
+	date,
+	time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'time'),
+})
 
 const eventFields = {
 	name: z.string().trim().min(1, 'required').max(120, 'too_long'),
@@ -40,6 +44,9 @@ export const updateEventInput = z
 		fillUnassigned: z.enum(schema.fillUnassignedOptions),
 		allocationStrategy: z.enum(schema.allocationStrategies),
 		changeCutoff: z.enum(schema.changeCutoffs),
+		/** Booking or ranking window, as wall-clock times in the event's timezone. */
+		opens: zonedMoment.nullable(),
+		closes: zonedMoment.nullable(),
 	})
 	.partial()
 	.refine(datesInOrder, { path: ['endsOn'], message: 'date_order' })
@@ -111,9 +118,24 @@ export async function updateEvent(
 	const endsOn = values.endsOn ?? current.endsOn
 	if (!datesInOrder({ startsOn, endsOn })) throw invalid({ endsOn: 'date_order' })
 
+	const { opens, closes, ...fields } = values
+	const timezone = values.timezone ?? current.timezone
+	const toInstant = (moment: { date: string; time: string } | null) =>
+		moment ? zonedToUtc(moment.date, moment.time, timezone) : null
+	const window: Partial<Pick<Event, 'opensAt' | 'closesAt'>> = {}
+	if (opens !== undefined) window.opensAt = toInstant(opens)
+	if (closes !== undefined) window.closesAt = toInstant(closes)
+	const opensAt = window.opensAt !== undefined ? window.opensAt : current.opensAt
+	const closesAt = window.closesAt !== undefined ? window.closesAt : current.closesAt
+	if (opensAt && closesAt && closesAt <= opensAt) throw invalid({ closes: 'time_order' })
+
+	const rankLimit = fields.rankLimit ?? current.rankLimit
+	const rankMinimum = fields.rankMinimum !== undefined ? fields.rankMinimum : current.rankMinimum
+	if (rankMinimum !== null && rankMinimum > rankLimit) throw invalid({ rankMinimum: 'too_large' })
+
 	const [updated] = await db
 		.update(schema.event)
-		.set(values)
+		.set({ ...fields, ...window })
 		.where(and(eq(schema.event.id, eventId), eq(schema.event.organizationId, ctx.organizationId)))
 		.returning()
 	if (!updated) throw notFound('Event')

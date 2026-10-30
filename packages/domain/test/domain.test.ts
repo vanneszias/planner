@@ -75,6 +75,29 @@ describe('events', () => {
 		})
 	})
 
+	it('stores the booking window in UTC and keeps it in order', async () => {
+		const ctx = await seedOrganization()
+		const event = await createEvent(db, ctx, summerCamp)
+		const updated = await updateEvent(db, ctx, event.id, {
+			opens: { date: '2027-05-03', time: '10:00' },
+			closes: { date: '2027-06-30', time: '23:59' },
+		})
+		expect(updated.opensAt?.toISOString()).toBe('2027-05-03T08:00:00.000Z')
+		await expect(
+			updateEvent(db, ctx, event.id, { closes: { date: '2027-05-01', time: '09:00' } }),
+		).rejects.toMatchObject({ issues: { closes: 'time_order' } })
+		const cleared = await updateEvent(db, ctx, event.id, { opens: null, closes: null })
+		expect(cleared.opensAt).toBeNull()
+	})
+
+	it('keeps the minimum number of ranked workshops within the limit', async () => {
+		const ctx = await seedOrganization()
+		const event = await createEvent(db, ctx, summerCamp)
+		await expect(
+			updateEvent(db, ctx, event.id, { rankLimit: 4, rankMinimum: 5 }),
+		).rejects.toMatchObject({ issues: { rankMinimum: 'too_large' } })
+	})
+
 	it('cascades deletes from the organization (D1 enforces foreign keys)', async () => {
 		const ctx = await seedOrganization()
 		const event = await createEvent(db, ctx, summerCamp)

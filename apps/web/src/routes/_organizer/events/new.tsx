@@ -1,37 +1,17 @@
 import type { CreateEventInput } from '@app/domain'
 import { Button } from '@app/ui/components/button'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { cn } from 'cn'
 import { type FormEvent, useEffect, useRef, useState } from 'react'
 import { FormError } from '#/components/auth-shell'
 import { Field, FieldInput } from '#/components/field'
+import { RadioCards } from '#/components/radio-cards'
 import { actionMessage } from '#/lib/errors'
+import { timeZones } from '#/lib/time-zones'
 import { m } from '#/paraglide/messages'
 import { getLocale } from '#/paraglide/runtime'
 import { createEventFn } from '#/server/events'
 
 export const Route = createFileRoute('/_organizer/events/new')({ component: NewEvent })
-
-const timeZones = [
-	'Europe/Brussels',
-	'Europe/Amsterdam',
-	'Europe/Luxembourg',
-	'Europe/Paris',
-	'Europe/Berlin',
-	'Europe/London',
-	'Europe/Dublin',
-	'Europe/Lisbon',
-	'Europe/Madrid',
-	'Europe/Rome',
-	'Europe/Vienna',
-	'Europe/Copenhagen',
-	'Europe/Stockholm',
-	'Europe/Helsinki',
-	'Europe/Warsaw',
-	'Europe/Prague',
-	'Europe/Athens',
-	'UTC',
-]
 
 /** Which step shows each field, so a server-side error can send the organizer back to it. */
 const stepOfField: Record<string, number> = {
@@ -200,36 +180,17 @@ function NewEvent() {
 				)}
 
 				{step === 2 && (
-					<fieldset className="flex flex-col gap-3">
-						<legend className="sr-only">{m.create_mode_question()}</legend>
-						{(
-							[
-								['booking', m.mode_booking_title(), m.mode_booking_body()],
-								['ranking', m.mode_ranking_title(), m.mode_ranking_body()],
-							] as const
-						).map(([mode, title, body]) => (
-							<label
-								key={mode}
-								className={cn(
-									'flex cursor-pointer gap-3 rounded-xl border-2 p-4',
-									values.mode === mode ? 'border-primary bg-tint-success' : 'border-input',
-								)}
-							>
-								<input
-									type="radio"
-									name="mode"
-									value={mode}
-									checked={values.mode === mode}
-									onChange={() => set('mode', mode)}
-									className="mt-1 size-5 accent-[var(--kelp)]"
-								/>
-								<span>
-									<span className="block font-bold">{title}</span>
-									<span className="text-sm text-muted-foreground">{body}</span>
-								</span>
-							</label>
-						))}
-					</fieldset>
+					<RadioCards
+						name="mode"
+						legend={m.create_mode_question()}
+						hideLegend
+						value={values.mode}
+						onChange={(mode) => set('mode', mode)}
+						options={[
+							{ value: 'booking', title: m.mode_booking_title(), body: m.mode_booking_body() },
+							{ value: 'ranking', title: m.mode_ranking_title(), body: m.mode_ranking_body() },
+						]}
+					/>
 				)}
 
 				{step === 3 && (
