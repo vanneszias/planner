@@ -203,20 +203,40 @@ live seat counts and waitlists, and the concurrency test passes.
 
 ### M3a: participants
 
-- [ ] Schema: `registration`, `assignment`, `waitlist_entry`, `email_delivery`.
-- [ ] Tokens: 128-bit private link token and 6-character short code per
+- [x] Schema: `registration`, `assignment`, `waitlist_entry`, `email_delivery` (migration `0002`).
+- [x] Tokens: 128-bit private link token and 6-character short code per
   registration, stored as SHA-256 hashes; link exchanged for an `HttpOnly`
   cookie, then redirect to the clean URL (security-privacy.md).
-- [ ] Domain: register (adult self-registration, D23), participant context,
+- [x] Domain: register (adult self-registration, D23), participant context,
   book, cancel (change cut-off, D22), waitlist join and promotion. Guarded
   insert enforces capacity, overlap and the per-person limit in one statement.
-- [ ] EventCoordinator: every booking write for an event goes through its
+- [x] EventCoordinator: every booking write for an event goes through its
   Durable Object; broadcasts seat counts to connected browsers (A5).
-- [ ] Concurrency test: hundreds of parallel bookings on one session, through
+- [x] Concurrency test: hundreds of parallel bookings on one session, through
   the Durable Object and straight against D1; never overbooked.
-- [ ] Public event page: register, book, cancel, waitlist, live seats, "My day"
+- [x] Public event page: register, book, cancel, waitlist, live seats, "My day"
   strip, "I have a code", confirmation email with the private link.
-- [ ] Turnstile on registration and code entry (Cloudflare test keys locally).
+- [x] Turnstile on registration, code entry and "Find my programme" (Cloudflare
+  test keys locally; skipped in production until real keys exist).
+
+Tested in the browser: register and book in one step (Dutch confirmation email
+with link, code and cancel link), overlaps and per-person count, "My day"
+strip, private link swapped for a cookie with a clean URL, code typed in
+lower case with a space, wrong code, waitlist and promotion with email, live
+seat counts over WebSocket, and "Not you? Cancel this registration" revoking
+the link.
+
+### Learned in M3a
+
+- **Durable Objects interleave at every await**, D1 calls included, so the
+  coordinator chains writes in a promise queue.
+- **Values returned over Durable Object RPC are typed with `Disposable`**,
+  which TanStack Start won't serialize; annotate them with the domain type.
+- **TanStack Router validates search params twice**, the second time with
+  the first result, so `validateSearch` must accept its own output.
+- **WebSocket close code 1005 is reported, never sent**; echoing it throws.
+- **`/vitest-plugin` wants a `main` entry** even for tests that
+  only call functions; without it, it logs uncaught service-binding errors.
 
 ### M3b: organizer side
 

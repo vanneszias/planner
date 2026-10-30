@@ -231,12 +231,14 @@ export async function cancelBooking(
 }
 
 /** Joins the waitlist of a full session. Returns the place in line (1-based). */
+export type WaitlistResult = { ok: true; position: number } | { ok: false; reason: BookingRefusal }
+
 export async function joinWaitlist(
 	db: Db,
 	context: ParticipantContext,
 	sessionId: string,
 	now = new Date(),
-): Promise<{ ok: true; position: number } | { ok: false; reason: BookingRefusal }> {
+): Promise<WaitlistResult> {
 	const facts = await sessionFacts(db, context.eventId, sessionId)
 	if (facts?.status !== 'scheduled') return { ok: false, reason: 'not_found' }
 	if (!bookingOpen(facts, now)) return { ok: false, reason: 'closed' }
@@ -318,4 +320,42 @@ export async function participantPlan(db: Db, context: ParticipantContext) {
 		})),
 	)
 	return { bookings, waitlist: positions }
+}
+
+/**
+ * Cancels a whole registration ("Not you? Cancel this registration", D23):
+ * frees every place they held, gives each freed seat to the waitlist, and
+ * clears their email, which also lets that address register again.
+ */
+export async function cancelRegistration(
+	db: Db,
+	context: ParticipantContext,
+): Promise<Promotion[]> {
+	const held = await db
+		.select({ sessionId: schema.assignment.sessionId })
+		.from(schema.assignment)
+		.where(eq(schema.assignment.registrationId, context.registrationId))
+	await db.batch([
+		db
+			.delete(schema.assignment)
+			.where(eq(schema.assignment.registrationId, context.registrationId)),
+		db
+			.delete(schema.waitlistEntry)
+			.where(eq(schema.waitlistEntry.registrationId, context.registrationId)),
+		db
+			.update(schema.registration)
+			.set({ status: 'cancelled', email: null })
+			.where(
+				and(
+					eq(schema.registration.id, context.registrationId),
+					eq(schema.registration.eventId, context.eventId),
+				),
+			),
+	])
+	const promotions: Promotion[] = []
+	for (const { sessionId } of held) {
+		const promoted = await promoteFromWaitlist(db, sessionId)
+		if (promoted) promotions.push(promoted)
+	}
+	return promotions
 }

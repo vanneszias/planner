@@ -22,6 +22,8 @@ export async function getPublicEvent(db: Db, orgSlug: string, eventSlug: string)
 			accentColor: schema.event.accentColor,
 			opensAt: schema.event.opensAt,
 			closesAt: schema.event.closesAt,
+			sessionsPerParticipant: schema.event.sessionsPerParticipant,
+			changeCutoff: schema.event.changeCutoff,
 		})
 		.from(schema.event)
 		.innerJoin(schema.organization, eq(schema.organization.id, schema.event.organizationId))
@@ -89,6 +91,11 @@ export async function getPublicEvent(db: Db, orgSlug: string, eventSlug: string)
 			ageGroups: ageGroupsOf.get(workshop.id) ?? [],
 		})),
 		sessions,
+		ageGroups: await db
+			.select({ id: schema.ageGroup.id, label: schema.ageGroup.label })
+			.from(schema.ageGroup)
+			.where(eq(schema.ageGroup.eventId, found.id))
+			.orderBy(asc(schema.ageGroup.sortOrder)),
 	}
 }
 
@@ -127,4 +134,24 @@ export async function findRedirect(db: Db, path: string): Promise<string | null>
 		return [`/${renamedOrganization.organizationSlug}`, ...rest].join('/')
 	}
 	return null
+}
+
+/** What participant actions and emails need about a public event, by id. Null unless published or closed. */
+export async function publicEventMeta(db: Db, eventId: string) {
+	const [found] = await db
+		.select({
+			id: schema.event.id,
+			organizationId: schema.event.organizationId,
+			name: schema.event.name,
+			slug: schema.event.slug,
+			organizationSlug: schema.organization.slug,
+			defaultLocale: schema.event.defaultLocale,
+			timezone: schema.event.timezone,
+			status: schema.event.status,
+		})
+		.from(schema.event)
+		.innerJoin(schema.organization, eq(schema.organization.id, schema.event.organizationId))
+		.where(and(eq(schema.event.id, eventId), inArray(schema.event.status, ['published', 'closed'])))
+		.limit(1)
+	return found ?? null
 }

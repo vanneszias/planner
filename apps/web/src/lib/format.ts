@@ -46,3 +46,8 @@ export function groupByDay<T extends { startsAt: Date }>(items: T[], timeZone: s
 	}
 	return [...days.values()]
 }
+
+/** "Saturday 3 May, 10:00" in the event's timezone. */
+export function formatDateTime(instant: Date, timeZone: string): string {
+	return `${formatDay(instant, timeZone)}, ${formatTime(instant, timeZone)}`
+}

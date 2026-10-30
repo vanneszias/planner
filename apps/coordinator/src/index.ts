@@ -5,9 +5,11 @@ import {
 	bookSession,
 	type CancelResult,
 	cancelBooking,
+	cancelRegistration,
 	joinWaitlist,
 	leaveWaitlist,
 	type ParticipantContext,
+	type Promotion,
 	seatCounts,
 } from '@app/domain'
 
@@ -69,6 +71,15 @@ export class EventCoordinator extends DurableObject<Env> {
 
 	async leaveWaitlist(context: ParticipantContext, sessionId: string): Promise<void> {
 		return this.serialized(() => leaveWaitlist(this.db(), context, sessionId))
+	}
+
+	/** Cancels a whole registration and fills the freed seats from waitlists (D23). */
+	async cancelRegistration(context: ParticipantContext): Promise<Promotion[]> {
+		return this.serialized(async () => {
+			const promotions = await cancelRegistration(this.db(), context)
+			await this.broadcastSeats(context.eventId)
+			return promotions
+		})
 	}
 
 	/** Sends a message to every connected browser. Messages never carry personal data. */

@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 import {
 	bookSession,
 	cancelBooking,
+	cancelRegistration,
 	contextFromCode,
 	contextFromToken,
 	createEvent,
@@ -208,5 +209,23 @@ describe('links and codes', () => {
 		await expect(
 			registerSelf(db, draft.id, { name: 'X', email: 'x@example.com' }),
 		).rejects.toMatchObject({ code: 'not_found' })
+	})
+})
+
+describe('cancelling a registration', () => {
+	it('frees places, promotes the waitlist, revokes the link and frees the email', async () => {
+		const { event, climb } = await bookingEvent(1)
+		const email = `cancel-${Date.now()}@example.com`
+		const ana = await registerSelf(db, event.id, { name: 'Ana', email })
+		if (ana.kind !== 'created') throw new Error('expected created')
+		const bo = await participant(event.id)
+		await bookSession(db, ana.context, climb)
+		await joinWaitlist(db, bo, climb)
+
+		expect(await cancelRegistration(db, ana.context)).toEqual([
+			{ registrationId: bo.registrationId, sessionId: climb },
+		])
+		expect(await contextFromToken(db, ana.credentials.token)).toBeNull()
+		expect((await registerSelf(db, event.id, { name: 'Ana', email })).kind).toBe('created')
 	})
 })
