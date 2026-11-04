@@ -25,7 +25,7 @@ export function AuthShell({
 				<LanguageSwitch />
 			</header>
 			<main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center py-10">
-				<h1 className="mb-2 font-display text-[clamp(1.75rem,6vw,2.25rem)] leading-tight font-semibold hyphens-auto">
+				<h1 className="mb-2 font-display text-[clamp(1.75rem,6vw,2.25rem)] leading-tight font-semibold text-balance wrap-break-word">
 					{title}
 				</h1>
 				{intro && <p className="mb-8 text-muted-foreground">{intro}</p>}

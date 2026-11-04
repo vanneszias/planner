@@ -4,7 +4,7 @@ import { Dialog } from '@app/ui/components/dialog'
 import { Marker } from '@app/ui/components/marker'
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { cn } from 'cn'
-import { CalendarDays, Hourglass } from 'lucide-react'
+import { Ban, CalendarDays, Check, Hourglass } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { BrandMark } from '#/components/brand-mark'
 import { DayStrip } from '#/components/event/day-strip'
@@ -216,7 +216,7 @@ function EventPage() {
 
 			{me && (
 				<div className="flex flex-wrap items-baseline justify-between gap-2">
-					<p className="font-display text-lg font-semibold">{m.hello_name({ name: me.name })}</p>
+					<p className="text-lg font-bold">{m.hello_name({ name: me.name })}</p>
 					{bookingMode && (
 						<p className="text-sm text-muted-foreground">
 							{m.booked_count({
@@ -334,6 +334,26 @@ function EventPage() {
 					)
 				))}
 
+			{bookingMode && !me && open && (
+				<section className="flex flex-wrap items-center gap-4 rounded-xl bg-card p-5 shadow-card">
+					<div className="min-w-56 flex-1">
+						<h2 className="font-display text-xl font-semibold">{m.book_title()}</h2>
+						<p className="text-muted-foreground">
+							{m.book_intro({ count: String(event.sessionsPerParticipant) })}
+						</p>
+					</div>
+					<Button onClick={() => setRegisteringFor('none')}>{m.register_only()}</Button>
+				</section>
+			)}
+
+			{!me && (
+				<ReturningForms
+					eventId={event.id}
+					turnstileSiteKey={page.turnstileSiteKey}
+					onSignedIn={() => router.invalidate()}
+				/>
+			)}
+
 			{tab === 'myday' && me ? (
 				mine.length === 0 ? (
 					<EmptyState
@@ -377,15 +397,35 @@ function EventPage() {
 					{groupByDay(sessions, event.timezone).length === 0 && (
 						<p className="rounded-xl bg-card shadow-card p-5">{m.programme_empty()}</p>
 					)}
-					{groupByDay(sessions, event.timezone).map((day) => (
-						<div key={day.label} className="flex flex-col gap-4">
+					{groupByDay(sessions, event.timezone).length > 1 && (
+						<nav
+							aria-label={m.jump_to_day()}
+							className="sticky top-0 z-10 -mx-4 flex gap-2 overflow-x-auto bg-background/95 px-4 py-2 backdrop-blur [scrollbar-width:none]"
+						>
+							{groupByDay(sessions, event.timezone).map((day, index) => (
+								<a
+									key={day.label}
+									href={`#day-${index}`}
+									className="shrink-0 rounded-full border border-border bg-card px-3 py-1.5 text-sm font-bold whitespace-nowrap first-letter:uppercase hover:border-edge"
+								>
+									{day.label}
+								</a>
+							))}
+						</nav>
+					)}
+					{groupByDay(sessions, event.timezone).map((day, dayIndex) => (
+						<div
+							key={day.label}
+							id={`day-${dayIndex}`}
+							className="flex scroll-mt-16 flex-col gap-4"
+						>
 							<h3 className="font-display text-lg font-semibold first-letter:uppercase">
 								{day.label}
 							</h3>
 							{groupBySlot(day.items).map((slot) => (
 								<div key={slot.startsAt.getTime()} className="flex flex-col gap-2">
 									<h4 className="flex items-baseline gap-3">
-										<span className="font-mono font-semibold tabular-nums">
+										<span className="font-bold tabular-nums">
 											{formatTime(slot.startsAt, event.timezone)}–
 											{formatTime(slot.endsAt, event.timezone)}
 										</span>
@@ -405,6 +445,7 @@ function EventPage() {
 													className={cn(
 														'flex items-center gap-3 bg-card px-4 py-3',
 														state?.action === 'cancel' && 'bg-tint-success',
+														me && state && state.action === null && 'bg-background/60',
 													)}
 												>
 													<div className="flex flex-1 items-start gap-3">
@@ -427,9 +468,23 @@ function EventPage() {
 																	</span>
 																)}
 															</p>
-															<p className="text-sm text-muted-foreground">
-																{session.room ? `${session.room} · ` : ''}
-																{state ? state.text : m.places({ count: String(session.capacity) })}
+															<p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+																{me && state && state.action === null && (
+																	<Ban aria-hidden className="size-3.5 shrink-0" />
+																)}
+																{state?.action === 'cancel' && (
+																	<Check
+																		aria-hidden
+																		className="size-3.5 shrink-0 text-success"
+																		strokeWidth={3}
+																	/>
+																)}
+																<span>
+																	{session.room ? `${session.room} · ` : ''}
+																	{state
+																		? state.text
+																		: m.places({ count: String(session.capacity) })}
+																</span>
 															</p>
 														</div>
 													</div>
@@ -535,14 +590,6 @@ function EventPage() {
 				</section>
 			)}
 
-			{!me && (
-				<ReturningForms
-					eventId={event.id}
-					turnstileSiteKey={page.turnstileSiteKey}
-					onSignedIn={() => router.invalidate()}
-				/>
-			)}
-
 			{me && tab === 'myday' && (
 				<div>
 					<Button
@@ -569,12 +616,12 @@ function Shell({ page, children }: { page: Page; children: React.ReactNode }) {
 						<BrandMark className="size-5" />
 						{event.organizationName}
 					</span>
-					<LanguageSwitch compact />
+					<LanguageSwitch />
 				</div>
 				<header className="flex flex-col gap-3 pt-2">
 					<h1
 						lang={event.defaultLocale}
-						className="font-display text-[clamp(1.875rem,7vw,2.75rem)] leading-[1.1] font-semibold hyphens-auto"
+						className="font-display text-[clamp(1.875rem,7vw,2.75rem)] leading-[1.1] font-semibold text-balance wrap-break-word"
 					>
 						{event.name}
 					</h1>

@@ -2,7 +2,7 @@ import { type AuditCategory, type AuditData, auditCategories } from '@app/domain
 import { Button } from '@app/ui/components/button'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { FieldSelect } from '#/components/field'
-import { formatStamp } from '#/lib/format'
+import { formatClock, formatDayStamp } from '#/lib/format'
 import { m } from '#/paraglide/messages'
 import { getAuditLogFn } from '#/server/audit'
 
@@ -146,10 +146,10 @@ function AuditLog() {
 			{entries.length === 0 ? (
 				<p className="rounded-xl bg-card shadow-card p-6">{m.audit_empty()}</p>
 			) : (
-				<div className="overflow-x-auto rounded-xl bg-card shadow-card">
+				<div className="overflow-hidden rounded-xl bg-card shadow-card sm:overflow-x-auto">
 					<table className="w-full text-left text-sm">
 						<caption className="sr-only">{m.audit_title()}</caption>
-						<thead className="border-b border-border">
+						<thead className="border-b border-border bg-accent/50 max-sm:sr-only text-xs tracking-wide text-muted-foreground uppercase">
 							<tr>
 								<th scope="col" className="p-3">
 									{m.audit_column_when()}
@@ -166,23 +166,47 @@ function AuditLog() {
 							</tr>
 						</thead>
 						<tbody>
-							{entries.map((entry) => (
-								<tr key={entry.id} className="border-b border-border align-top last:border-0">
-									<td className="p-3 font-mono whitespace-nowrap">
-										{formatStamp(entry.createdAt)}
-									</td>
-									<td className="p-3">
-										{entry.actorKind === 'system'
-											? m.audit_actor_system()
-											: (entry.actorName ?? m.audit_actor_removed())}
-									</td>
-									<td className="p-3">
-										<span className="block">{actionLabels[entry.action]?.() ?? entry.action}</span>
-										<Details data={entry.data} />
-									</td>
-									<td className="p-3">{entry.eventName ?? '—'}</td>
-								</tr>
-							))}
+							{collapse(entries).map((row) =>
+								row.kind === 'day' ? (
+									<tr key={row.key} className="border-b border-border bg-background/60">
+										<th
+											scope="colgroup"
+											colSpan={4}
+											className="px-3 py-2 text-left text-xs font-bold tracking-wide text-muted-foreground uppercase"
+										>
+											{row.label}
+										</th>
+									</tr>
+								) : (
+									<tr
+										key={row.entry.id}
+										className="border-b border-border align-top last:border-0 max-sm:grid max-sm:grid-cols-[auto_1fr] max-sm:gap-x-3 max-sm:px-3 max-sm:py-2.5 max-sm:[&>td]:p-0"
+									>
+										<td className="p-3 whitespace-nowrap text-muted-foreground tabular-nums max-sm:row-span-3">
+											{clockRange(row.firstAt, row.entry.createdAt)}
+										</td>
+										<td className="p-3">
+											{row.entry.actorKind === 'system'
+												? m.audit_actor_system()
+												: (row.entry.actorName ?? m.audit_actor_removed())}
+										</td>
+										<td className="p-3">
+											<span className="flex flex-wrap items-center gap-2">
+												{actionLabels[row.entry.action]?.() ?? row.entry.action}
+												{row.count > 1 && (
+													<span className="rounded-full bg-accent px-2 py-0.5 text-xs font-bold">
+														{m.audit_repeated({ count: String(row.count) })}
+													</span>
+												)}
+											</span>
+											<Details data={row.entry.data} />
+										</td>
+										<td className="p-3 max-sm:text-muted-foreground">
+											{row.entry.eventName ?? '—'}
+										</td>
+									</tr>
+								),
+							)}
 						</tbody>
 					</table>
 				</div>
@@ -206,6 +230,47 @@ function AuditLog() {
 			</div>
 		</div>
 	)
+}
+
+type Entry = Awaited<ReturnType<typeof Route.useLoaderData>>['entries'][number]
+type Row =
+	| { kind: 'day'; key: string; label: string }
+	| { kind: 'entry'; entry: Entry; count: number; firstAt: number }
+
+const dayKey = (at: number) => new Date(at).toDateString()
+
+/** "22:28–22:47" for a folded run; one time when it all happened in the same minute. */
+function clockRange(from: number, to: number) {
+	const [a, b] = [formatClock(from), formatClock(to)]
+	return a === b ? a : `${a}–${b}`
+}
+
+/** Day headings, and runs of the same person doing the same thing folded into one row. */
+function collapse(entries: Entry[]): Row[] {
+	const rows: Row[] = []
+	let last: Extract<Row, { kind: 'entry' }> | null = null
+	for (const entry of entries) {
+		const day = dayKey(entry.createdAt)
+		if (!last || dayKey(last.entry.createdAt) !== day) {
+			rows.push({ kind: 'day', key: day, label: formatDayStamp(entry.createdAt) })
+			last = null
+		}
+		if (
+			last &&
+			!entry.data &&
+			!last.entry.data &&
+			last.entry.action === entry.action &&
+			last.entry.actorName === entry.actorName &&
+			last.entry.eventName === entry.eventName
+		) {
+			last.count++
+			last.firstAt = entry.createdAt
+			continue
+		}
+		last = { kind: 'entry', entry, count: 1, firstAt: entry.createdAt }
+		rows.push(last)
+	}
+	return rows
 }
 
 /** The few details entries carry: counts, kinds and changed fields. Never personal data. */

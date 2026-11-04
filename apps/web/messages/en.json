@@ -501,5 +501,10 @@
 	"showing_count": "Showing {shown} of {total}",
 	"no_matches": "No participants match these filters.",
 	"selected_count": "{count} selected",
-	"checkin_names_hint": "Load the list to find people by name and check them in by hand."
+	"checkin_names_hint": "Load the list to find people by name and check them in by hand.",
+	"book_title": "Book your sessions",
+	"book_intro": "Register once, then book up to {count} sessions. Places go first come, first served.",
+	"jump_to_day": "Jump to a day",
+	"or_divider": "or",
+	"audit_repeated": "{count} times"
 }

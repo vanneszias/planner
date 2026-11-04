@@ -74,3 +74,13 @@ export function groupBySlot<T extends { startsAt: Date; endsAt: Date }>(items: T
 	}
 	return [...slots.values()].sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime())
 }
+
+/** "13:05" in the viewer's own timezone. */
+export function formatClock(at: number): string {
+	return new Intl.DateTimeFormat(locale(), { timeStyle: 'short' }).format(at)
+}
+
+/** "Wednesday 4 November 2026" in the viewer's own timezone, for day headings in logs. */
+export function formatDayStamp(at: number): string {
+	return new Intl.DateTimeFormat(locale(), { dateStyle: 'full' }).format(at)
+}

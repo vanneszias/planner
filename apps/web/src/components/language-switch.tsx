@@ -8,7 +8,7 @@ const names = { en: 'English', nl: 'Nederlands' } as const
 /**
  * A native select (keyboard and screen-reader friendly) laid transparently
  * over a quiet header control: globe, language, chevron. `compact` shows only
- * the language code on small screens.
+ * just the globe on small screens.
  */
 export function LanguageSwitch({ compact = false }: { compact?: boolean }) {
 	const current = getLocale()
@@ -19,12 +19,7 @@ export function LanguageSwitch({ compact = false }: { compact?: boolean }) {
 			<span aria-hidden className={cn(compact && 'max-sm:hidden')}>
 				{names[current]}
 			</span>
-			{compact && (
-				<span aria-hidden className="uppercase sm:hidden">
-					{current}
-				</span>
-			)}
-			<ChevronDown aria-hidden className="size-3.5" />
+			<ChevronDown aria-hidden className={cn('size-3.5', compact && 'max-sm:hidden')} />
 			<select
 				className="absolute inset-0 cursor-pointer appearance-none opacity-0 focus-visible:outline-none"
 				value={current}

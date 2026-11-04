@@ -1,7 +1,8 @@
 import type { UpdateEventInput } from '@app/domain'
 import { Button } from '@app/ui/components/button'
 import { createFileRoute, getRouteApi, useRouter } from '@tanstack/react-router'
-import { type FormEvent, type ReactNode, useState } from 'react'
+import { Check, ChevronDown, Plus, Trash2 } from 'lucide-react'
+import { type ComponentProps, type FormEvent, type ReactNode, useState } from 'react'
 import { FormError } from '#/components/auth-shell'
 import { Field, FieldInput, FieldSelect } from '#/components/field'
 import { RadioCards } from '#/components/radio-cards'
@@ -75,8 +76,6 @@ function Settings() {
 
 	return (
 		<div className="flex flex-col gap-6">
-			{canEdit && <WebAddressForm />}
-			{canEdit && <AgeGroupsForm />}
 			<form onSubmit={submit} noValidate className="flex flex-col gap-6">
 				<fieldset disabled={!canEdit} className="contents">
 					<Section title={m.settings_basics()}>
@@ -92,7 +91,7 @@ function Settings() {
 							<textarea
 								id="description"
 								rows={4}
-								className="rounded-md border border-input bg-card px-3 py-2"
+								className="rounded-md border border-input bg-card px-3 py-2 shadow-xs"
 								value={values.description}
 								onChange={(e) => set('description', e.target.value)}
 							/>
@@ -197,9 +196,13 @@ function Settings() {
 						/>
 					</Section>
 
-					<details className="rounded-xl bg-card shadow-card p-5 [&_summary]:cursor-pointer">
-						<summary className="min-h-11 content-center text-lg font-bold">
-							{m.more_options()}
+					<details className="group rounded-xl bg-card px-5 py-2 shadow-card open:pb-5">
+						<summary className="flex min-h-12 cursor-pointer list-none items-center gap-2 text-lg font-bold [&::-webkit-details-marker]:hidden">
+							<span className="flex-1">{m.more_options()}</span>
+							<ChevronDown
+								aria-hidden
+								className="size-5 text-muted-foreground transition-transform group-open:rotate-180"
+							/>
 						</summary>
 						<div className="mt-4 flex flex-col gap-6">
 							{values.mode === 'ranking' ? (
@@ -298,30 +301,64 @@ function Settings() {
 				</fieldset>
 
 				{canEdit && (
-					<div className="flex flex-wrap items-center gap-4">
+					<div className="sticky bottom-0 z-10 -mx-4 flex flex-wrap items-center justify-end gap-4 border-t border-border bg-background/95 px-4 py-3 backdrop-blur">
+						<FormError message={error} />
+						<p
+							aria-live="polite"
+							className="flex items-center gap-2 text-sm font-bold empty:hidden"
+						>
+							{status && <Check aria-hidden className="size-4 text-success" strokeWidth={3} />}
+							{status}
+						</p>
 						<Button type="submit" disabled={pending}>
 							{m.save_settings()}
 						</Button>
-						<p aria-live="polite" className="font-bold empty:hidden">
-							{status}
-						</p>
 					</div>
 				)}
-				<FormError message={error} />
 			</form>
+			{canEdit && <WebAddressForm />}
+			{canEdit && <AgeGroupsForm />}
 		</div>
 	)
 }
 
-function Section({ title, hint, children }: { title: string; hint?: string; children: ReactNode }) {
+/** A titled settings block: label column on the left on wide screens, fields on the right. */
+function Section({
+	title,
+	hint,
+	children,
+	as: Tag = 'section',
+	...props
+}: {
+	title: string
+	hint?: string
+	children: ReactNode
+	as?: 'section' | 'form'
+} & Omit<ComponentProps<'form'>, 'title' | 'children'>) {
 	return (
-		<section className="flex flex-col gap-4 rounded-xl bg-card shadow-card p-5">
+		<Tag
+			className="grid gap-x-8 gap-y-4 rounded-xl bg-card p-5 shadow-card md:grid-cols-[minmax(0,14rem)_minmax(0,1fr)] md:p-6"
+			{...props}
+		>
 			<div>
-				<h2 className="text-lg font-bold">{title}</h2>
-				{hint && <p className="text-sm text-muted-foreground">{hint}</p>}
+				<h2 className="font-bold">{title}</h2>
+				{hint && <p className="mt-1 text-sm text-muted-foreground">{hint}</p>}
 			</div>
+			<div className="flex min-w-0 flex-col gap-4">{children}</div>
+		</Tag>
+	)
+}
+
+/** Save button and its confirmation, at the foot of a section that saves on its own. */
+function SectionSave({ children, status }: { children: ReactNode; status: string | null }) {
+	return (
+		<div className="flex flex-wrap items-center gap-3 border-t border-border pt-4">
 			{children}
-		</section>
+			<p aria-live="polite" className="flex items-center gap-2 text-sm font-bold empty:hidden">
+				{status && <Check aria-hidden className="size-4 text-success" strokeWidth={3} />}
+				{status}
+			</p>
+		</div>
 	)
 }
 
@@ -417,33 +454,33 @@ function WebAddressForm() {
 	}
 
 	return (
-		<form
+		<Section
+			as="form"
 			onSubmit={submit}
 			noValidate
-			className="flex flex-col gap-4 rounded-xl bg-card shadow-card p-5"
+			title={m.web_address_label()}
+			hint={m.web_address_hint()}
 		>
-			<Field id="slug" label={m.web_address_label()} hint={m.web_address_hint()} error={issue}>
-				<div className="flex items-center gap-1">
-					<span className="font-mono text-muted-foreground">/{organizationSlug}/</span>
+			<Field id="slug" label={m.web_address_label()} error={issue}>
+				<div className="flex h-11 min-w-0 items-stretch overflow-hidden rounded-md border border-input bg-card shadow-xs focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-ring">
+					<span className="flex shrink-0 items-center border-r border-border bg-accent px-3 font-mono text-sm whitespace-nowrap text-muted-foreground">
+						/{organizationSlug}/
+					</span>
 					<FieldInput
 						id="slug"
-						hint
 						error={issue}
-						className="font-mono"
+						className="h-full min-w-0 rounded-none border-0 font-mono shadow-none focus-visible:outline-none"
 						value={slug}
 						onChange={(e) => setSlug(e.target.value)}
 					/>
 				</div>
 			</Field>
-			<div className="flex flex-wrap items-center gap-4">
-				<Button type="submit" variant="outline" disabled={pending || slug === event.slug}>
+			<SectionSave status={status}>
+				<Button type="submit" variant="outline" size="sm" disabled={pending || slug === event.slug}>
 					{m.save_address()}
 				</Button>
-				<p aria-live="polite" className="font-bold empty:hidden">
-					{status}
-				</p>
-			</div>
-		</form>
+			</SectionSave>
+		</Section>
 	)
 }
 
@@ -471,15 +508,13 @@ function AgeGroupsForm() {
 	}
 
 	return (
-		<form
+		<Section
+			as="form"
 			onSubmit={submit}
 			noValidate
-			className="flex flex-col gap-4 rounded-xl bg-card shadow-card p-5"
+			title={m.age_groups_title()}
+			hint={m.age_groups_hint()}
 		>
-			<div>
-				<h2 className="text-lg font-bold">{m.age_groups_title()}</h2>
-				<p className="text-sm text-muted-foreground">{m.age_groups_hint()}</p>
-			</div>
 			{groups.map((group, index) => {
 				const id = `age-group-${index}`
 				const issue = issues[`${index}.label`]
@@ -502,29 +537,33 @@ function AgeGroupsForm() {
 						<Button
 							type="button"
 							variant="ghost"
+							size="icon"
+							className="text-muted-foreground hover:bg-tint-danger hover:text-destructive"
+							title={m.remove_age_group()}
 							aria-label={`${m.remove_age_group()}: ${group.label || m.age_group_label({ number: String(index + 1) })}`}
 							onClick={() => setGroups((all) => all.filter((_, i) => i !== index))}
 						>
-							{m.remove_age_group()}
+							<Trash2 />
 						</Button>
 					</div>
 				)
 			})}
-			<div className="flex flex-wrap items-center gap-3">
+			<div>
 				<Button
 					type="button"
-					variant="outline"
+					variant="ghost"
+					size="sm"
 					onClick={() => setGroups((all) => [...all, { label: '' }])}
 				>
+					<Plus />
 					{m.add_age_group()}
 				</Button>
-				<Button type="submit" disabled={pending}>
+			</div>
+			<SectionSave status={status}>
+				<Button type="submit" variant="outline" size="sm" disabled={pending}>
 					{m.save_age_groups()}
 				</Button>
-				<p aria-live="polite" className="font-bold empty:hidden">
-					{status}
-				</p>
-			</div>
-		</form>
+			</SectionSave>
+		</Section>
 	)
 }

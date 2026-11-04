@@ -30,23 +30,23 @@ function EventLayout() {
 		'-mb-px border-b-2 border-transparent pb-3 text-[0.9375rem] font-bold text-muted-foreground hover:text-foreground data-[status=active]:border-primary data-[status=active]:text-foreground'
 
 	return (
-		<div className="flex flex-col gap-6">
-			<div className="print:hidden">
-				<div className="flex flex-wrap items-center gap-3">
-					<h1 className="font-display text-[clamp(1.5rem,5vw,2.25rem)] leading-tight font-semibold hyphens-auto">
-						{event.name}
-					</h1>
+		<div className="flex flex-col gap-5 sm:gap-6">
+			<div className="flex flex-col gap-2 print:hidden">
+				<h1 className="font-display text-[clamp(1.5rem,5vw,2.25rem)] leading-tight font-semibold text-balance wrap-break-word">
+					{event.name}
+				</h1>
+				<p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-muted-foreground">
 					<StatusLabel status={event.status} />
-				</div>
-				<p className="mt-1 flex items-center gap-2 text-muted-foreground">
-					<CalendarDays aria-hidden className="size-4" />
-					{formatDateRange(event.startsOn, event.endsOn)}
+					<span className="flex items-center gap-1.5">
+						<CalendarDays aria-hidden className="size-4" />
+						{formatDateRange(event.startsOn, event.endsOn)}
+					</span>
 				</p>
 			</div>
 			<nav
 				aria-label={event.name}
 				ref={tabs}
-				className="print:hidden -mx-4 flex gap-6 overflow-x-auto border-b border-border px-4 whitespace-nowrap [scrollbar-width:none] max-sm:[mask-image:linear-gradient(to_right,black_85%,transparent)]"
+				className="print:hidden flex gap-6 overflow-x-auto border-b border-border whitespace-nowrap [scrollbar-width:none] max-sm:[mask-image:linear-gradient(to_right,black_85%,transparent)]"
 			>
 				<Link to="/events/$eventId" params={params} activeOptions={{ exact: true }} className={tab}>
 					{m.nav_overview()}

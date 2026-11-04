@@ -262,12 +262,10 @@ function WorkshopName({
 				{workshop.title}
 			</span>
 			{workshop.times.length > 0 && (
-				<span className="mt-1 flex flex-wrap gap-1">
-					{workshop.times.map((time) => (
-						<span
-							key={time}
-							className="rounded bg-accent px-1.5 py-px text-xs font-bold whitespace-nowrap text-muted-foreground tabular-nums"
-						>
+				<span className="block text-sm text-muted-foreground tabular-nums">
+					{workshop.times.map((time, index) => (
+						<span key={time} className="whitespace-nowrap">
+							{index > 0 && ' · '}
 							{time}
 						</span>
 					))}

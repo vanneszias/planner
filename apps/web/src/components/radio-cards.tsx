@@ -17,14 +17,16 @@ export function RadioCards<T extends string>({
 	onChange: (value: T) => void
 }) {
 	return (
-		<fieldset className="flex flex-col gap-3">
+		<fieldset className={cn('grid gap-3', options.length === 2 && 'sm:grid-cols-2')}>
 			<legend className={cn('mb-2 font-bold', hideLegend && 'sr-only')}>{legend}</legend>
 			{options.map((option) => (
 				<label
 					key={option.value}
 					className={cn(
-						'flex cursor-pointer gap-3 rounded-xl border-2 p-4',
-						value === option.value ? 'border-primary bg-tint-success' : 'border-input',
+						'flex cursor-pointer gap-3 rounded-lg border bg-card p-4 transition-colors',
+						value === option.value
+							? 'border-primary shadow-[inset_0_0_0_1px_var(--kelp)]'
+							: 'border-input hover:bg-accent/50',
 					)}
 				>
 					<input

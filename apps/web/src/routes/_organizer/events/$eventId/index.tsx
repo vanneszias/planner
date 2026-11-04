@@ -59,6 +59,8 @@ function Overview() {
 		},
 	] as const
 
+	// Once everything is done the checklist has nothing to say: it steps aside.
+	const ready = published && steps.every((step) => step.done)
 	const places = sessions.reduce((sum, session) => sum + session.capacity, 0)
 	const stats = [
 		{ label: m.stat_workshops(), value: workshops.length, icon: <Shapes /> },
@@ -83,45 +85,47 @@ function Overview() {
 				))}
 			</dl>
 
-			<div className="grid gap-6 lg:grid-cols-[3fr_2fr]">
-				<section aria-labelledby="checklist" className="rounded-xl bg-card shadow-card p-5">
-					<h2 id="checklist" className="mb-3 font-display text-lg font-semibold">
-						{m.checklist_title()}
-					</h2>
-					<ol className="-mx-2 flex flex-col">
-						{steps.map((item) => (
-							<li key={item.label}>
-								<Link
-									to={item.to}
-									params={params}
-									className="group flex min-h-12 items-center gap-3 rounded-lg px-2 hover:bg-accent"
-								>
-									<CheckDot done={item.done} />
-									<span className="flex-1 font-bold">{item.label}</span>
-									<span className="text-sm text-muted-foreground">{item.detail}</span>
-									<ChevronRight
-										aria-hidden
-										className="size-4 text-muted-foreground group-hover:text-foreground"
-									/>
-								</Link>
+			<div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+				{!ready && (
+					<section
+						aria-labelledby="checklist"
+						className="min-w-0 rounded-xl bg-card p-5 shadow-card"
+					>
+						<h2 id="checklist" className="mb-3 text-lg font-bold">
+							{m.checklist_title()}
+						</h2>
+						<ol className="-mx-2 flex flex-col">
+							{steps.map((item) => (
+								<li key={item.label}>
+									<Link
+										to={item.to}
+										params={params}
+										className="group flex min-h-12 items-center gap-3 rounded-lg px-2 hover:bg-accent"
+									>
+										<CheckDot done={item.done} />
+										<span className="flex-1 font-bold">{item.label}</span>
+										<span className="text-sm text-muted-foreground">{item.detail}</span>
+										<ChevronRight
+											aria-hidden
+											className="size-4 text-muted-foreground group-hover:text-foreground"
+										/>
+									</Link>
+								</li>
+							))}
+							<li className="flex min-h-12 items-center gap-3 px-2">
+								<CheckDot done={published} />
+								<span className="flex-1 font-bold">{m.checklist_publish()}</span>
 							</li>
-						))}
-						<li className="flex min-h-12 items-center gap-3 px-2">
-							<CheckDot done={published} />
-							<span className="flex-1 font-bold">{m.checklist_publish()}</span>
-						</li>
-					</ol>
-				</section>
+						</ol>
+					</section>
+				)}
 
 				<section
-					className="flex flex-col gap-4 rounded-xl bg-card shadow-card p-5"
+					className="flex min-w-0 flex-col gap-4 rounded-xl bg-card p-5 shadow-card"
 					aria-labelledby="public-page"
 					aria-live="polite"
 				>
-					<h2
-						id="public-page"
-						className="flex items-center gap-2 font-display text-lg font-semibold"
-					>
+					<h2 id="public-page" className="flex items-center gap-2 text-lg font-bold">
 						{m.public_page_label()}
 					</h2>
 					{published ? (
@@ -149,8 +153,9 @@ function Overview() {
 						)}
 						{canPublish && (
 							<Button
-								variant={published ? 'ghost' : 'default'}
+								variant={published ? 'outline' : 'default'}
 								size={published ? 'sm' : 'default'}
+								className={published ? 'text-destructive hover:text-destructive' : undefined}
 								disabled={pending}
 								onClick={() => setStatus(published ? 'draft' : 'published')}
 							>
@@ -160,9 +165,10 @@ function Overview() {
 					</div>
 					<FormError message={error} />
 				</section>
+				{ready && <Retention eventId={event.id} />}
 			</div>
 
-			<Retention eventId={event.id} />
+			{!ready && <Retention eventId={event.id} />}
 		</div>
 	)
 }
@@ -211,7 +217,7 @@ function Retention({ eventId }: { eventId: string }) {
 			aria-labelledby="retention"
 			className="flex flex-col gap-3 rounded-xl bg-card shadow-card p-5"
 		>
-			<h2 id="retention" className="flex items-center gap-2 font-display text-lg font-semibold">
+			<h2 id="retention" className="flex items-center gap-2 text-lg font-bold">
 				<ShieldCheck aria-hidden className="size-5 text-muted-foreground" />
 				{m.retention_title()}
 			</h2>
@@ -239,7 +245,12 @@ function Retention({ eventId }: { eventId: string }) {
 							</div>
 						) : (
 							<div>
-								<Button variant="outline" size="sm" onClick={() => setConfirming(true)}>
+								<Button
+									variant="outline"
+									size="sm"
+									className="text-destructive hover:text-destructive"
+									onClick={() => setConfirming(true)}
+								>
 									{m.retention_anonymise_now()}
 								</Button>
 							</div>

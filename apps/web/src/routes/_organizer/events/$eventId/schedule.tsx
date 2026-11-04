@@ -74,7 +74,7 @@ function Schedule() {
 					{groupBySlot(day.items).map((slot) => (
 						<div key={slot.startsAt.getTime()} className="flex flex-col gap-2">
 							<h3 className="sticky top-14 z-10 -mx-1 flex items-baseline gap-3 bg-background/95 px-1 py-1.5 backdrop-blur">
-								<span className="font-mono text-base font-semibold tabular-nums">
+								<span className="text-base font-bold tabular-nums">
 									{formatTime(slot.startsAt, event.timezone)}–
 									{formatTime(slot.endsAt, event.timezone)}
 								</span>

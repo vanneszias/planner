@@ -3,7 +3,7 @@ import { Button } from '@app/ui/components/button'
 import { Marker } from '@app/ui/components/marker'
 import { createFileRoute, getRouteApi } from '@tanstack/react-router'
 import { cn } from 'cn'
-import { Check, Printer, ScanLine, TriangleAlert, Users, X } from 'lucide-react'
+import { Check, Printer, ScanLine, TriangleAlert, X } from 'lucide-react'
 import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { FormError } from '#/components/auth-shell'
 import {
@@ -15,7 +15,6 @@ import {
 import { Scanner } from '#/components/check-in/scanner'
 import { useLiveCheckIns } from '#/components/check-in/use-live-check-ins'
 import { Field, FieldInput, FieldSelect } from '#/components/field'
-import { EmptyState } from '#/components/page'
 import { actionMessage } from '#/lib/errors'
 import { formatShortDayTime, formatTime } from '#/lib/format'
 import { m } from '#/paraglide/messages'
@@ -194,7 +193,6 @@ function CheckIn() {
 				</Field>
 				<div className="flex min-w-56 flex-col gap-2">
 					<p className="flex items-center gap-2.5">
-						{session && <Marker color={session.markerColor} shape={session.markerShape} />}
 						<span className="text-2xl font-bold tabular-nums">
 							{m.checkin_counter({ here: String(here), expected: String(expected) })}
 						</span>
@@ -243,9 +241,7 @@ function CheckIn() {
 							{scanning ? <X /> : <ScanLine />}
 							{scanning ? m.scanner_stop() : m.scanner_start()}
 						</Button>
-						<span className="pb-3 text-sm text-muted-foreground max-sm:hidden" aria-hidden>
-							/
-						</span>
+						<span className="pb-3 text-sm font-bold text-muted-foreground">{m.or_divider()}</span>
 						<form onSubmit={submitCode} noValidate className="flex flex-wrap items-end gap-2">
 							<Field id="checkin-code" label={m.checkin_code_label()}>
 								<FieldInput
@@ -272,7 +268,7 @@ function CheckIn() {
 
 			<section aria-labelledby="checkin-names" className="flex flex-col gap-3 print:hidden">
 				<div className="flex flex-wrap items-center justify-between gap-2">
-					<h2 id="checkin-names" className="font-display text-lg font-semibold">
+					<h2 id="checkin-names" className="text-lg font-bold">
 						{m.checkin_by_name()}
 					</h2>
 					<Button
@@ -349,21 +345,18 @@ function CheckIn() {
 						</ul>
 					</>
 				) : (
-					<EmptyState
-						icon={<Users />}
-						title={m.checkin_names_hint()}
-						action={
-							<Button
-								variant="outline"
-								onClick={() => {
-									focusLater('#checkin-search')
-									loadRoster()
-								}}
-							>
-								{m.checkin_show_names()}
-							</Button>
-						}
-					/>
+					<div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-edge/60 p-4">
+						<p className="text-sm text-muted-foreground">{m.checkin_names_hint()}</p>
+						<Button
+							variant="outline"
+							onClick={() => {
+								focusLater('#checkin-search')
+								loadRoster()
+							}}
+						>
+							{m.checkin_show_names()}
+						</Button>
+					</div>
 				)}
 			</section>
 

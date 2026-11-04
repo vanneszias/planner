@@ -75,6 +75,8 @@ function Participants() {
 			.sort((a, b) => collator.compare(a.displayName, b.displayName))
 	}, [participants, ageFilter, statusFilter, query])
 	const visible = matches.slice(0, limit)
+	// Before allocation runs, a ranking event's session counts are all zero: noise.
+	const showSessions = !ranks || participants.some((p) => p.bookings > 0)
 	const allVisibleSelected = visible.length > 0 && visible.every((p) => selected.has(p.id))
 
 	function toggle(id: string, on: boolean) {
@@ -355,7 +357,7 @@ function Participants() {
 									)}
 									<th className="p-3">{m.column_name()}</th>
 									<th className="p-3 max-md:hidden">{m.column_contact()}</th>
-									<th className="p-3 text-right">{m.column_sessions()}</th>
+									{showSessions && <th className="p-3 text-right">{m.column_sessions()}</th>}
 									<th className="p-3 text-right max-sm:hidden">{m.column_waitlist()}</th>
 									{ranks && <th className="p-3">{m.column_ranked()}</th>}
 								</tr>
@@ -377,11 +379,9 @@ function Participants() {
 												/>
 											</td>
 										)}
-										<td className="max-w-0 p-3 sm:max-w-none">
-											<span className="block truncate font-bold">
-												{p.displayName || m.anonymous()}
-											</span>
-											<span className="block truncate text-muted-foreground md:hidden">
+										<td className="p-3">
+											<span className="block font-bold">{p.displayName || m.anonymous()}</span>
+											<span className="block text-muted-foreground break-all md:hidden">
 												{p.email ?? p.guardianEmail}
 											</span>
 											<span className="block text-muted-foreground">
@@ -397,7 +397,7 @@ function Participants() {
 										<td className="p-3 break-all max-md:hidden">
 											{p.email ?? p.guardianEmail ?? '—'}
 										</td>
-										<td className="p-3 text-right tabular-nums">{p.bookings}</td>
+										{showSessions && <td className="p-3 text-right tabular-nums">{p.bookings}</td>}
 										<td className="p-3 text-right tabular-nums max-sm:hidden">
 											{p.waitlisted || '—'}
 										</td>

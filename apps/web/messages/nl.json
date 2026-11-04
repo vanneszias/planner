@@ -501,5 +501,10 @@
 	"showing_count": "{shown} van {total} getoond",
 	"no_matches": "Geen deelnemers voor deze filters.",
 	"selected_count": "{count} geselecteerd",
-	"checkin_names_hint": "Laad de lijst om mensen op naam te zoeken en manueel in te checken."
+	"checkin_names_hint": "Laad de lijst om mensen op naam te zoeken en manueel in te checken.",
+	"book_title": "Kies je sessies",
+	"book_intro": "Schrijf je één keer in en boek daarna tot {count} sessies. Wie eerst komt, eerst maalt.",
+	"jump_to_day": "Spring naar een dag",
+	"or_divider": "of",
+	"audit_repeated": "{count} keer"
 }

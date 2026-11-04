@@ -51,12 +51,17 @@ function Dashboard() {
 									<CalendarDays aria-hidden className="size-5" />
 								</span>
 								<span className="min-w-0 flex-1">
-									<span className="block truncate font-bold">{event.name}</span>
+									<span className="line-clamp-2 font-bold">{event.name}</span>
 									<span className="text-sm text-muted-foreground">
 										{formatDateRange(event.startsOn, event.endsOn)}
 									</span>
+									<span className="mt-1.5 block sm:hidden">
+										<StatusLabel status={event.status} />
+									</span>
 								</span>
-								<StatusLabel status={event.status} />
+								<span className="max-sm:hidden">
+									<StatusLabel status={event.status} />
+								</span>
 								<ChevronRight
 									aria-hidden
 									className="size-5 shrink-0 text-muted-foreground group-hover:text-foreground max-sm:hidden"

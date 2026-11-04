@@ -81,7 +81,7 @@ export function DayStrip({
 function Segment({ time, children }: { time: string; children: React.ReactNode }) {
 	return (
 		<li className="relative flex gap-4 p-4 [&+&]:border-t-[1.5px] [&+&]:border-dashed [&+&]:border-line [&+&]:before:absolute [&+&]:before:-top-2 [&+&]:before:-left-2 [&+&]:before:size-4 [&+&]:before:rounded-full [&+&]:before:bg-background [&+&]:after:absolute [&+&]:after:-top-2 [&+&]:after:-right-2 [&+&]:after:size-4 [&+&]:after:rounded-full [&+&]:after:bg-background">
-			<span className="w-12 shrink-0 font-mono">{time}</span>
+			<span className="w-12 shrink-0 font-bold tabular-nums">{time}</span>
 			<div className="flex-1">{children}</div>
 		</li>
 	)

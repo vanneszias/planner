@@ -28,7 +28,7 @@ export const Route = createFileRoute('/_organizer')({
 })
 
 const navLink =
-	'flex h-9 items-center rounded-md px-2.5 text-sm font-bold text-muted-foreground hover:bg-accent hover:text-foreground data-[status=active]:bg-accent data-[status=active]:text-foreground'
+	'flex h-9 shrink-0 items-center rounded-md px-2 text-sm sm:px-2.5 font-bold whitespace-nowrap text-muted-foreground hover:bg-accent hover:text-foreground data-[status=active]:bg-accent data-[status=active]:text-foreground'
 
 function OrganizerLayout() {
 	const { organizations, activeId, canAudit } = Route.useLoaderData()
@@ -54,7 +54,10 @@ function OrganizerLayout() {
 						<BrandMark />
 						<span className="max-sm:sr-only">{brand.name}</span>
 					</Link>
-					<nav aria-label={brand.name} className="flex flex-1 items-center gap-1">
+					<nav
+						aria-label={brand.name}
+						className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto [scrollbar-width:none]"
+					>
 						<Link to="/home" className={navLink}>
 							{m.nav_events()}
 						</Link>
@@ -96,7 +99,7 @@ function OrganizerLayout() {
 					</Button>
 				</div>
 			</header>
-			<main className="mx-auto max-w-5xl px-4 py-8 sm:py-10">
+			<main className="mx-auto max-w-5xl px-4 py-6 sm:py-10">
 				<Outlet />
 			</main>
 		</div>
