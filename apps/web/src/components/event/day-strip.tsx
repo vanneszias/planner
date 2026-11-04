@@ -1,4 +1,6 @@
+import { Button } from '@app/ui/components/button'
 import { Marker, type MarkerColor, type MarkerShape } from '@app/ui/components/marker'
+import { cn } from 'cn'
 import { formatTime, groupByDay } from '#/lib/format'
 import { m } from '#/paraglide/messages'
 
@@ -12,6 +14,9 @@ export type StripSession = {
 	markerShape: MarkerShape
 }
 
+/** A time slot of the programme with nothing booked in it (booking mode). */
+export type OpenSlot = { startsAt: Date; endsAt: Date }
+
 /** Gaps shorter than this are walking time, not free time. */
 const freeTimeMinutes = 30
 
@@ -21,14 +26,27 @@ const freeTimeMinutes = 30
  */
 export function DayStrip({
 	sessions,
+	openSlots = [],
+	onBrowse,
 	timeZone,
 	contentLocale,
 }: {
 	sessions: StripSession[]
+	/** Slots still free to book: shown as prompts instead of plain free time. */
+	openSlots?: OpenSlot[]
+	onBrowse?: () => void
 	timeZone: string
 	contentLocale: string
 }) {
-	const sorted = [...sessions].sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime())
+	type Item = StripSession | (OpenSlot & { id: string; open: true })
+	const sorted: Item[] = [
+		...sessions,
+		...openSlots.map((slot) => ({
+			...slot,
+			id: `open-${slot.startsAt.getTime()}`,
+			open: true as const,
+		})),
+	].sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime())
 	return (
 		<div className="flex flex-col gap-6">
 			{groupByDay(sorted, timeZone).map((day) => (
@@ -47,6 +65,26 @@ export function DayStrip({
 										<p className="text-muted-foreground">{m.free_time()}</p>
 									</Segment>,
 								)
+							}
+							if ('open' in session) {
+								segments.push(
+									<Segment key={session.id} time={formatTime(session.startsAt, timeZone)} muted>
+										<div className="flex flex-wrap items-center justify-between gap-2">
+											<div>
+												<p className="font-bold text-muted-foreground">{m.open_slot()}</p>
+												<p className="text-sm text-muted-foreground">
+													{m.until_time({ time: formatTime(session.endsAt, timeZone) })}
+												</p>
+											</div>
+											{onBrowse && (
+												<Button variant="outline" size="sm" onClick={onBrowse}>
+													{m.open_slot_action()}
+												</Button>
+											)}
+										</div>
+									</Segment>,
+								)
+								return segments
 							}
 							segments.push(
 								<Segment key={session.id} time={formatTime(session.startsAt, timeZone)}>
@@ -78,9 +116,22 @@ export function DayStrip({
 }
 
 /** One perforated segment: dashed divider with notches at both edges, except the first. */
-function Segment({ time, children }: { time: string; children: React.ReactNode }) {
+function Segment({
+	time,
+	muted = false,
+	children,
+}: {
+	time: string
+	muted?: boolean
+	children: React.ReactNode
+}) {
 	return (
-		<li className="relative flex gap-4 p-4 [&+&]:border-t-[1.5px] [&+&]:border-dashed [&+&]:border-line [&+&]:before:absolute [&+&]:before:-top-2 [&+&]:before:-left-2 [&+&]:before:size-4 [&+&]:before:rounded-full [&+&]:before:bg-background [&+&]:after:absolute [&+&]:after:-top-2 [&+&]:after:-right-2 [&+&]:after:size-4 [&+&]:after:rounded-full [&+&]:after:bg-background">
+		<li
+			className={cn(
+				'relative flex gap-4 p-4 [&+&]:border-t-[1.5px] [&+&]:border-dashed [&+&]:border-line [&+&]:before:absolute [&+&]:before:-top-2 [&+&]:before:-left-2 [&+&]:before:size-4 [&+&]:before:rounded-full [&+&]:before:bg-background [&+&]:after:absolute [&+&]:after:-top-2 [&+&]:after:-right-2 [&+&]:after:size-4 [&+&]:after:rounded-full [&+&]:after:bg-background',
+				muted && 'bg-[repeating-linear-gradient(135deg,transparent_0_8px,var(--accent)_8px_9px)]',
+			)}
+		>
 			<span className="w-12 shrink-0 font-bold tabular-nums">{time}</span>
 			<div className="flex-1">{children}</div>
 		</li>

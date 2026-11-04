@@ -69,11 +69,11 @@ function Overview() {
 
 	return (
 		<div className="flex flex-col gap-6">
-			<dl className="grid gap-3 sm:grid-cols-3 sm:gap-4">
+			<dl className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
 				{stats.map((stat) => (
 					<div
 						key={stat.label}
-						className="flex flex-col gap-1 rounded-xl bg-card p-4 shadow-card sm:p-5"
+						className="flex flex-col gap-1 rounded-xl bg-card p-4 shadow-card last:max-sm:col-span-2 sm:p-5"
 					>
 						<dt className="text-sm font-bold text-muted-foreground">{stat.label}</dt>
 						<dd className="flex items-baseline gap-1.5">

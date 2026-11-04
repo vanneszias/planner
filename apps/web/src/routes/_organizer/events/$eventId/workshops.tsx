@@ -3,7 +3,7 @@ import { Button } from '@app/ui/components/button'
 import { ConfirmDialog, Dialog } from '@app/ui/components/dialog'
 import { Marker } from '@app/ui/components/marker'
 import { createFileRoute, getRouteApi, useRouter } from '@tanstack/react-router'
-import { Plus, Shapes } from 'lucide-react'
+import { Plus, Shapes, Trash2 } from 'lucide-react'
 import { type FormEvent, useState } from 'react'
 import { FormError } from '#/components/auth-shell'
 import { Field, FieldInput, FormActions } from '#/components/field'
@@ -98,11 +98,7 @@ function Workshops() {
 									)}
 								</div>
 								{canEdit && (
-									<RowActions
-										label={workshop.title}
-										onEdit={() => setEditing(workshop)}
-										onDelete={() => setDeleting(workshop)}
-									/>
+									<RowActions label={workshop.title} onEdit={() => setEditing(workshop)} />
 								)}
 							</li>
 						)
@@ -125,6 +121,14 @@ function Workshops() {
 					<WorkshopForm
 						eventId={event.id}
 						workshop={editing === 'new' ? undefined : editing}
+						onDelete={
+							editing === 'new'
+								? undefined
+								: () => {
+										setDeleting(editing)
+										setEditing(null)
+									}
+						}
 						onDone={async () => {
 							setEditing(null)
 							await router.invalidate()
@@ -154,10 +158,12 @@ function WorkshopForm({
 	eventId,
 	workshop,
 	onDone,
+	onDelete,
 }: {
 	eventId: string
 	workshop?: Workshop
 	onDone: () => Promise<void>
+	onDelete?: () => void
 }) {
 	const { ageGroups, workshopAgeGroups } = eventRoute.useLoaderData()
 	const [values, setValues] = useState<WorkshopInput>({
@@ -266,7 +272,22 @@ function WorkshopForm({
 				</fieldset>
 			)}
 			<FormError message={error} />
-			<FormActions>
+			<FormActions
+				aside={
+					onDelete && (
+						<Button
+							type="button"
+							variant="ghost"
+							size="sm"
+							className="text-destructive hover:bg-tint-danger hover:text-destructive"
+							onClick={onDelete}
+						>
+							<Trash2 />
+							{m.delete()}
+						</Button>
+					)
+				}
+			>
 				<Button type="button" variant="outline" onClick={() => onDone()}>
 					{m.cancel()}
 				</Button>

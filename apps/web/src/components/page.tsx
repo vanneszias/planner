@@ -1,4 +1,5 @@
 import { Button } from '@app/ui/components/button'
+import { getRouteApi } from '@tanstack/react-router'
 import { Pencil, Trash2 } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { m } from '#/paraglide/messages'
@@ -78,5 +79,35 @@ export function RowActions({
 				</Button>
 			)}
 		</span>
+	)
+}
+
+const organizerRoute = getRouteApi('/_organizer')
+
+/** Top of an organizer page: the active organization, the title, an optional line and action. */
+export function PageHeader({
+	title,
+	description,
+	action,
+}: {
+	title: string
+	description?: ReactNode
+	action?: ReactNode
+}) {
+	const { organizations, activeId } = organizerRoute.useLoaderData()
+	const organization = organizations.find((o) => o.id === activeId)
+	return (
+		<div className="flex flex-wrap items-end justify-between gap-4">
+			<div className="flex max-w-2xl flex-col gap-1">
+				{organization && (
+					<p className="text-sm font-bold text-muted-foreground">{organization.name}</p>
+				)}
+				<h1 className="font-display text-[clamp(1.75rem,6vw,2.25rem)] leading-tight font-semibold text-balance">
+					{title}
+				</h1>
+				{description && <p className="text-muted-foreground">{description}</p>}
+			</div>
+			{action}
+		</div>
 	)
 }

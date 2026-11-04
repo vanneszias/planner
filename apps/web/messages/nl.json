@@ -249,7 +249,7 @@
 	"registration_cancelled": "Je inschrijving is geschrapt. Je kunt deze pagina sluiten.",
 	"next_up": "Hierna",
 	"nav_participants": "Deelnemers",
-	"participants_count": "Deelnemers: {count}",
+	"participants_count": "{count} deelnemers",
 	"participants_empty": "Nog geen deelnemers. Deel de evenementpagina, of voeg zelf deelnemers toe.",
 	"add_participant": "Deelnemer toevoegen",
 	"import_csv": "Importeren uit CSV",
@@ -540,5 +540,14 @@
 	"registered_as": "Je bent ingeschreven",
 	"allocation_booking_title": "Verdelen is voor rangschik-evenementen",
 	"allocation_booking_body": "In dit evenement boeken mensen zelf hun sessies, dus er valt niets te verdelen.",
-	"back_to_overview": "Terug naar het overzicht"
+	"back_to_overview": "Terug naar het overzicht",
+	"rank_progress_needed": "{count} van {min} nodig",
+	"rank_progress_enough": "{count} gekozen · je mag er tot {max} kiezen",
+	"rank_progress_full": "{count} gekozen · dat is het maximum",
+	"open_slot": "Nog niets geboekt",
+	"open_slot_action": "Sessies bekijken",
+	"quick_actions": "Snel aan de slag",
+	"invite_team_link": "Nodig je team uit",
+	"invite_team_hint": "Editors bouwen samen met jou het programma.",
+	"ranking_short": "Ranglijst"
 }

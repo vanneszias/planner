@@ -1,9 +1,9 @@
 import { authClient } from '@app/auth/client'
 import { Button } from '@app/ui/components/button'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { CalendarDays, ChevronRight, KeyRound, Plus } from 'lucide-react'
+import { CalendarDays, ChevronRight, KeyRound, Plus, UserPlus } from 'lucide-react'
 import { useState } from 'react'
-import { EmptyState } from '#/components/page'
+import { EmptyState, PageHeader } from '#/components/page'
 import { StatusLabel } from '#/components/status-label'
 import { formatDateRange } from '#/lib/format'
 import { m } from '#/paraglide/messages'
@@ -16,62 +16,77 @@ export const Route = createFileRoute('/_organizer/home')({
 })
 
 function Dashboard() {
-	const { organization, events, canCreate } = Route.useLoaderData()
+	const { events, canCreate } = Route.useLoaderData()
 
 	return (
 		<div className="flex flex-col gap-8">
-			<div className="flex flex-wrap items-end justify-between gap-4">
-				<div>
-					<p className="text-sm text-muted-foreground">{organization?.name}</p>
-					<h1 className="font-display text-[clamp(1.75rem,6vw,2.25rem)] font-semibold">
-						{m.dashboard_title()}
-					</h1>
-				</div>
-				{canCreate && (
-					<Button asChild>
-						<Link to="/events/new">
-							<Plus />
-							{m.create_event()}
-						</Link>
-					</Button>
-				)}
-			</div>
-
-			{events.length === 0 ? (
-				<EmptyState icon={<CalendarDays />} title={m.events_empty()} />
-			) : (
-				<ul className="divide-y divide-border overflow-hidden rounded-xl bg-card shadow-card">
-					{events.map((event) => (
-						<li key={event.id}>
-							<Link
-								to="/events/$eventId"
-								params={{ eventId: event.id }}
-								className="group flex items-center gap-4 px-4 py-4 hover:bg-accent/60 sm:px-5"
-							>
-								<DateBlock date={event.startsOn} />
-								<span className="min-w-0 flex-1">
-									<span className="line-clamp-2 font-bold">{event.name}</span>
-									<span className="text-sm text-muted-foreground">
-										{formatDateRange(event.startsOn, event.endsOn)}
-									</span>
-									<span className="mt-1.5 block sm:hidden">
-										<StatusLabel status={event.status} />
-									</span>
-								</span>
-								<span className="max-sm:hidden">
-									<StatusLabel status={event.status} />
-								</span>
-								<ChevronRight
-									aria-hidden
-									className="size-5 shrink-0 text-muted-foreground group-hover:text-foreground max-sm:hidden"
-								/>
+			<PageHeader
+				title={m.dashboard_title()}
+				action={
+					canCreate && (
+						<Button asChild>
+							<Link to="/events/new">
+								<Plus />
+								{m.create_event()}
 							</Link>
-						</li>
-					))}
-				</ul>
-			)}
+						</Button>
+					)
+				}
+			/>
 
-			<PasskeyPrompt />
+			<div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+				<div className="min-w-0">
+					{events.length === 0 ? (
+						<EmptyState icon={<CalendarDays />} title={m.events_empty()} />
+					) : (
+						<ul className="divide-y divide-border overflow-hidden rounded-xl bg-card shadow-card">
+							{events.map((event) => (
+								<li key={event.id}>
+									<Link
+										to="/events/$eventId"
+										params={{ eventId: event.id }}
+										className="group flex items-center gap-4 px-4 py-4 hover:bg-accent/60 sm:px-5"
+									>
+										<DateBlock date={event.startsOn} />
+										<span className="min-w-0 flex-1">
+											<span className="line-clamp-2 font-bold">{event.name}</span>
+											<span className="text-sm text-muted-foreground">
+												{formatDateRange(event.startsOn, event.endsOn)}
+											</span>
+											<span className="mt-1.5 block sm:hidden">
+												<StatusLabel status={event.status} />
+											</span>
+										</span>
+										<span className="max-sm:hidden">
+											<StatusLabel status={event.status} />
+										</span>
+										<ChevronRight
+											aria-hidden
+											className="size-5 shrink-0 text-muted-foreground group-hover:text-foreground max-sm:hidden"
+										/>
+									</Link>
+								</li>
+							))}
+						</ul>
+					)}
+				</div>
+				<aside className="flex flex-col gap-4">
+					<Link
+						to="/team"
+						className="group flex items-center gap-4 rounded-xl bg-card p-4 shadow-card hover:bg-accent/40"
+					>
+						<span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent text-muted-foreground">
+							<UserPlus aria-hidden className="size-5" />
+						</span>
+						<span className="min-w-0 flex-1">
+							<span className="block font-bold">{m.invite_team_link()}</span>
+							<span className="block text-sm text-muted-foreground">{m.invite_team_hint()}</span>
+						</span>
+						<ChevronRight aria-hidden className="size-4 text-muted-foreground" />
+					</Link>
+					<PasskeyPrompt />
+				</aside>
+			</div>
 		</div>
 	)
 }
@@ -87,9 +102,9 @@ function PasskeyPrompt() {
 	return (
 		<section
 			aria-labelledby="passkey"
-			className="flex flex-wrap items-center gap-4 rounded-xl border border-dashed border-edge/60 p-4 sm:p-5"
+			className="flex flex-wrap items-center gap-4 rounded-xl bg-card p-4 shadow-card"
 		>
-			<span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-accent text-muted-foreground">
+			<span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent text-muted-foreground">
 				<KeyRound aria-hidden className="size-5" />
 			</span>
 			<div className="min-w-48 flex-1">

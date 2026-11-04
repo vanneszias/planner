@@ -2,6 +2,7 @@ import { type AuditCategory, type AuditData, auditCategories } from '@app/domain
 import { Button } from '@app/ui/components/button'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { FieldSelect } from '#/components/field'
+import { PageHeader } from '#/components/page'
 import { formatClock, formatDayStamp } from '#/lib/format'
 import { m } from '#/paraglide/messages'
 import { getAuditLogFn } from '#/server/audit'
@@ -88,13 +89,8 @@ function AuditLog() {
 		navigate({ search: (current) => ({ ...current, ...change, before: undefined }) })
 
 	return (
-		<div className="flex flex-col gap-5">
-			<div>
-				<h1 className="font-display text-[clamp(1.5rem,5vw,2.25rem)] leading-tight font-semibold">
-					{m.audit_title()}
-				</h1>
-				<p className="text-muted-foreground">{m.audit_intro()}</p>
-			</div>
+		<div className="flex flex-col gap-6">
+			<PageHeader title={m.audit_title()} description={m.audit_intro()} />
 
 			<div className="grid gap-3 sm:grid-cols-3">
 				<label className="flex min-w-0 flex-col gap-1.5 text-sm font-bold">

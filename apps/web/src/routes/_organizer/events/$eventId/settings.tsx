@@ -338,8 +338,8 @@ function Settings() {
 					</details>
 				</fieldset>
 
-				{canEdit && (
-					<div className="sticky bottom-0 z-10 -mx-4 flex flex-wrap items-center justify-end gap-4 border-t border-border bg-background/95 px-4 py-3 backdrop-blur">
+				{canEdit && (dirty || status || error) && (
+					<div className="sticky bottom-4 z-10 flex flex-wrap items-center justify-end gap-4 rounded-xl bg-card px-4 py-3 shadow-[0_12px_32px_-8px_rgb(28_30_51/0.3)] ring-1 ring-ink/5">
 						<FormError message={error} />
 						{dirty && (
 							<p className="flex items-center gap-2 text-sm font-bold text-muted-foreground">

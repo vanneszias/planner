@@ -129,11 +129,20 @@ export function RankList({
 					<div className="h-1.5 flex-1 overflow-hidden rounded-full bg-accent" aria-hidden>
 						<div
 							className="h-full rounded-full bg-primary transition-[width]"
-							style={{ width: `${Math.min(100, (ranked.length / rules.max) * 100)}%` }}
+							style={{
+								width: `${missing > 0 ? (ranked.length / Math.max(1, rules.min)) * 100 : 100}%`,
+							}}
 						/>
 					</div>
 					<p className="text-sm font-bold tabular-nums">
-						{m.rank_count({ count: String(ranked.length), max: String(rules.max) })}
+						{missing > 0
+							? m.rank_progress_needed({ count: String(ranked.length), min: String(rules.min) })
+							: ranked.length >= rules.max
+								? m.rank_progress_full({ count: String(ranked.length) })
+								: m.rank_progress_enough({
+										count: String(ranked.length),
+										max: String(rules.max),
+									})}
 					</p>
 				</div>
 			</div>
@@ -149,14 +158,14 @@ export function RankList({
 					return (
 						<li
 							key={id}
-							className="flex items-center gap-2.5 rounded-xl bg-card p-2 pl-3 shadow-card"
+							className="flex flex-wrap items-center gap-x-2.5 gap-y-2 rounded-xl bg-card p-2 pl-3 shadow-card"
 						>
 							<span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-ink text-sm font-bold text-white tabular-nums">
 								{index + 1}
 							</span>
 							<Marker color={workshop.markerColor} shape={workshop.markerShape} />
 							<WorkshopName workshop={workshop} contentLocale={contentLocale} />
-							<span className="flex shrink-0 gap-1">
+							<span className="flex shrink-0 gap-1 max-sm:w-full max-sm:justify-end max-sm:border-t max-sm:border-border max-sm:pt-2">
 								<Button
 									variant="outline"
 									size="icon-lg"
@@ -234,21 +243,17 @@ export function RankList({
 				)}
 			>
 				<FormError message={error} />
-				<p
-					aria-live="polite"
-					className={cn(
-						'flex items-center gap-2 rounded-lg bg-tint-success px-3 py-2 text-sm font-bold',
-						!saved && 'hidden',
-					)}
-				>
-					<Check aria-hidden className="size-4 shrink-0 text-success" strokeWidth={3} />
+				<p aria-live="polite" className="sr-only">
 					{saved}
 				</p>
 				<Button
 					className={cn(
 						'w-full',
-						(missing > 0 || upToDate) &&
-							'bg-accent text-muted-foreground hover:bg-accent aria-disabled:opacity-100',
+						missing > 0 &&
+							'border border-primary/40 bg-tint-success text-foreground hover:bg-tint-success aria-disabled:opacity-100',
+						upToDate &&
+							missing === 0 &&
+							'bg-tint-success text-foreground hover:bg-tint-success aria-disabled:opacity-100',
 					)}
 					aria-disabled={pending || missing > 0 || upToDate || undefined}
 					onClick={missing > 0 || upToDate ? undefined : save}

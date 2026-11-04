@@ -109,7 +109,7 @@ function NewEvent() {
 	]
 
 	return (
-		<form onSubmit={submit} noValidate className="mx-auto flex max-w-lg flex-col gap-6">
+		<form onSubmit={submit} noValidate className="mx-auto flex max-w-xl flex-col gap-6">
 			<div>
 				<p className="text-sm text-muted-foreground">
 					{m.step_of({ step: String(step + 1), total: String(totalSteps) })}
@@ -117,7 +117,7 @@ function NewEvent() {
 				<h1
 					ref={heading}
 					tabIndex={-1}
-					className="font-display text-[clamp(1.5rem,5vw,2rem)] font-semibold outline-none"
+					className="font-display text-[clamp(1.5rem,5vw,2rem)] leading-tight font-semibold text-balance outline-none"
 				>
 					{questions[step]}
 				</h1>

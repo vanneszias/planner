@@ -102,6 +102,11 @@ function EventPage() {
 	const booked = new Set(me?.bookings.map((b) => b.sessionId))
 	const waitlisted = new Map(me?.waitlist.map((w) => [w.sessionId, w.position]))
 	const mine = sessions.filter((s) => booked.has(s.id))
+	// Programme slots with nothing of mine overlapping: My day offers them as prompts.
+	const openSlots = groupByDay(sessions, event.timezone)
+		.flatMap((day) => groupBySlot(day.items))
+		.filter((slot) => !mine.some((s) => s.startsAt < slot.endsAt && slot.startsAt < s.endsAt))
+		.map(({ startsAt, endsAt }) => ({ startsAt, endsAt }))
 	const now = Date.now()
 	const opensAt = event.opensAt ? new Date(event.opensAt) : null
 	const closesAt = event.closesAt ? new Date(event.closesAt) : null
@@ -240,33 +245,39 @@ function EventPage() {
 						</span>
 					</div>
 				)}
-				<div role="tablist" aria-label={event.name} className="flex gap-1 rounded-lg bg-accent p-1">
-					{(
-						[
-							['programme', m.tab_programme()],
-							['myday', m.tab_my_day()],
-						] as const
-					).map(([value, label]) => (
-						<button
-							key={value}
-							type="button"
-							role="tab"
-							aria-selected={tab === value}
-							className={cn(
-								'min-h-10 flex-1 rounded-md text-sm font-bold text-muted-foreground',
-								tab === value && 'bg-card text-foreground shadow-card',
-							)}
-							onClick={() => setTab(value)}
-						>
-							{label}
-						</button>
-					))}
-				</div>
+				{!(rankingMode && !page.published) && (
+					<div
+						role="tablist"
+						aria-label={event.name}
+						className="flex gap-1 rounded-lg bg-accent p-1"
+					>
+						{(
+							[
+								['programme', m.tab_programme()],
+								['myday', m.tab_my_day()],
+							] as const
+						).map(([value, label]) => (
+							<button
+								key={value}
+								type="button"
+								role="tab"
+								aria-selected={tab === value}
+								className={cn(
+									'min-h-10 flex-1 rounded-md text-sm font-bold text-muted-foreground',
+									tab === value && 'bg-card text-foreground shadow-card',
+								)}
+								onClick={() => setTab(value)}
+							>
+								{label}
+							</button>
+						))}
+					</div>
+				)}
 			</section>
 			<Button
 				variant="ghost"
 				size="sm"
-				className="self-start text-muted-foreground hover:bg-tint-danger hover:text-destructive"
+				className="self-start text-muted-foreground hover:bg-tint-danger hover:text-destructive max-lg:hidden"
 				onClick={() => router.navigate({ to: '.', search: { cancel: true } })}
 			>
 				{m.cancel_registration()}
@@ -278,7 +289,7 @@ function EventPage() {
 				<section className="flex flex-col items-start gap-3 rounded-xl bg-card p-5 shadow-card">
 					<h2 className="font-display text-xl font-semibold">{intro.title}</h2>
 					<p className="text-muted-foreground">{intro.body}</p>
-					<Button className="max-lg:self-start lg:w-full" onClick={() => setRegisteringFor('none')}>
+					<Button className="w-full" onClick={() => setRegisteringFor('none')}>
 						{m.register_only()}
 					</Button>
 				</section>
@@ -420,13 +431,17 @@ function EventPage() {
 				) : null)}
 
 			{tab === 'myday' && me ? (
-				mine.length === 0 ? (
+				mine.length === 0 && !(bookingMode && open) ? (
 					<EmptyState
 						icon={<CalendarDays />}
 						title={rankingMode ? m.my_day_empty_ranking() : m.my_day_empty()}
 					/>
 				) : (
 					<DayStrip
+						openSlots={
+							bookingMode && open && mine.length < event.sessionsPerParticipant ? openSlots : []
+						}
+						onBrowse={() => setTab('programme')}
 						timeZone={event.timezone}
 						contentLocale={event.defaultLocale}
 						sessions={mine.map((s) => {
@@ -537,10 +552,13 @@ function EventPage() {
 													className={cn(
 														'flex items-center gap-3 bg-card px-4 py-3',
 														state?.action === 'cancel' && 'bg-tint-success',
-														me && state && state.action === null && 'bg-background/60',
+														me &&
+															state &&
+															state.action === null &&
+															'bg-background/70 [&_.session-name]:text-muted-foreground [&_.session-title>svg]:opacity-50',
 													)}
 												>
-													<div className="flex flex-1 items-start gap-3">
+													<div className="session-title flex flex-1 items-start gap-3">
 														<Marker
 															color={workshop.markerColor}
 															shape={workshop.markerShape}
@@ -548,7 +566,7 @@ function EventPage() {
 														/>
 														<div className="flex-1">
 															<p className="flex flex-wrap items-center gap-x-2 gap-y-1">
-																<span className="font-bold" lang={event.defaultLocale}>
+																<span className="session-name font-bold" lang={event.defaultLocale}>
 																	{workshop.title}
 																</span>
 																{workshop.ageGroups.length > 0 && (
@@ -584,7 +602,7 @@ function EventPage() {
 														<Button
 															size="sm"
 															className="h-10 shrink-0 sm:min-w-28"
-															variant={me ? 'default' : 'outline'}
+															variant="outline"
 															aria-label={`${m.book_session()}: ${label}`}
 															data-session-action={session.id}
 															aria-disabled={busy === session.id || undefined}
@@ -680,6 +698,16 @@ function EventPage() {
 						</div>
 					))}
 				</section>
+			)}
+			{me && (
+				<Button
+					variant="ghost"
+					size="sm"
+					className="self-start text-muted-foreground hover:bg-tint-danger hover:text-destructive lg:hidden"
+					onClick={() => router.navigate({ to: '.', search: { cancel: true } })}
+				>
+					{m.cancel_registration()}
+				</Button>
 			)}
 		</Shell>
 	)

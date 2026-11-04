@@ -218,7 +218,7 @@ function CheckIn() {
 				<p className="rounded-xl bg-tint-warning p-4 print:hidden">{m.checkin_read_only()}</p>
 			)}
 
-			<div aria-live="polite" role="status" className="print:hidden">
+			<div aria-live="polite" role="status" className="empty:hidden print:hidden">
 				{shown && (
 					<ScanResult
 						shown={shown}
@@ -242,7 +242,7 @@ function CheckIn() {
 				<div className="flex flex-col gap-4 rounded-xl bg-card p-5 shadow-card print:hidden">
 					<div className="flex flex-wrap items-end gap-x-4 gap-y-3">
 						<Button
-							variant={scanning ? 'outline' : 'default'}
+							variant={scanning || expected === 0 ? 'outline' : 'default'}
 							onClick={() => setScanning(!scanning)}
 						>
 							{scanning ? <X /> : <ScanLine />}

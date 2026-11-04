@@ -6,6 +6,7 @@ import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { type FormEvent, useState } from 'react'
 import { FormError } from '#/components/auth-shell'
 import { Field, FieldInput, PrefixedInput } from '#/components/field'
+import { PageHeader } from '#/components/page'
 import { RadioCards } from '#/components/radio-cards'
 import { actionMessage } from '#/lib/errors'
 import { m } from '#/paraglide/messages'
@@ -48,12 +49,7 @@ function Team() {
 
 	return (
 		<div className="flex flex-col gap-6">
-			<div>
-				<p className="text-sm text-muted-foreground">{organization?.name}</p>
-				<h1 className="font-display text-[clamp(1.75rem,6vw,2.25rem)] font-semibold">
-					{m.team_title()}
-				</h1>
-			</div>
+			<PageHeader title={m.team_title()} />
 
 			<ul className="divide-y divide-border rounded-xl bg-card shadow-card">
 				{members.map((member) => (

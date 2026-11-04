@@ -1,6 +1,6 @@
-import { createFileRoute, Link, Outlet, useLocation, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link, Outlet, useLocation } from '@tanstack/react-router'
 import { CalendarDays, ChevronLeft } from 'lucide-react'
-import { FieldSelect } from '#/components/field'
+import { useEffect, useRef } from 'react'
 import { StatusLabel } from '#/components/status-label'
 import { formatDateRange } from '#/lib/format'
 import { m } from '#/paraglide/messages'
@@ -26,9 +26,16 @@ type Section = { path: keyof typeof routes; label: string }
 function EventLayout() {
 	const { event } = Route.useLoaderData()
 	const params = { eventId: event.id }
-	const navigate = useNavigate()
 	const pathname = useLocation({ select: (location) => location.pathname })
-	const base = `/events/${event.id}`
+	// Keep the current pill in view on phones.
+	const pills = useRef<HTMLElement>(null)
+	// biome-ignore lint/correctness/useExhaustiveDependencies: the pathname is what moves the active pill
+	useEffect(() => {
+		const nav = pills.current
+		const active = nav?.querySelector<HTMLElement>('[aria-current="page"]')
+		if (nav && active)
+			nav.scrollLeft += active.getBoundingClientRect().left - nav.getBoundingClientRect().left - 16
+	}, [pathname])
 	const sections: Section[] = [
 		{ path: '', label: m.nav_overview() },
 		{ path: '/workshops', label: m.nav_workshops() },
@@ -40,8 +47,6 @@ function EventLayout() {
 		{ path: '/check-in', label: m.nav_check_in() },
 		{ path: '/settings', label: m.nav_settings() },
 	]
-	const current =
-		sections.find((s) => s.path && pathname.startsWith(`${base}${s.path}`))?.path ?? ''
 	// TanStack marks the current tab with data-status="active" (and aria-current="page").
 	const tab =
 		'-mb-px border-b-2 border-transparent pb-3 text-[0.9375rem] font-bold whitespace-nowrap text-muted-foreground hover:text-foreground data-[status=active]:border-primary data-[status=active]:text-foreground'
@@ -67,19 +72,24 @@ function EventLayout() {
 					</span>
 				</p>
 			</div>
-			{/* Phones: every section in one picker instead of a clipped tab strip. */}
-			<FieldSelect
-				aria-label={m.section_label()}
-				className="sm:hidden print:hidden"
-				value={current}
-				onChange={(e) => navigate({ to: routes[e.target.value as Section['path']], params })}
+			{/* Phones: the sections as a scrolling row of pills; the current one scrolls into view. */}
+			<nav
+				aria-label={event.name}
+				ref={pills}
+				className="-mx-4 flex snap-x gap-1.5 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:hidden print:hidden"
 			>
 				{sections.map((section) => (
-					<option key={section.path} value={section.path}>
+					<Link
+						key={section.path}
+						to={routes[section.path]}
+						params={params}
+						activeOptions={{ exact: section.path === '' }}
+						className="shrink-0 snap-start rounded-full border border-border bg-card px-3.5 py-2 text-sm font-bold whitespace-nowrap text-muted-foreground data-[status=active]:border-ink data-[status=active]:bg-ink data-[status=active]:text-white"
+					>
 						{section.label}
-					</option>
+					</Link>
 				))}
-			</FieldSelect>
+			</nav>
 			<nav
 				aria-label={event.name}
 				className="flex gap-6 border-b border-border max-sm:hidden print:hidden"

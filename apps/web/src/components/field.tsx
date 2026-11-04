@@ -81,10 +81,11 @@ export function FieldSelect({ className, children, ...props }: ComponentProps<'s
  * Cancel then submit, right-aligned on wider screens; full width stacked on phones.
  * Sticks to the bottom of a scrolling dialog so the actions stay in reach.
  */
-export function FormActions({ children }: { children: ReactNode }) {
+export function FormActions({ children, aside }: { children: ReactNode; aside?: ReactNode }) {
 	return (
-		<div className="sticky -bottom-6 z-10 -mx-6 -mb-6 flex justify-end gap-2 border-t border-border bg-card px-6 py-4 max-sm:[&>*]:flex-1">
-			{children}
+		<div className="sticky -bottom-6 z-10 -mx-6 -mb-6 flex flex-wrap items-center gap-2 border-t border-border bg-card px-6 py-4">
+			{aside && <div className="mr-auto">{aside}</div>}
+			<div className="flex flex-1 justify-end gap-2 max-sm:[&>*]:flex-1">{children}</div>
 		</div>
 	)
 }

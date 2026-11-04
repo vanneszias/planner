@@ -197,6 +197,7 @@ function Participants() {
 					<AddForm
 						eventId={event.id}
 						ageGroups={ageGroups}
+						onCancel={() => setPanel(null)}
 						onDone={async (name) => {
 							setPanel(null)
 							setStatus(m.participant_added({ name }))
@@ -434,11 +435,12 @@ function Participants() {
 														<Button
 															variant="ghost"
 															size="sm"
-															className="text-muted-foreground hover:text-foreground max-sm:size-8 max-sm:px-0"
+															className="text-muted-foreground hover:text-foreground"
 															aria-label={m.enter_ranking_for({ name: p.displayName })}
 															onClick={() => openRanking(p.id, p.displayName)}
 														>
 															<Pencil />
+															<span className="sm:hidden">{m.ranking_short()}</span>
 															<span className="max-sm:hidden">{m.enter_ranking()}</span>
 														</Button>
 													)}
@@ -476,10 +478,12 @@ function AddForm({
 	eventId,
 	ageGroups,
 	onDone,
+	onCancel,
 }: {
 	eventId: string
 	ageGroups: { id: string; label: string }[]
 	onDone: (name: string) => Promise<void>
+	onCancel: () => void
 }) {
 	const [name, setName] = useState('')
 	const [ageGroupId, setAgeGroupId] = useState(ageGroups[0]?.id ?? '')
@@ -535,6 +539,9 @@ function AddForm({
 				/>
 			</Field>
 			<FormActions>
+				<Button type="button" variant="outline" onClick={onCancel}>
+					{m.cancel()}
+				</Button>
 				<Button type="submit" disabled={pending}>
 					{m.save_participant()}
 				</Button>

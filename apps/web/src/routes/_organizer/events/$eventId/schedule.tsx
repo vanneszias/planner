@@ -4,7 +4,7 @@ import { Button } from '@app/ui/components/button'
 import { ConfirmDialog, Dialog } from '@app/ui/components/dialog'
 import { Marker } from '@app/ui/components/marker'
 import { createFileRoute, getRouteApi, Link, useRouter } from '@tanstack/react-router'
-import { CalendarClock, Plus, TriangleAlert } from 'lucide-react'
+import { CalendarClock, Plus, Trash2, TriangleAlert } from 'lucide-react'
 import { type FormEvent, useState } from 'react'
 import { FormError } from '#/components/auth-shell'
 import { Field, FieldInput, FieldSelect, FormActions } from '#/components/field'
@@ -69,12 +69,36 @@ function Schedule() {
 
 			{sessions.length === 0 && <EmptyState icon={<CalendarClock />} title={m.sessions_empty()} />}
 
-			{days.map((day) => (
-				<section key={day.label} aria-label={day.label} className="flex flex-col gap-4">
+			{days.length > 1 && (
+				<nav
+					aria-label={m.jump_to_day()}
+					className="sticky top-14 z-20 -mx-4 -my-4 flex gap-2 overflow-x-auto bg-background/95 px-4 py-2 backdrop-blur [scrollbar-width:none]"
+				>
+					{days.map((day, index) => (
+						<a
+							key={day.label}
+							href={`#day-${index}`}
+							className="shrink-0 rounded-full border border-border bg-card px-3 py-1.5 text-sm font-bold whitespace-nowrap first-letter:uppercase hover:border-edge"
+						>
+							{day.label}
+						</a>
+					))}
+				</nav>
+			)}
+
+			{days.map((day, dayIndex) => (
+				<section
+					key={day.label}
+					id={`day-${dayIndex}`}
+					aria-label={day.label}
+					className="flex scroll-mt-28 flex-col gap-4"
+				>
 					<h2 className="font-display text-xl font-semibold first-letter:uppercase">{day.label}</h2>
 					{groupBySlot(day.items).map((slot) => (
 						<div key={slot.startsAt.getTime()} className="flex flex-col gap-2">
-							<h3 className="sticky top-14 z-10 -mx-1 flex items-baseline gap-3 bg-background/95 px-1 py-1.5 backdrop-blur">
+							<h3
+								className={`sticky z-10 -mx-1 flex items-baseline gap-3 bg-background/95 px-1 py-1.5 backdrop-blur ${days.length > 1 ? 'top-[6.5rem]' : 'top-14'}`}
+							>
 								<span className="text-base font-bold tabular-nums">
 									{formatTime(slot.startsAt, event.timezone)}–
 									{formatTime(slot.endsAt, event.timezone)}
@@ -123,13 +147,7 @@ function Schedule() {
 														</span>
 													)}
 												</div>
-												{canEdit && (
-													<RowActions
-														label={label}
-														onEdit={() => setEditing(session)}
-														onDelete={() => setDeleting(session)}
-													/>
-												)}
+												{canEdit && <RowActions label={label} onEdit={() => setEditing(session)} />}
 											</div>
 											{clashes?.map((other) => (
 												<p
@@ -173,6 +191,10 @@ function Schedule() {
 				{editing && (
 					<EditSessionForm
 						session={editing}
+						onDelete={() => {
+							setDeleting(editing)
+							setEditing(null)
+						}}
 						onDone={async (saved) => {
 							setEditing(null)
 							if (saved) await router.invalidate()
@@ -283,7 +305,7 @@ function AddSessionsForm({ onDone }: { onDone: (saved: boolean) => Promise<void>
 					return (
 						// biome-ignore lint/suspicious/noArrayIndexKey: slots have no identity beyond position
 						<div key={index} className="flex flex-col gap-2 rounded-lg border border-border p-3">
-							<div className="flex flex-wrap items-end gap-3">
+							<div className="grid grid-cols-2 items-end gap-3 sm:grid-cols-[1.4fr_1fr_1fr_auto] [&>*:first-child]:col-span-2 sm:[&>*:first-child]:col-span-1">
 								<Field id={`slot-${index}-date`} label={m.date_label()}>
 									<FieldInput
 										id={`slot-${index}-date`}
@@ -361,9 +383,11 @@ type SessionRow = ReturnType<typeof eventRoute.useLoaderData>['sessions'][number
 function EditSessionForm({
 	session,
 	onDone,
+	onDelete,
 }: {
 	session: SessionRow
 	onDone: (saved: boolean) => Promise<void>
+	onDelete: () => void
 }) {
 	const { event } = eventRoute.useLoaderData()
 	const start = utcToZoned(session.startsAt, event.timezone)
@@ -395,7 +419,7 @@ function EditSessionForm({
 	const slotError = issues['slot.date'] ?? issues['slot.end'] ?? issues['slots.0.date']
 	return (
 		<form onSubmit={submit} noValidate className="flex flex-col gap-5">
-			<div className="flex flex-wrap items-end gap-3">
+			<div className="grid grid-cols-2 items-end gap-3 sm:grid-cols-[1.4fr_1fr_1fr_auto] [&>*:first-child]:col-span-2 sm:[&>*:first-child]:col-span-1">
 				<Field id={`${id}-date`} label={m.date_label()}>
 					<FieldInput
 						id={`${id}-date`}
@@ -447,7 +471,20 @@ function EditSessionForm({
 				</Field>
 			</div>
 			<FormError message={error} />
-			<FormActions>
+			<FormActions
+				aside={
+					<Button
+						type="button"
+						variant="ghost"
+						size="sm"
+						className="text-destructive hover:bg-tint-danger hover:text-destructive"
+						onClick={onDelete}
+					>
+						<Trash2 />
+						{m.delete()}
+					</Button>
+				}
+			>
 				<Button type="button" variant="outline" onClick={() => onDone(false)}>
 					{m.cancel()}
 				</Button>

@@ -57,11 +57,11 @@ function OrganizerLayout() {
 				<div className="mx-auto flex h-14 max-w-5xl items-center gap-2 px-4 sm:gap-6">
 					<Link to="/home" className="flex items-center gap-2 font-display text-base font-semibold">
 						<BrandMark />
-						<span className="max-sm:sr-only">{brand.name}</span>
+						<span>{brand.name}</span>
 					</Link>
 					<nav
 						aria-label={brand.name}
-						className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto [scrollbar-width:none]"
+						className="flex min-w-0 flex-1 items-center gap-1 max-sm:hidden"
 					>
 						<Link to="/home" className={cn(navLink, onEvents && 'bg-accent text-foreground')}>
 							{m.nav_events()}
@@ -103,7 +103,8 @@ function OrganizerLayout() {
 							{m.sign_out()}
 						</Button>
 					</div>
-					<AccountMenu onSignOut={signOut} />
+					<span className="flex-1 sm:hidden" />
+					<AccountMenu onSignOut={signOut} canAudit={canAudit} />
 				</div>
 			</header>
 			<main className="mx-auto max-w-5xl px-4 py-6 sm:py-10">
@@ -117,8 +118,8 @@ const languageNames = { en: 'English', nl: 'Nederlands' } as const
 const menuItem =
 	'flex h-10 cursor-pointer items-center gap-2.5 rounded-md px-2.5 text-sm font-bold outline-none data-highlighted:bg-accent'
 
-/** Phones: language and sign-out behind one labelled menu, so the nav keeps its room. */
-function AccountMenu({ onSignOut }: { onSignOut: () => void }) {
+/** Phones: navigation, language and sign-out behind one labelled menu. */
+function AccountMenu({ onSignOut, canAudit }: { onSignOut: () => void; canAudit: boolean }) {
 	const current = getLocale()
 	return (
 		<DropdownMenu.Root>
@@ -134,6 +135,18 @@ function AccountMenu({ onSignOut }: { onSignOut: () => void }) {
 					sideOffset={6}
 					className="z-50 min-w-48 rounded-lg bg-card p-1.5 shadow-[0_12px_32px_-8px_rgb(28_30_51/0.3)] ring-1 ring-ink/5"
 				>
+					<DropdownMenu.Item asChild className={menuItem}>
+						<Link to="/home">{m.nav_events()}</Link>
+					</DropdownMenu.Item>
+					<DropdownMenu.Item asChild className={menuItem}>
+						<Link to="/team">{m.nav_team()}</Link>
+					</DropdownMenu.Item>
+					{canAudit && (
+						<DropdownMenu.Item asChild className={menuItem}>
+							<Link to="/audit">{m.nav_audit()}</Link>
+						</DropdownMenu.Item>
+					)}
+					<DropdownMenu.Separator className="my-1.5 h-px bg-border" />
 					<DropdownMenu.Label className="px-2.5 pt-1.5 pb-1 text-xs font-bold tracking-wide text-muted-foreground uppercase">
 						{m.language_switch()}
 					</DropdownMenu.Label>
