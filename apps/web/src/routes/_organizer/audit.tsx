@@ -198,7 +198,7 @@ function AuditLog() {
 											<Details data={row.entry.data} />
 										</td>
 										<td className="p-3 max-sm:text-muted-foreground">
-											{row.entry.eventName ?? '—'}
+											{row.events.length ? row.events.join(', ') : '—'}
 										</td>
 									</tr>
 								),
@@ -231,7 +231,7 @@ function AuditLog() {
 type Entry = Awaited<ReturnType<typeof Route.useLoaderData>>['entries'][number]
 type Row =
 	| { kind: 'day'; key: string; label: string }
-	| { kind: 'entry'; entry: Entry; count: number; firstAt: number }
+	| { kind: 'entry'; entry: Entry; count: number; firstAt: number; events: string[] }
 
 const dayKey = (at: number) => new Date(at).toDateString()
 
@@ -256,13 +256,21 @@ function collapse(entries: Entry[]): Row[] {
 			JSON.stringify(entry.data) === JSON.stringify(last.entry.data) &&
 			last.entry.action === entry.action &&
 			last.entry.actorName === entry.actorName &&
-			last.entry.eventName === entry.eventName
+			last.firstAt - entry.createdAt < 15 * 60_000
 		) {
 			last.count++
 			last.firstAt = entry.createdAt
+			if (entry.eventName && !last.events.includes(entry.eventName))
+				last.events.push(entry.eventName)
 			continue
 		}
-		last = { kind: 'entry', entry, count: 1, firstAt: entry.createdAt }
+		last = {
+			kind: 'entry',
+			entry,
+			count: 1,
+			firstAt: entry.createdAt,
+			events: entry.eventName ? [entry.eventName] : [],
+		}
 		rows.push(last)
 	}
 	return rows

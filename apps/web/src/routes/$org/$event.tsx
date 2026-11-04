@@ -11,6 +11,7 @@ import {
 	ChevronDown,
 	CircleCheck,
 	Hourglass,
+	Plus,
 	TriangleAlert,
 	X,
 } from 'lucide-react'
@@ -92,6 +93,7 @@ function EventPage() {
 	const [notice, setNotice] = useState<{ text: string; ok: boolean } | null>(null)
 	const [busy, setBusy] = useState<string | null>(null)
 	const [cancelled, setCancelled] = useState(false)
+	const [availableOnly, setAvailableOnly] = useState(false)
 
 	const workshopById = new Map(workshops.map((w) => [w.id, w]))
 	const registeringSession =
@@ -174,6 +176,13 @@ function EventPage() {
 			refocus.current = null
 		}
 	})
+
+	/** With "only sessions I can book" on, hide what can't be booked (keep my own bookings). */
+	const shown = (session: Session) => {
+		if (!availableOnly || !bookingMode) return true
+		const action = stateOf(session).action
+		return action === 'book' || action === 'cancel' || action === 'leave'
+	}
 
 	function stateOf(session: Session) {
 		const taken = seats[session.id] ?? 0
@@ -303,7 +312,7 @@ function EventPage() {
 	)
 
 	return (
-		<Shell page={page} aside={rail} compact={Boolean(me)}>
+		<Shell page={page} aside={rail}>
 			{me && cancel && (
 				<section className="flex flex-col gap-3 rounded-xl bg-tint-warning p-5">
 					<p>{m.cancel_registration_confirm({ event: event.name })}</p>
@@ -407,6 +416,7 @@ function EventPage() {
 				(me ? (
 					rankingOpen ? (
 						<RankList
+							sessions={event.sessionsPerParticipant}
 							contentLocale={event.defaultLocale}
 							initial={me.ranking}
 							rules={me.rules}
@@ -471,9 +481,22 @@ function EventPage() {
 			)}
 			{tab === 'myday' && me ? null : (
 				<section aria-labelledby="programme" className="flex flex-col gap-4">
-					<h2 id="programme" className="font-display text-xl font-medium">
-						{m.programme_title()}
-					</h2>
+					<div className="flex flex-wrap items-center justify-between gap-3">
+						<h2 id="programme" className="font-display text-xl font-semibold">
+							{m.programme_title()}
+						</h2>
+						{bookingMode && me && open && (
+							<label className="flex cursor-pointer items-center gap-2 text-sm font-bold">
+								<input
+									type="checkbox"
+									className="size-4 accent-[var(--kelp)]"
+									checked={availableOnly}
+									onChange={(e) => setAvailableOnly(e.target.checked)}
+								/>
+								{m.available_only()}
+							</label>
+						)}
+					</div>
 					{bookingMode && !open && (
 						<p className="rounded-xl bg-tint-warning p-4 font-bold">
 							{opensAt && now < opensAt.getTime()
@@ -509,7 +532,7 @@ function EventPage() {
 							<h3 className="font-display text-lg font-semibold first-letter:uppercase">
 								{day.label}
 							</h3>
-							{groupBySlot(day.items).map((slot, slotIndex) => (
+							{groupBySlot(day.items.filter(shown)).map((slot, slotIndex) => (
 								<details
 									key={slot.startsAt.getTime()}
 									open={
@@ -562,7 +585,7 @@ function EventPage() {
 														me &&
 															state &&
 															state.action === null &&
-															'bg-background/70 [&_.session-name]:text-muted-foreground',
+															'[&_.session-title>svg]:opacity-50',
 													)}
 												>
 													<div className="session-title flex flex-1 items-start gap-3">
@@ -613,7 +636,7 @@ function EventPage() {
 													{open && state?.action === 'book' && (
 														<Button
 															size="sm"
-															className="h-10 shrink-0 sm:min-w-28"
+															className="shrink-0 border-primary/30 text-primary hover:bg-tint-success hover:text-primary"
 															variant="outline"
 															aria-label={`${m.book_session()}: ${label}`}
 															data-session-action={session.id}
@@ -631,14 +654,14 @@ function EventPage() {
 																	: setRegisteringFor(session.id)
 															}
 														>
-															<span className="sm:hidden">{m.book_short()}</span>
-															<span className="max-sm:hidden">{m.book_session()}</span>
+															<Plus />
+															{m.book_short()}
 														</Button>
 													)}
 													{open && state?.action === 'cancel' && (
 														<Button
 															size="sm"
-															className="h-10 shrink-0 sm:min-w-28"
+															className="shrink-0"
 															variant="outline"
 															aria-label={`${m.cancel_booking()}: ${label}`}
 															data-session-action={session.id}
@@ -660,7 +683,7 @@ function EventPage() {
 													{open && state?.action === 'join' && (
 														<Button
 															size="sm"
-															className="h-10 shrink-0 sm:min-w-28"
+															className="shrink-0"
 															variant="outline"
 															aria-label={`${m.join_waitlist()}: ${label}`}
 															data-session-action={session.id}
@@ -682,7 +705,7 @@ function EventPage() {
 													{open && state?.action === 'leave' && (
 														<Button
 															size="sm"
-															className="h-10 shrink-0 sm:min-w-28"
+															className="shrink-0"
 															variant="ghost"
 															aria-label={`${m.leave_waitlist()}: ${label}`}
 															data-session-action={session.id}
@@ -733,13 +756,10 @@ function EventPage() {
 function Shell({
 	page,
 	aside,
-	compact = false,
 	children,
 }: {
 	page: Page
 	aside?: React.ReactNode
-	/** Registered participants know the event: a smaller title gets them to their task. */
-	compact?: boolean
 	children: React.ReactNode
 }) {
 	const { event } = page
@@ -762,10 +782,7 @@ function Shell({
 				<header className="flex max-w-3xl flex-col gap-3 pt-2">
 					<h1
 						lang={event.defaultLocale}
-						className={cn(
-							'font-display leading-[1.1] font-semibold text-balance wrap-break-word',
-							compact ? 'text-[clamp(1.5rem,5vw,2rem)]' : 'text-[clamp(1.875rem,7vw,2.75rem)]',
-						)}
+						className="font-display text-[clamp(1.875rem,6vw,2.75rem)] leading-[1.1] font-semibold text-balance wrap-break-word"
 					>
 						{event.name}
 					</h1>

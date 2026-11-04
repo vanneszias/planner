@@ -72,7 +72,7 @@ function Schedule() {
 			{days.length > 1 && (
 				<nav
 					aria-label={m.jump_to_day()}
-					className="sticky top-14 z-20 -mx-4 -my-4 flex gap-2 overflow-x-auto border-b border-border bg-background px-4 py-2 [scrollbar-width:none]"
+					className="sticky top-14 z-20 -my-4 flex gap-2 overflow-x-auto border-b border-border bg-background py-2 [scrollbar-width:none]"
 				>
 					{days.map((day, index) => (
 						<a
@@ -164,7 +164,7 @@ function Schedule() {
 												{canEdit && (
 													<Pencil
 														aria-hidden
-														className="mt-0.5 size-4 shrink-0 text-edge opacity-0 transition-opacity group-hover:opacity-100"
+														className="mt-0.5 size-4 shrink-0 text-edge transition-colors group-hover:text-foreground"
 													/>
 												)}
 											</div>

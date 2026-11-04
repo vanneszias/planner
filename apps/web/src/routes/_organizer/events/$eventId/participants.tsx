@@ -3,7 +3,7 @@ import { Dialog } from '@app/ui/components/dialog'
 import { Input } from '@app/ui/components/input'
 import { createFileRoute, getRouteApi, useRouter } from '@tanstack/react-router'
 import { cn } from 'cn'
-import { Check, Mail, Pencil, Printer, Search, Upload, UserPlus, Users } from 'lucide-react'
+import { Check, Eye, Mail, Pencil, Printer, Search, Upload, UserPlus, Users } from 'lucide-react'
 import { type FormEvent, useMemo, useState } from 'react'
 import { FormError } from '#/components/auth-shell'
 import { ExportsPanel } from '#/components/event/exports-panel'
@@ -422,14 +422,10 @@ function Participants() {
 											/>
 										</th>
 									)}
-									<th className="p-3">{m.column_name()}</th>
-									<th className="p-3 max-md:hidden">{m.column_contact()}</th>
-									{showSessions && (
-										<th className="p-3 text-right max-sm:hidden">{m.column_sessions()}</th>
-									)}
-									{showWaitlist && (
-										<th className="p-3 text-right max-sm:hidden">{m.column_waitlist()}</th>
-									)}
+									<th className="w-[30%] p-3">{m.column_name()}</th>
+									<th className="w-[38%] p-3 max-md:hidden">{m.column_contact()}</th>
+									{showSessions && <th className="p-3 max-sm:hidden">{m.column_sessions()}</th>}
+									{showWaitlist && <th className="p-3 max-sm:hidden">{m.column_waitlist()}</th>}
 									{ranks && <th className="p-3">{m.column_ranked()}</th>}
 								</tr>
 							</thead>
@@ -471,12 +467,10 @@ function Participants() {
 											{p.email ?? p.guardianEmail ?? '—'}
 										</td>
 										{showSessions && (
-											<td className="p-3 text-right tabular-nums max-sm:hidden">{p.bookings}</td>
+											<td className="p-3 tabular-nums max-sm:hidden">{p.bookings}</td>
 										)}
 										{showWaitlist && (
-											<td className="p-3 text-right tabular-nums max-sm:hidden">
-												{p.waitlisted || '—'}
-											</td>
+											<td className="p-3 tabular-nums max-sm:hidden">{p.waitlisted || '—'}</td>
 										)}
 										{ranks && (
 											<td className="p-3">
@@ -498,7 +492,7 @@ function Participants() {
 															aria-label={m.enter_ranking_for({ name: p.displayName })}
 															onClick={() => openRanking(p.id, p.displayName)}
 														>
-															<Pencil />
+															{p.ranked ? <Eye /> : <Pencil />}
 															{p.ranked ? m.view_ranking() : m.enter_ranking()}
 														</Button>
 													)}

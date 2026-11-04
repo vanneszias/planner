@@ -1,7 +1,7 @@
 import { Button } from '@app/ui/components/button'
 import { Marker, type MarkerColor, type MarkerShape } from '@app/ui/components/marker'
 import { cn } from 'cn'
-import { Check, ChevronDown, ChevronUp, Plus, X } from 'lucide-react'
+import { Check, ChevronDown, ChevronUp, Lock, Plus, X } from 'lucide-react'
 import { useState } from 'react'
 import { FormError } from '#/components/auth-shell'
 import { m } from '#/paraglide/messages'
@@ -30,7 +30,10 @@ export function RankList({
 	savedMessage = m.ranking_saved(),
 	saveLabel = m.save_ranking(),
 	hideTitle = false,
+	sessions,
 }: {
+	/** How many sessions each person gets; explains why they rank more than that. */
+	sessions?: number
 	/** In a dialog the dialog's title names the list. */
 	hideTitle?: boolean
 	workshops: RankableWorkshop[]
@@ -123,7 +126,13 @@ export function RankList({
 					{heading}
 				</h2>
 				<p className="text-muted-foreground">
-					{m.rank_intro({ min: String(rules.min), max: String(rules.max) })}
+					{sessions
+						? m.rank_intro_sessions({
+								sessions: String(sessions),
+								min: String(rules.min),
+								max: String(rules.max),
+							})
+						: m.rank_intro({ min: String(rules.min), max: String(rules.max) })}
 				</p>
 				<div className="mt-3 flex items-center gap-3" aria-live="polite">
 					<div className="h-1.5 flex-1 overflow-hidden rounded-full bg-accent" aria-hidden>
@@ -253,7 +262,7 @@ export function RankList({
 					className={cn(
 						'w-full',
 						missing > 0 &&
-							'border border-primary/40 bg-tint-success text-foreground hover:bg-tint-success aria-disabled:opacity-100',
+							'bg-accent text-muted-foreground hover:bg-accent aria-disabled:opacity-100',
 						upToDate &&
 							missing === 0 &&
 							'bg-tint-success text-foreground hover:bg-tint-success aria-disabled:opacity-100',
@@ -262,7 +271,10 @@ export function RankList({
 					onClick={missing > 0 || upToDate ? undefined : save}
 				>
 					{missing > 0 ? (
-						m.rank_pick_more({ count: String(missing) })
+						<>
+							<Lock aria-hidden />
+							{m.rank_pick_more({ count: String(missing) })}
+						</>
 					) : upToDate ? (
 						<>
 							<Check aria-hidden />

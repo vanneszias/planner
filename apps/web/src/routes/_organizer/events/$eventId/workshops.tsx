@@ -87,21 +87,30 @@ function Workshops() {
 									<p className="text-sm text-muted-foreground">
 										{[
 											workshop.facilitatorName,
-											stat
-												? `${m.workshop_sessions({ count: String(stat.sessions) })} · ${m.workshop_places_total({ count: String(stat.places) })}`
-												: m.no_sessions_yet(),
+											// Phones: the counts sit in the line; wider screens give them columns.
+											<span key="stats" className="sm:hidden">
+												{stat
+													? `${m.workshop_sessions({ count: String(stat.sessions) })} · ${m.workshop_places_total({ count: String(stat.places) })}`
+													: m.no_sessions_yet()}
+											</span>,
 										]
 											.filter(Boolean)
-											.join(' · ')}
+											.flatMap((part, i) => (i ? [' · ', part] : [part]))}
 									</p>
 									{workshop.description && (
 										<p className="mt-1 line-clamp-2 text-sm">{workshop.description}</p>
 									)}
 								</div>
+								<span className="w-24 shrink-0 text-right text-sm tabular-nums max-sm:hidden">
+									{stat ? m.workshop_sessions({ count: String(stat.sessions) }) : '—'}
+								</span>
+								<span className="w-24 shrink-0 text-right text-sm text-muted-foreground tabular-nums max-sm:hidden">
+									{stat ? m.places_short({ count: String(stat.places) }) : ''}
+								</span>
 								{canEdit && (
 									<Pencil
 										aria-hidden
-										className="size-4 shrink-0 text-edge opacity-0 transition-opacity group-hover:opacity-100"
+										className="size-4 shrink-0 text-edge transition-colors group-hover:text-foreground"
 									/>
 								)}
 							</li>

@@ -33,8 +33,12 @@ function EventLayout() {
 	useEffect(() => {
 		const nav = pills.current
 		const active = nav?.querySelector<HTMLElement>('[aria-current="page"]')
-		if (nav && active)
-			nav.scrollLeft += active.getBoundingClientRect().left - nav.getBoundingClientRect().left - 16
+		if (!nav || !active) return
+		// After layout (fonts can still shift widths): leave one tab of context on the left.
+		const frame = requestAnimationFrame(() => {
+			nav.scrollLeft += active.getBoundingClientRect().left - nav.getBoundingClientRect().left - 48
+		})
+		return () => cancelAnimationFrame(frame)
 	}, [pathname])
 	const sections: Section[] = [
 		{ path: '', label: m.nav_overview() },
@@ -76,7 +80,7 @@ function EventLayout() {
 			<nav
 				aria-label={event.name}
 				ref={pills}
-				className="flex gap-6 overflow-x-auto border-b border-border [scrollbar-width:none] max-sm:-mx-4 max-sm:scroll-px-4 max-sm:gap-5 max-sm:px-4 max-sm:[mask-image:linear-gradient(to_right,black_calc(100%-2.5rem),transparent)] print:hidden"
+				className="flex gap-6 overflow-x-auto border-b border-border [scrollbar-width:none] max-sm:-mx-4 max-sm:scroll-px-4 max-sm:gap-5 max-sm:px-4 max-sm:[mask-image:linear-gradient(to_right,transparent,black_1.25rem,black_calc(100%-2.5rem),transparent)] print:hidden"
 			>
 				{sections.map((section) => (
 					<Link

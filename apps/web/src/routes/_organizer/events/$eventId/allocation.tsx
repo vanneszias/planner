@@ -81,6 +81,7 @@ function AllocationPage() {
 
 	const workshopById = new Map(workshops.map((w) => [w.id, w]))
 	const places = sessions.reduce((sum, s) => sum + s.capacity, 0)
+	const needed = progress.registrations * event.sessionsPerParticipant
 	const sessionById = new Map(sessions.map((s) => [s.id, s]))
 	const sessionLabel = (id: string) => {
 		const s = sessionById.get(id)
@@ -139,9 +140,13 @@ function AllocationPage() {
 					</div>
 					<div className="flex flex-col gap-1.5 rounded-lg bg-background p-4">
 						<dt className="text-sm font-bold text-muted-foreground">{m.allocation_capacity()}</dt>
-						<dd className="text-2xl font-bold tabular-nums">{places}</dd>
+						<dd className="text-2xl font-bold tabular-nums">
+							{places >= needed
+								? m.allocation_spare({ count: String(places - needed) })
+								: m.allocation_short({ count: String(needed - places) })}
+						</dd>
 						<dd className="text-sm text-muted-foreground">
-							{m.allocation_capacity_body({
+							{m.allocation_needed_line({
 								places: String(places),
 								needed: String(progress.registrations * event.sessionsPerParticipant),
 								people: String(progress.registrations),

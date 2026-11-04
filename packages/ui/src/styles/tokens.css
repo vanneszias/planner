@@ -129,6 +129,17 @@
 		outline: 3px solid var(--ring);
 		outline-offset: 2px;
 	}
+	/* Native date and time fields: same figures and a quieter picker icon as the rest of the form. */
+	input[type="date"],
+	input[type="time"] {
+		font-variant-numeric: tabular-nums;
+		color-scheme: light;
+	}
+	input[type="date"]::-webkit-calendar-picker-indicator,
+	input[type="time"]::-webkit-calendar-picker-indicator {
+		opacity: 0.55;
+		cursor: pointer;
+	}
 	/* An invalid field keeps one colour story: danger border, danger ring. */
 	[aria-invalid="true"]:focus-visible {
 		outline-color: var(--danger);

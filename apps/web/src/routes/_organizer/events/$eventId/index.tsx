@@ -56,7 +56,20 @@ function Overview() {
 	const ranks = event.mode === 'ranking'
 	const places = sessions.reduce((sum, session) => sum + session.capacity, 0)
 	const stats: { label: string; value: number; of?: number; sub?: string }[] = [
-		{ label: m.stat_registered(), value: participation.registrations },
+		{
+			label: m.stat_registered(),
+			value: participation.registrations,
+			sub: ranks
+				? m.stat_still_to_rank({
+						count: String(participation.registrations - participation.ranked),
+					})
+				: m.stat_avg_booked({
+						avg: (participation.registrations
+							? participation.booked / participation.registrations
+							: 0
+						).toFixed(1),
+					}),
+		},
 		ranks
 			? { label: m.stat_ranked(), value: participation.ranked, of: participation.registrations }
 			: { label: m.stat_booked(), value: participation.booked, of: places },
@@ -212,6 +225,7 @@ function Overview() {
 
 			<Manage
 				eventId={event.id}
+				booking={!ranks}
 				published={published}
 				canPublish={canPublish}
 				pending={pending}
@@ -244,12 +258,14 @@ function CopyButton({ text }: { text: () => string }) {
 /** When participant data goes (D6, D20), and "Anonymise now" (journeys.md, O9). */
 function Manage({
 	eventId,
+	booking,
 	published,
 	canPublish,
 	pending: unpublishing,
 	onUnpublish,
 }: {
 	eventId: string
+	booking: boolean
 	published: boolean
 	canPublish: boolean
 	pending: boolean
@@ -306,7 +322,9 @@ function Manage({
 									? m.retention_done({
 											date: day(new Date(retention.doneAt).toISOString().slice(0, 10)),
 										})
-									: m.retention_scheduled({ date: day(retention.date) })}
+									: booking
+										? m.retention_scheduled_booking({ date: day(retention.date) })
+										: m.retention_scheduled({ date: day(retention.date) })}
 							</p>
 						</div>
 						{!retention.doneAt && retention.canAnonymise && !confirming && (

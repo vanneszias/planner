@@ -559,5 +559,14 @@
 	"allocation_title": "Plan the sessions",
 	"allocation_capacity": "Places vs. needed",
 	"allocation_capacity_body": "{places} places for {needed} needed ({people} people × {per})",
-	"allocation_ranked_label": "Ranked their favourites"
+	"allocation_ranked_label": "Ranked their favourites",
+	"available_only": "Only sessions I can book",
+	"rank_intro_sessions": "You'll get {sessions} sessions. Rank {min} to {max} workshops, so there are alternatives if a favourite fills up.",
+	"retention_scheduled_booking": "Participant data will be anonymised on {date}. Names, emails and bookings go; attendance counts stay.",
+	"stat_still_to_rank": "{count} still to rank",
+	"stat_avg_booked": "{avg} sessions booked per person",
+	"allocation_spare": "{count} places to spare",
+	"allocation_short": "{count} places short",
+	"allocation_needed_line": "Total capacity {places} for {needed} needed ({people} people × {per}). Allocation can still leave gaps when favourites overlap.",
+	"places_short": "{count} places"
 }
