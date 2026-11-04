@@ -58,7 +58,10 @@ export function ExportsPanel({ eventId }: { eventId: string }) {
 	const label = (kind: ExportKind) => kinds.find((k) => k.kind === kind)?.label() ?? kind
 
 	return (
-		<section aria-labelledby="exports" className="flex flex-col gap-3 rounded-xl bg-card p-5">
+		<section
+			aria-labelledby="exports"
+			className="flex flex-col gap-3 rounded-xl bg-card shadow-card p-5"
+		>
 			<div>
 				<h2 id="exports" className="text-lg font-bold">
 					{m.exports_title()}

@@ -3,7 +3,7 @@ import { Button } from '@app/ui/components/button'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { type FormEvent, useEffect, useRef, useState } from 'react'
 import { FormError } from '#/components/auth-shell'
-import { Field, FieldInput } from '#/components/field'
+import { Field, FieldInput, FieldSelect } from '#/components/field'
 import { RadioCards } from '#/components/radio-cards'
 import { actionMessage } from '#/lib/errors'
 import { timeZones } from '#/lib/time-zones'
@@ -123,7 +123,7 @@ function NewEvent() {
 				</h1>
 			</div>
 
-			<div className="flex flex-col gap-4 rounded-xl bg-card p-5">
+			<div className="flex flex-col gap-4 rounded-xl bg-card shadow-card p-5">
 				{step === 0 && (
 					<Field id="name" label={m.event_name_label()} error={issues.name}>
 						<FieldInput
@@ -163,9 +163,8 @@ function NewEvent() {
 							</Field>
 						</div>
 						<Field id="timezone" label={m.timezone_label()} error={issues.timezone}>
-							<select
+							<FieldSelect
 								id="timezone"
-								className="h-11 rounded-md border border-input bg-card px-3"
 								value={values.timezone}
 								onChange={(e) => set('timezone', e.target.value)}
 							>
@@ -174,7 +173,7 @@ function NewEvent() {
 										{zone.replace('_', ' ')}
 									</option>
 								))}
-							</select>
+							</FieldSelect>
 						</Field>
 					</>
 				)}

@@ -1,6 +1,16 @@
 import { Button } from '@app/ui/components/button'
 import { createFileRoute, getRouteApi, Link, useRouter } from '@tanstack/react-router'
 import { cn } from 'cn'
+import {
+	CalendarClock,
+	Check,
+	ChevronRight,
+	Copy,
+	ExternalLink,
+	Shapes,
+	ShieldCheck,
+	Users,
+} from 'lucide-react'
 import { useState } from 'react'
 import { FormError } from '#/components/auth-shell'
 import { actionMessage } from '#/lib/errors'
@@ -49,63 +59,131 @@ function Overview() {
 		},
 	] as const
 
+	const places = sessions.reduce((sum, session) => sum + session.capacity, 0)
+	const stats = [
+		{ label: m.stat_workshops(), value: workshops.length, icon: <Shapes /> },
+		{ label: m.stat_sessions(), value: sessions.length, icon: <CalendarClock /> },
+		{ label: m.stat_places(), value: places, icon: <Users /> },
+	]
+
 	return (
 		<div className="flex flex-col gap-6">
-			<section aria-labelledby="checklist" className="rounded-xl bg-card p-5">
-				<h2 id="checklist" className="mb-4 text-lg font-bold">
-					{m.checklist_title()}
-				</h2>
-				<ol className="flex flex-col gap-2">
-					{steps.map((item) => (
-						<li key={item.label}>
-							<Link
-								to={item.to}
-								params={params}
-								className="flex min-h-11 items-center gap-3 rounded-lg px-2 hover:bg-accent"
-							>
-								<CheckDot done={item.done} />
-								<span className="flex-1 font-bold">{item.label}</span>
-								<span className="text-sm text-muted-foreground">{item.detail}</span>
-							</Link>
-						</li>
-					))}
-					<li className="flex min-h-11 items-center gap-3 px-2">
-						<CheckDot done={published} />
-						<span className="flex-1 font-bold">{m.checklist_publish()}</span>
-					</li>
-				</ol>
-			</section>
-
-			<section className="flex flex-col gap-3 rounded-xl bg-card p-5" aria-live="polite">
-				{published ? (
-					<>
-						<p className="font-bold">{m.published_notice()}</p>
-						<p>
-							{m.public_page_label()}:{' '}
-							<a href={publicPath} className="font-mono text-primary underline underline-offset-4">
-								{publicPath}
-							</a>
-						</p>
-					</>
-				) : (
-					<p>{m.draft_notice()}</p>
-				)}
-				{canPublish && (
-					<div>
-						<Button
-							variant={published ? 'outline' : 'default'}
-							disabled={pending}
-							onClick={() => setStatus(published ? 'draft' : 'published')}
-						>
-							{published ? m.unpublish_button() : m.publish_button()}
-						</Button>
+			<dl className="grid grid-cols-3 gap-2 sm:gap-4">
+				{stats.map((stat) => (
+					<div
+						key={stat.label}
+						className="flex flex-col gap-1 rounded-xl bg-card shadow-card p-4 sm:p-5"
+					>
+						<dt className="flex items-center gap-2 text-sm font-bold text-muted-foreground [&_svg]:size-4">
+							<span className="max-sm:hidden">{stat.icon}</span>
+							{stat.label}
+						</dt>
+						<dd className="text-2xl font-bold tabular-nums sm:text-3xl">{stat.value}</dd>
 					</div>
-				)}
-				<FormError message={error} />
-			</section>
+				))}
+			</dl>
+
+			<div className="grid gap-6 lg:grid-cols-[3fr_2fr]">
+				<section aria-labelledby="checklist" className="rounded-xl bg-card shadow-card p-5">
+					<h2 id="checklist" className="mb-3 font-display text-lg font-semibold">
+						{m.checklist_title()}
+					</h2>
+					<ol className="-mx-2 flex flex-col">
+						{steps.map((item) => (
+							<li key={item.label}>
+								<Link
+									to={item.to}
+									params={params}
+									className="group flex min-h-12 items-center gap-3 rounded-lg px-2 hover:bg-accent"
+								>
+									<CheckDot done={item.done} />
+									<span className="flex-1 font-bold">{item.label}</span>
+									<span className="text-sm text-muted-foreground">{item.detail}</span>
+									<ChevronRight
+										aria-hidden
+										className="size-4 text-muted-foreground group-hover:text-foreground"
+									/>
+								</Link>
+							</li>
+						))}
+						<li className="flex min-h-12 items-center gap-3 px-2">
+							<CheckDot done={published} />
+							<span className="flex-1 font-bold">{m.checklist_publish()}</span>
+						</li>
+					</ol>
+				</section>
+
+				<section
+					className="flex flex-col gap-4 rounded-xl bg-card shadow-card p-5"
+					aria-labelledby="public-page"
+					aria-live="polite"
+				>
+					<h2
+						id="public-page"
+						className="flex items-center gap-2 font-display text-lg font-semibold"
+					>
+						{m.public_page_label()}
+					</h2>
+					{published ? (
+						<>
+							<p className="flex items-center gap-2 text-sm font-bold">
+								<span className="size-2 rounded-full bg-success" aria-hidden />
+								{m.published_notice()}
+							</p>
+							<div className="flex items-center gap-2 rounded-lg border border-border bg-background py-1 pr-1 pl-3">
+								<span className="min-w-0 flex-1 truncate font-mono text-sm">{publicPath}</span>
+								<CopyButton text={() => new URL(publicPath, window.location.origin).href} />
+							</div>
+						</>
+					) : (
+						<p className="text-sm text-muted-foreground">{m.draft_notice()}</p>
+					)}
+					<div className="mt-auto flex flex-wrap gap-2">
+						{published && (
+							<Button asChild variant="outline" size="sm">
+								<a href={publicPath} target="_blank" rel="noreferrer">
+									<ExternalLink />
+									{m.open_page()}
+								</a>
+							</Button>
+						)}
+						{canPublish && (
+							<Button
+								variant={published ? 'ghost' : 'default'}
+								size={published ? 'sm' : 'default'}
+								disabled={pending}
+								onClick={() => setStatus(published ? 'draft' : 'published')}
+							>
+								{published ? m.unpublish_button() : m.publish_button()}
+							</Button>
+						)}
+					</div>
+					<FormError message={error} />
+				</section>
+			</div>
 
 			<Retention eventId={event.id} />
 		</div>
+	)
+}
+
+/** Copies a link and says so for two seconds. */
+function CopyButton({ text }: { text: () => string }) {
+	const [copied, setCopied] = useState(false)
+	return (
+		<Button
+			variant="ghost"
+			size="sm"
+			className="shrink-0"
+			onClick={async () => {
+				await navigator.clipboard.writeText(text())
+				setCopied(true)
+				setTimeout(() => setCopied(false), 2000)
+			}}
+		>
+			{copied ? <Check /> : <Copy />}
+			<span aria-live="polite">{copied ? m.link_copied() : m.copy_link()}</span>
+		</Button>
 	)
 }
 
@@ -129,8 +207,12 @@ function Retention({ eventId }: { eventId: string }) {
 	}
 
 	return (
-		<section aria-labelledby="retention" className="flex flex-col gap-3 rounded-xl bg-card p-5">
-			<h2 id="retention" className="text-lg font-bold">
+		<section
+			aria-labelledby="retention"
+			className="flex flex-col gap-3 rounded-xl bg-card shadow-card p-5"
+		>
+			<h2 id="retention" className="flex items-center gap-2 font-display text-lg font-semibold">
+				<ShieldCheck aria-hidden className="size-5 text-muted-foreground" />
 				{m.retention_title()}
 			</h2>
 			{retention.doneAt ? (
@@ -139,7 +221,9 @@ function Retention({ eventId }: { eventId: string }) {
 				</p>
 			) : (
 				<>
-					<p>{m.retention_scheduled({ date: day(retention.date) })}</p>
+					<p className="text-muted-foreground">
+						{m.retention_scheduled({ date: day(retention.date) })}
+					</p>
 					{retention.canAnonymise &&
 						(confirming ? (
 							<div className="flex flex-col gap-3 rounded-lg bg-tint-warning p-4">
@@ -155,7 +239,7 @@ function Retention({ eventId }: { eventId: string }) {
 							</div>
 						) : (
 							<div>
-								<Button variant="outline" onClick={() => setConfirming(true)}>
+								<Button variant="outline" size="sm" onClick={() => setConfirming(true)}>
 									{m.retention_anonymise_now()}
 								</Button>
 							</div>
@@ -176,7 +260,7 @@ function CheckDot({ done }: { done: boolean }) {
 				done ? 'border-primary bg-primary text-primary-foreground' : 'border-input',
 			)}
 		>
-			<span aria-hidden="true">{done ? '✓' : ''}</span>
+			{done && <Check aria-hidden className="size-3.5" strokeWidth={3} />}
 			<span className="sr-only">({done ? m.checklist_done() : m.checklist_todo()})</span>
 		</span>
 	)

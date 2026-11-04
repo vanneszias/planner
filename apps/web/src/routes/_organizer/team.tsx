@@ -1,6 +1,7 @@
 import { authClient } from '@app/auth/client'
 import type { Role } from '@app/auth/permissions'
 import { Button } from '@app/ui/components/button'
+import { ConfirmDialog } from '@app/ui/components/dialog'
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { type FormEvent, useState } from 'react'
 import { FormError } from '#/components/auth-shell'
@@ -27,9 +28,10 @@ function Team() {
 	const { organization, members, invitations, currentUserId, canManage } = Route.useLoaderData()
 	const router = useRouter()
 	const [error, setError] = useState<string | null>(null)
+	const [removing, setRemoving] = useState<{ id: string; name: string } | null>(null)
 
-	async function remove(memberId: string, name: string) {
-		if (!window.confirm(m.remove_member_confirm({ name }))) return
+	async function remove(memberId: string) {
+		setRemoving(null)
 		const result = await authClient.organization.removeMember({
 			memberIdOrEmail: memberId,
 			organizationId: organization?.id,
@@ -57,7 +59,7 @@ function Team() {
 				{members.map((member) => (
 					<li
 						key={member.memberId}
-						className="flex flex-wrap items-center gap-3 rounded-xl bg-card p-4"
+						className="flex flex-wrap items-center gap-3 rounded-xl bg-card shadow-card p-4"
 					>
 						<div className="flex-1">
 							<p className="font-bold">
@@ -75,7 +77,9 @@ function Team() {
 							<Button
 								variant="ghost"
 								aria-label={`${m.remove_member()}: ${member.name || member.email}`}
-								onClick={() => remove(member.memberId, member.name || member.email)}
+								onClick={() =>
+									setRemoving({ id: member.memberId, name: member.name || member.email })
+								}
 							>
 								{m.remove_member()}
 							</Button>
@@ -93,7 +97,7 @@ function Team() {
 						{invitations.map((invitation) => (
 							<li
 								key={invitation.id}
-								className="flex flex-wrap items-center gap-3 rounded-xl bg-card p-4"
+								className="flex flex-wrap items-center gap-3 rounded-xl bg-card shadow-card p-4"
 							>
 								<p className="flex-1">{invitation.email}</p>
 								<span className="rounded-full bg-accent px-3 py-1 text-sm font-bold">
@@ -117,6 +121,14 @@ function Team() {
 			<FormError message={error} />
 			{canManage && organization && <OrganizationForm organization={organization} />}
 			{canManage && organization && <InviteForm organizationId={organization.id} />}
+			<ConfirmDialog
+				open={removing !== null}
+				onOpenChange={(open) => !open && setRemoving(null)}
+				title={removing ? m.remove_member_confirm({ name: removing.name }) : ''}
+				confirmLabel={m.remove_member()}
+				cancelLabel={m.cancel()}
+				onConfirm={() => (removing ? remove(removing.id) : undefined)}
+			/>
 		</div>
 	)
 }
@@ -152,7 +164,11 @@ function InviteForm({ organizationId }: { organizationId: string }) {
 	}
 
 	return (
-		<form onSubmit={submit} noValidate className="flex flex-col gap-4 rounded-xl bg-card p-5">
+		<form
+			onSubmit={submit}
+			noValidate
+			className="flex flex-col gap-4 rounded-xl bg-card shadow-card p-5"
+		>
 			<h2 className="text-lg font-bold">{m.invite_title()}</h2>
 			<Field id="invite-email" label={m.invite_email_label()} error={issue}>
 				<FieldInput
@@ -220,7 +236,11 @@ function OrganizationForm({ organization }: { organization: { name: string; slug
 	}
 
 	return (
-		<form onSubmit={submit} noValidate className="flex flex-col gap-4 rounded-xl bg-card p-5">
+		<form
+			onSubmit={submit}
+			noValidate
+			className="flex flex-col gap-4 rounded-xl bg-card shadow-card p-5"
+		>
 			<h2 className="text-lg font-bold">{m.organization_section()}</h2>
 			<Field id="org-name" label={m.organization_name_label()} error={issues.name}>
 				<FieldInput

@@ -9,6 +9,8 @@ import {
 	useNavigate,
 	useRouter,
 } from '@tanstack/react-router'
+import { LogOut } from 'lucide-react'
+import { BrandMark } from '#/components/brand-mark'
 import { LanguageSwitch } from '#/components/language-switch'
 import { m } from '#/paraglide/messages'
 import { getMyOrganizations } from '#/server/people'
@@ -26,7 +28,7 @@ export const Route = createFileRoute('/_organizer')({
 })
 
 const navLink =
-	'text-sm font-bold text-muted-foreground hover:text-foreground data-[status=active]:text-foreground data-[status=active]:underline data-[status=active]:underline-offset-4'
+	'flex h-9 items-center rounded-md px-2.5 text-sm font-bold text-muted-foreground hover:bg-accent hover:text-foreground data-[status=active]:bg-accent data-[status=active]:text-foreground'
 
 function OrganizerLayout() {
 	const { organizations, activeId, canAudit } = Route.useLoaderData()
@@ -46,13 +48,13 @@ function OrganizerLayout() {
 
 	return (
 		<div className="min-h-dvh">
-			<header className="border-b border-border bg-card print:hidden">
-				{/* Row 1: where you can go. Row 2: context (organization, language). */}
-				<div className="mx-auto flex max-w-4xl items-center gap-3 px-4 pt-2">
-					<Link to="/home" className="font-display text-base font-semibold">
-						{brand.name}
+			<header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur print:hidden">
+				<div className="mx-auto flex h-14 max-w-5xl items-center gap-2 px-4 sm:gap-6">
+					<Link to="/home" className="flex items-center gap-2 font-display text-base font-semibold">
+						<BrandMark />
+						<span className="max-sm:sr-only">{brand.name}</span>
 					</Link>
-					<nav aria-label={brand.name} className="flex flex-1 gap-3">
+					<nav aria-label={brand.name} className="flex flex-1 items-center gap-1">
 						<Link to="/home" className={navLink}>
 							{m.nav_events()}
 						</Link>
@@ -65,16 +67,11 @@ function OrganizerLayout() {
 							</Link>
 						)}
 					</nav>
-					<Button variant="ghost" className="px-2" onClick={signOut}>
-						{m.sign_out()}
-					</Button>
-				</div>
-				<div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-2 px-4 pb-2">
-					{organizations.length > 1 ? (
+					{organizations.length > 1 && (
 						<label className="flex items-center gap-2 text-sm text-muted-foreground">
-							{m.switch_organization()}
+							<span className="sr-only">{m.switch_organization()}</span>
 							<select
-								className="min-h-11 max-w-48 rounded-md border border-input bg-card px-2 text-foreground"
+								className="h-9 max-w-40 rounded-md border border-input bg-card px-2 text-sm font-bold text-foreground"
 								value={activeId}
 								onChange={(event) => switchOrganization(event.target.value)}
 							>
@@ -85,13 +82,21 @@ function OrganizerLayout() {
 								))}
 							</select>
 						</label>
-					) : (
-						<span />
 					)}
-					<LanguageSwitch />
+					<LanguageSwitch compact />
+					<Button
+						variant="ghost"
+						size="sm"
+						className="h-9 text-sm font-bold text-muted-foreground hover:text-foreground"
+						onClick={signOut}
+						aria-label={m.sign_out()}
+					>
+						<LogOut />
+						<span className="max-sm:hidden">{m.sign_out()}</span>
+					</Button>
 				</div>
 			</header>
-			<main className="mx-auto max-w-4xl px-4 py-8">
+			<main className="mx-auto max-w-5xl px-4 py-8 sm:py-10">
 				<Outlet />
 			</main>
 		</div>

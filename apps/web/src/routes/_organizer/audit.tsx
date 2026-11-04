@@ -1,6 +1,7 @@
 import { type AuditCategory, type AuditData, auditCategories } from '@app/domain'
 import { Button } from '@app/ui/components/button'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { FieldSelect } from '#/components/field'
 import { formatStamp } from '#/lib/format'
 import { m } from '#/paraglide/messages'
 import { getAuditLogFn } from '#/server/audit'
@@ -78,8 +79,6 @@ const actionLabels: Record<string, () => string> = {
 	'organization.update': m.audit_organization_update,
 }
 
-const select = 'h-11 rounded-md border border-input bg-card px-3 font-normal'
-
 function AuditLog() {
 	const { entries, next, events, members } = Route.useLoaderData()
 	const search = Route.useSearch()
@@ -100,8 +99,7 @@ function AuditLog() {
 			<div className="flex flex-wrap items-end gap-3">
 				<label className="flex flex-col gap-1 text-sm font-bold">
 					{m.audit_filter_event()}
-					<select
-						className={select}
+					<FieldSelect
 						value={search.event ?? ''}
 						onChange={(e) => filter({ event: e.target.value || undefined })}
 					>
@@ -111,12 +109,11 @@ function AuditLog() {
 								{event.name}
 							</option>
 						))}
-					</select>
+					</FieldSelect>
 				</label>
 				<label className="flex flex-col gap-1 text-sm font-bold">
 					{m.audit_filter_category()}
-					<select
-						className={select}
+					<FieldSelect
 						value={search.category ?? ''}
 						onChange={(e) =>
 							filter({ category: (e.target.value || undefined) as AuditCategory | undefined })
@@ -128,12 +125,11 @@ function AuditLog() {
 								{categoryLabels[category]()}
 							</option>
 						))}
-					</select>
+					</FieldSelect>
 				</label>
 				<label className="flex flex-col gap-1 text-sm font-bold">
 					{m.audit_filter_person()}
-					<select
-						className={select}
+					<FieldSelect
 						value={search.person ?? ''}
 						onChange={(e) => filter({ person: e.target.value || undefined })}
 					>
@@ -143,14 +139,14 @@ function AuditLog() {
 								{member.name}
 							</option>
 						))}
-					</select>
+					</FieldSelect>
 				</label>
 			</div>
 
 			{entries.length === 0 ? (
-				<p className="rounded-xl bg-card p-6">{m.audit_empty()}</p>
+				<p className="rounded-xl bg-card shadow-card p-6">{m.audit_empty()}</p>
 			) : (
-				<div className="overflow-x-auto rounded-xl bg-card">
+				<div className="overflow-x-auto rounded-xl bg-card shadow-card">
 					<table className="w-full text-left text-sm">
 						<caption className="sr-only">{m.audit_title()}</caption>
 						<thead className="border-b border-border">

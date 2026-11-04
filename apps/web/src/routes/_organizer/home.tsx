@@ -1,7 +1,9 @@
 import { authClient } from '@app/auth/client'
 import { Button } from '@app/ui/components/button'
 import { createFileRoute, Link } from '@tanstack/react-router'
+import { CalendarDays, ChevronRight, KeyRound, Plus } from 'lucide-react'
 import { useState } from 'react'
+import { EmptyState } from '#/components/page'
 import { StatusLabel } from '#/components/status-label'
 import { formatDateRange } from '#/lib/format'
 import { m } from '#/paraglide/messages'
@@ -16,7 +18,7 @@ function Dashboard() {
 	const { organization, events, canCreate } = Route.useLoaderData()
 
 	return (
-		<div className="flex flex-col gap-6">
+		<div className="flex flex-col gap-8">
 			<div className="flex flex-wrap items-end justify-between gap-4">
 				<div>
 					<p className="text-sm text-muted-foreground">{organization?.name}</p>
@@ -26,29 +28,39 @@ function Dashboard() {
 				</div>
 				{canCreate && (
 					<Button asChild>
-						<Link to="/events/new">{m.create_event()}</Link>
+						<Link to="/events/new">
+							<Plus />
+							{m.create_event()}
+						</Link>
 					</Button>
 				)}
 			</div>
 
 			{events.length === 0 ? (
-				<p className="rounded-xl bg-card p-6">{m.events_empty()}</p>
+				<EmptyState icon={<CalendarDays />} title={m.events_empty()} />
 			) : (
-				<ul className="flex flex-col gap-3">
+				<ul className="divide-y divide-border overflow-hidden rounded-xl bg-card shadow-card">
 					{events.map((event) => (
 						<li key={event.id}>
 							<Link
 								to="/events/$eventId"
 								params={{ eventId: event.id }}
-								className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-card p-4 hover:bg-accent"
+								className="group flex items-center gap-4 px-4 py-4 hover:bg-accent/60 sm:px-5"
 							>
-								<span>
-									<span className="block text-lg font-bold">{event.name}</span>
+								<span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-accent text-muted-foreground group-hover:bg-card">
+									<CalendarDays aria-hidden className="size-5" />
+								</span>
+								<span className="min-w-0 flex-1">
+									<span className="block truncate font-bold">{event.name}</span>
 									<span className="text-sm text-muted-foreground">
 										{formatDateRange(event.startsOn, event.endsOn)}
 									</span>
 								</span>
 								<StatusLabel status={event.status} />
+								<ChevronRight
+									aria-hidden
+									className="size-5 shrink-0 text-muted-foreground group-hover:text-foreground max-sm:hidden"
+								/>
 							</Link>
 						</li>
 					))}
@@ -69,13 +81,25 @@ function PasskeyPrompt() {
 	}
 
 	return (
-		<div className="flex flex-col items-start gap-2 border-t border-border pt-6">
-			<Button variant="outline" onClick={addPasskey}>
-				{m.add_passkey()}
+		<section
+			aria-labelledby="passkey"
+			className="flex flex-wrap items-center gap-4 rounded-xl border border-dashed border-edge/60 p-4 sm:p-5"
+		>
+			<span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-accent text-muted-foreground">
+				<KeyRound aria-hidden className="size-5" />
+			</span>
+			<div className="min-w-48 flex-1">
+				<h2 id="passkey" className="font-bold">
+					{m.passkey_title()}
+				</h2>
+				<p className="text-sm text-muted-foreground">{m.passkey_body()}</p>
+				<p aria-live="polite" className="mt-1 text-sm font-bold empty:hidden">
+					{status}
+				</p>
+			</div>
+			<Button variant="outline" size="sm" onClick={addPasskey}>
+				{m.add_passkey_short()}
 			</Button>
-			<p aria-live="polite" className="text-sm empty:hidden">
-				{status}
-			</p>
-		</div>
+		</section>
 	)
 }

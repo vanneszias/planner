@@ -1,21 +1,26 @@
 import { brand } from '@app/brand'
 import { Button } from '@app/ui/components/button'
+import { Dialog } from '@app/ui/components/dialog'
 import { Marker } from '@app/ui/components/marker'
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { cn } from 'cn'
+import { CalendarDays, Hourglass } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { BrandMark } from '#/components/brand-mark'
 import { DayStrip } from '#/components/event/day-strip'
 import { Explanation } from '#/components/event/explanation'
 import { RegisterForm, ReturningForms } from '#/components/event/forms'
 import { RankList } from '#/components/event/rank-list'
 import { useLiveSeats } from '#/components/event/use-live-seats'
 import { LanguageSwitch } from '#/components/language-switch'
+import { EmptyState } from '#/components/page'
 import {
 	formatDateRange,
 	formatDateTime,
 	formatShortDayTime,
 	formatTime,
 	groupByDay,
+	groupBySlot,
 } from '#/lib/format'
 import { m } from '#/paraglide/messages'
 import {
@@ -80,6 +85,10 @@ function EventPage() {
 	const [cancelled, setCancelled] = useState(false)
 
 	const workshopById = new Map(workshops.map((w) => [w.id, w]))
+	const registeringWorkshop =
+		registeringFor && registeringFor !== 'none'
+			? workshopById.get(sessions.find((s) => s.id === registeringFor)?.workshopId ?? '')
+			: undefined
 	const booked = new Set(me?.bookings.map((b) => b.sessionId))
 	const waitlisted = new Map(me?.waitlist.map((w) => [w.sessionId, w.position]))
 	const mine = sessions.filter((s) => booked.has(s.id))
@@ -176,7 +185,7 @@ function EventPage() {
 	if (cancelled) {
 		return (
 			<Shell page={page}>
-				<p className="rounded-xl bg-card p-5 font-bold" role="status">
+				<p className="rounded-xl bg-card shadow-card p-5 font-bold" role="status">
 					{m.registration_cancelled()}
 				</p>
 			</Shell>
@@ -207,7 +216,7 @@ function EventPage() {
 
 			{me && (
 				<div className="flex flex-wrap items-baseline justify-between gap-2">
-					<p className="text-lg font-bold">{m.hello_name({ name: me.name })}</p>
+					<p className="font-display text-lg font-semibold">{m.hello_name({ name: me.name })}</p>
 					{bookingMode && (
 						<p className="text-sm text-muted-foreground">
 							{m.booked_count({
@@ -244,24 +253,47 @@ function EventPage() {
 				</div>
 			)}
 
-			<p aria-live="polite" className="font-bold empty:hidden" role="status">
+			<p
+				aria-live="polite"
+				className="flex items-center gap-2 rounded-lg bg-accent px-4 py-3 font-bold empty:hidden"
+				role="status"
+			>
 				{notice}
 			</p>
 
-			{registeringFor && (
-				<RegisterForm
-					eventId={event.id}
-					sessionId={registeringFor === 'none' ? undefined : registeringFor}
-					ageGroups={ageGroups}
-					turnstileSiteKey={page.turnstileSiteKey}
-					onCancel={() => setRegisteringFor(null)}
-					onDone={async (message, refusal) => {
-						setRegisteringFor(null)
-						setNotice(refusal ? `${message} ${(refusals[refusal] ?? m.error_generic)()}` : message)
-						await router.invalidate()
-					}}
-				/>
-			)}
+			<Dialog
+				open={registeringFor !== null}
+				onOpenChange={(isOpen) => !isOpen && setRegisteringFor(null)}
+				title={rankingMode ? m.register_title_rank() : m.register_title()}
+				description={m.register_intro()}
+				icon={
+					registeringWorkshop && (
+						<Marker
+							color={registeringWorkshop.markerColor}
+							shape={registeringWorkshop.markerShape}
+						/>
+					)
+				}
+				closeLabel={m.close()}
+			>
+				{registeringFor && (
+					<RegisterForm
+						eventId={event.id}
+						sessionId={registeringFor === 'none' ? undefined : registeringFor}
+						ageGroups={ageGroups}
+						suggestedAgeGroups={registeringWorkshop?.ageGroups}
+						turnstileSiteKey={page.turnstileSiteKey}
+						onCancel={() => setRegisteringFor(null)}
+						onDone={async (message, refusal) => {
+							setRegisteringFor(null)
+							setNotice(
+								refusal ? `${message} ${(refusals[refusal] ?? m.error_generic)()}` : message,
+							)
+							await router.invalidate()
+						}}
+					/>
+				)}
+			</Dialog>
 
 			{rankingMode &&
 				!page.published &&
@@ -288,24 +320,26 @@ function EventPage() {
 								}))}
 						/>
 					) : (
-						<p className="rounded-xl bg-card p-5 font-bold">{m.ranking_waiting()}</p>
+						<EmptyState icon={<Hourglass />} title={m.ranking_waiting()} />
 					)
 				) : (
-					rankingOpen &&
-					!registeringFor && (
-						<section className="flex flex-col gap-3 rounded-xl bg-card p-5">
-							<h2 className="font-display text-xl font-medium">{m.rank_title()}</h2>
-							<p className="text-muted-foreground">{m.register_intro()}</p>
-							<div>
-								<Button onClick={() => setRegisteringFor('none')}>{m.register_only()}</Button>
+					rankingOpen && (
+						<section className="flex flex-wrap items-center gap-4 rounded-xl bg-card p-5 shadow-card">
+							<div className="min-w-56 flex-1">
+								<h2 className="font-display text-xl font-semibold">{m.rank_title()}</h2>
+								<p className="text-muted-foreground">{m.register_intro()}</p>
 							</div>
+							<Button onClick={() => setRegisteringFor('none')}>{m.register_only()}</Button>
 						</section>
 					)
 				))}
 
 			{tab === 'myday' && me ? (
 				mine.length === 0 ? (
-					<p className="rounded-xl bg-card p-5">{m.my_day_empty()}</p>
+					<EmptyState
+						icon={<CalendarDays />}
+						title={rankingMode ? m.my_day_empty_ranking() : m.my_day_empty()}
+					/>
 				) : (
 					<DayStrip
 						timeZone={event.timezone}
@@ -341,125 +375,161 @@ function EventPage() {
 						</p>
 					)}
 					{groupByDay(sessions, event.timezone).length === 0 && (
-						<p className="rounded-xl bg-card p-5">{m.programme_empty()}</p>
+						<p className="rounded-xl bg-card shadow-card p-5">{m.programme_empty()}</p>
 					)}
 					{groupByDay(sessions, event.timezone).map((day) => (
-						<div key={day.label} className="flex flex-col gap-2">
-							<h3 className="font-bold first-letter:uppercase">{day.label}</h3>
-							<ul className="flex flex-col gap-2">
-								{day.items.map((session) => {
-									const workshop = workshopById.get(session.workshopId)
-									if (!workshop) return null
-									const state = bookingMode ? stateOf(session) : null
-									const label = `${workshop.title} ${formatTime(session.startsAt, event.timezone)}`
-									return (
-										<li key={session.id} className="flex flex-col gap-3 rounded-xl bg-card p-4">
-											<div className="flex items-start gap-3">
-												<Marker
-													color={workshop.markerColor}
-													shape={workshop.markerShape}
-													className="mt-0.5"
-												/>
-												<div className="flex-1">
-													<p className="font-bold" lang={event.defaultLocale}>
-														{workshop.title}
-													</p>
-													<p className="text-sm text-muted-foreground">
-														{session.room ? `${session.room} · ` : ''}
-														{state ? state.text : m.places({ count: String(session.capacity) })}
-													</p>
-													{workshop.ageGroups.length > 0 && (
-														<p className="text-sm font-bold" lang={event.defaultLocale}>
-															{m.for_ages({ groups: workshop.ageGroups.join(', ') })}
-														</p>
+						<div key={day.label} className="flex flex-col gap-4">
+							<h3 className="font-display text-lg font-semibold first-letter:uppercase">
+								{day.label}
+							</h3>
+							{groupBySlot(day.items).map((slot) => (
+								<div key={slot.startsAt.getTime()} className="flex flex-col gap-2">
+									<h4 className="flex items-baseline gap-3">
+										<span className="font-mono font-semibold tabular-nums">
+											{formatTime(slot.startsAt, event.timezone)}–
+											{formatTime(slot.endsAt, event.timezone)}
+										</span>
+										<span className="text-sm text-muted-foreground">
+											{m.slot_count({ count: String(slot.items.length) })}
+										</span>
+									</h4>
+									<ul className="divide-y divide-border overflow-hidden rounded-xl bg-card shadow-card">
+										{slot.items.map((session) => {
+											const workshop = workshopById.get(session.workshopId)
+											if (!workshop) return null
+											const state = bookingMode ? stateOf(session) : null
+											const label = `${workshop.title} ${formatTime(session.startsAt, event.timezone)}`
+											return (
+												<li
+													key={session.id}
+													className={cn(
+														'flex items-center gap-3 bg-card px-4 py-3',
+														state?.action === 'cancel' && 'bg-tint-success',
 													)}
-												</div>
-												<span className="font-mono">
-													{formatTime(session.startsAt, event.timezone)}
-												</span>
-											</div>
-											{open && state?.action === 'book' && (
-												<Button
-													variant={me ? 'default' : 'outline'}
-													aria-label={`${m.book_session()}: ${label}`}
-													data-session-action={session.id}
-													aria-disabled={busy === session.id || undefined}
-													onClick={() =>
-														me
-															? act(
+												>
+													<div className="flex flex-1 items-start gap-3">
+														<Marker
+															color={workshop.markerColor}
+															shape={workshop.markerShape}
+															className="mt-0.5"
+														/>
+														<div className="flex-1">
+															<p className="flex flex-wrap items-center gap-x-2 gap-y-1">
+																<span className="font-bold" lang={event.defaultLocale}>
+																	{workshop.title}
+																</span>
+																{workshop.ageGroups.length > 0 && (
+																	<span
+																		className="rounded-full bg-accent px-2 py-0.5 text-xs font-bold"
+																		lang={event.defaultLocale}
+																	>
+																		{m.for_ages({ groups: workshop.ageGroups.join(', ') })}
+																	</span>
+																)}
+															</p>
+															<p className="text-sm text-muted-foreground">
+																{session.room ? `${session.room} · ` : ''}
+																{state ? state.text : m.places({ count: String(session.capacity) })}
+															</p>
+														</div>
+													</div>
+													{open && state?.action === 'book' && (
+														<Button
+															size="sm"
+															className="h-10 shrink-0 sm:min-w-28"
+															variant={me ? 'default' : 'outline'}
+															aria-label={`${m.book_session()}: ${label}`}
+															data-session-action={session.id}
+															aria-disabled={busy === session.id || undefined}
+															onClick={() =>
+																me
+																	? act(
+																			session.id,
+																			() =>
+																				bookFn({
+																					data: { eventId: event.id, sessionId: session.id },
+																				}),
+																			m.booked_notice({ session: label }),
+																		)
+																	: setRegisteringFor(session.id)
+															}
+														>
+															<span className="sm:hidden">{m.book_short()}</span>
+															<span className="max-sm:hidden">{m.book_session()}</span>
+														</Button>
+													)}
+													{open && state?.action === 'cancel' && (
+														<Button
+															size="sm"
+															className="h-10 shrink-0 sm:min-w-28"
+															variant="outline"
+															aria-label={`${m.cancel_booking()}: ${label}`}
+															data-session-action={session.id}
+															aria-disabled={busy === session.id || undefined}
+															onClick={() =>
+																act(
 																	session.id,
 																	() =>
-																		bookFn({ data: { eventId: event.id, sessionId: session.id } }),
-																	m.booked_notice({ session: label }),
+																		cancelFn({
+																			data: { eventId: event.id, sessionId: session.id },
+																		}),
+																	m.cancelled_notice({ session: label }),
 																)
-															: setRegisteringFor(session.id)
-													}
-												>
-													{m.book_session()}
-												</Button>
-											)}
-											{open && state?.action === 'cancel' && (
-												<Button
-													variant="outline"
-													aria-label={`${m.cancel_booking()}: ${label}`}
-													data-session-action={session.id}
-													aria-disabled={busy === session.id || undefined}
-													onClick={() =>
-														act(
-															session.id,
-															() =>
-																cancelFn({ data: { eventId: event.id, sessionId: session.id } }),
-															m.cancelled_notice({ session: label }),
-														)
-													}
-												>
-													{m.cancel_booking()}
-												</Button>
-											)}
-											{open && state?.action === 'join' && (
-												<Button
-													variant="outline"
-													aria-label={`${m.join_waitlist()}: ${label}`}
-													data-session-action={session.id}
-													aria-disabled={busy === session.id || undefined}
-													onClick={() =>
-														act(
-															session.id,
-															() =>
-																joinWaitlistFn({
-																	data: { eventId: event.id, sessionId: session.id },
-																}),
-															m.waitlist_joined_notice({ session: label }),
-														)
-													}
-												>
-													{m.join_waitlist()}
-												</Button>
-											)}
-											{open && state?.action === 'leave' && (
-												<Button
-													variant="ghost"
-													aria-label={`${m.leave_waitlist()}: ${label}`}
-													data-session-action={session.id}
-													aria-disabled={busy === session.id || undefined}
-													onClick={() =>
-														act(
-															session.id,
-															() =>
-																leaveWaitlistFn({
-																	data: { eventId: event.id, sessionId: session.id },
-																}),
-															m.waitlist_left_notice({ session: label }),
-														)
-													}
-												>
-													{m.leave_waitlist()}
-												</Button>
-											)}
-										</li>
-									)
-								})}
-							</ul>
+															}
+														>
+															{m.cancel_booking()}
+														</Button>
+													)}
+													{open && state?.action === 'join' && (
+														<Button
+															size="sm"
+															className="h-10 shrink-0 sm:min-w-28"
+															variant="outline"
+															aria-label={`${m.join_waitlist()}: ${label}`}
+															data-session-action={session.id}
+															aria-disabled={busy === session.id || undefined}
+															onClick={() =>
+																act(
+																	session.id,
+																	() =>
+																		joinWaitlistFn({
+																			data: { eventId: event.id, sessionId: session.id },
+																		}),
+																	m.waitlist_joined_notice({ session: label }),
+																)
+															}
+														>
+															{m.join_waitlist()}
+														</Button>
+													)}
+													{open && state?.action === 'leave' && (
+														<Button
+															size="sm"
+															className="h-10 shrink-0 sm:min-w-28"
+															variant="ghost"
+															aria-label={`${m.leave_waitlist()}: ${label}`}
+															data-session-action={session.id}
+															aria-disabled={busy === session.id || undefined}
+															onClick={() =>
+																act(
+																	session.id,
+																	() =>
+																		leaveWaitlistFn({
+																			data: { eventId: event.id, sessionId: session.id },
+																		}),
+																	m.waitlist_left_notice({ session: label }),
+																)
+															}
+														>
+															{m.leave_waitlist()}
+														</Button>
+													)}
+												</li>
+											)
+										})}
+									</ul>
+								</div>
+							))}
 						</div>
 					))}
 				</section>
@@ -487,35 +557,55 @@ function EventPage() {
 	)
 }
 
-/** Header band and outer layout shared by every state of the page. */
+/** Header and outer layout shared by every state of the page. */
 function Shell({ page, children }: { page: Page; children: React.ReactNode }) {
 	const { event } = page
 	return (
-		<main className="mx-auto flex min-h-dvh max-w-2xl flex-col gap-6 px-4 py-6">
-			<div className="flex justify-end">
-				<LanguageSwitch />
-			</div>
-			<header
-				className="rounded-2xl p-5 text-white"
-				style={{ background: event.accentColor ?? 'var(--kelp)' }}
-			>
-				<h1
-					lang={event.defaultLocale}
-					className="font-display text-[clamp(1.75rem,7vw,2.5rem)] leading-tight font-semibold hyphens-auto"
-				>
-					{event.name}
-				</h1>
-				<p className="mt-1">{formatDateRange(event.startsOn, event.endsOn)}</p>
-				<p className="mt-1 text-sm opacity-95">
-					{m.organized_by({ name: event.organizationName })}
-				</p>
-			</header>
-			{event.description && (
-				<p lang={event.defaultLocale} className="whitespace-pre-line">
-					{event.description}
-				</p>
-			)}
-			{children}
-		</main>
+		<div className="min-h-dvh">
+			<div className="h-1.5" style={{ background: event.accentColor ?? 'var(--kelp)' }} />
+			<main className="mx-auto flex max-w-2xl flex-col gap-6 px-4 pt-4 pb-10">
+				<div className="flex items-center justify-between">
+					<span className="flex items-center gap-2 text-sm font-bold text-muted-foreground">
+						<BrandMark className="size-5" />
+						{event.organizationName}
+					</span>
+					<LanguageSwitch compact />
+				</div>
+				<header className="flex flex-col gap-3 pt-2">
+					<h1
+						lang={event.defaultLocale}
+						className="font-display text-[clamp(1.875rem,7vw,2.75rem)] leading-[1.1] font-semibold hyphens-auto"
+					>
+						{event.name}
+					</h1>
+					<p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-muted-foreground">
+						<span className="flex items-center gap-1.5">
+							<CalendarDays aria-hidden className="size-4" />
+							{formatDateRange(event.startsOn, event.endsOn)}
+						</span>
+						<span>{m.organized_by({ name: event.organizationName })}</span>
+					</p>
+					<MarkerRow workshops={page.workshops} />
+				</header>
+				{event.description && (
+					<p lang={event.defaultLocale} className="whitespace-pre-line">
+						{event.description}
+					</p>
+				)}
+				{children}
+			</main>
+		</div>
+	)
+}
+
+/** A strip of the programme's stickers: the page's one burst of colour. */
+function MarkerRow({ workshops }: { workshops: Page['workshops'] }) {
+	if (workshops.length === 0) return null
+	return (
+		<div aria-hidden className="flex flex-wrap gap-1.5 pt-1">
+			{workshops.slice(0, 16).map((w) => (
+				<Marker key={w.id} color={w.markerColor} shape={w.markerShape} className="size-4" />
+			))}
+		</div>
 	)
 }

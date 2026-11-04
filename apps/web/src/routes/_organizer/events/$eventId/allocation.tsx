@@ -5,6 +5,7 @@ import { createFileRoute, getRouteApi, useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
 import { FormError } from '#/components/auth-shell'
 import { Explanation } from '#/components/event/explanation'
+import { FieldSelect } from '#/components/field'
 import { RadioCards } from '#/components/radio-cards'
 import { actionMessage } from '#/lib/errors'
 import { formatShortDayTime } from '#/lib/format'
@@ -51,7 +52,7 @@ function Allocation() {
 	const [pending, setPending] = useState(false)
 
 	if (event.mode !== 'ranking') {
-		return <p className="rounded-xl bg-card p-6">{m.allocation_booking_mode()}</p>
+		return <p className="rounded-xl bg-card shadow-card p-6">{m.allocation_booking_mode()}</p>
 	}
 	if (anonymised) return <p className="rounded-xl bg-tint-warning p-6">{m.data_deleted()}</p>
 
@@ -90,7 +91,7 @@ function Allocation() {
 
 	return (
 		<div className="flex flex-col gap-6">
-			<section className="flex flex-col gap-4 rounded-xl bg-card p-5">
+			<section className="flex flex-col gap-4 rounded-xl bg-card shadow-card p-5">
 				<p className="font-bold">
 					{m.allocation_progress({
 						ranked: String(progress.ranked),
@@ -136,7 +137,10 @@ function Allocation() {
 
 			{review && (
 				<>
-					<section aria-labelledby="metrics" className="flex flex-col gap-2 rounded-xl bg-card p-5">
+					<section
+						aria-labelledby="metrics"
+						className="flex flex-col gap-2 rounded-xl bg-card shadow-card p-5"
+					>
 						<h2 id="metrics" className="flex items-center gap-3 text-lg font-bold">
 							{isDraft ? m.run_draft_label() : m.run_published_label()}
 						</h2>
@@ -223,15 +227,14 @@ function Allocation() {
 
 					<label className="flex max-w-xs flex-col gap-1 text-sm font-bold">
 						{m.filter_status()}
-						<select
-							className="h-11 rounded-md border border-input bg-card px-3 font-normal"
+						<FieldSelect
 							value={filter}
 							onChange={(e) => setFilter(e.target.value as typeof filter)}
 						>
 							<option value="all">{m.filter_all()}</option>
 							<option value="empty">{m.filter_empty()}</option>
 							<option value="notop3">{m.filter_no_top3()}</option>
-						</select>
+						</FieldSelect>
 					</label>
 
 					<ul className="flex flex-col gap-2">
@@ -296,7 +299,7 @@ function PersonRow({
 }) {
 	const [target, setTarget] = useState('')
 	return (
-		<li className="flex flex-col gap-2 rounded-xl bg-card p-4">
+		<li className="flex flex-col gap-2 rounded-xl bg-card shadow-card p-4">
 			<div className="flex flex-wrap items-start justify-between gap-2">
 				<div>
 					<p className="font-bold">{name}</p>
@@ -347,8 +350,8 @@ function PersonRow({
 						<div className="flex flex-wrap items-end gap-2">
 							<label className="flex flex-col gap-1 text-sm font-bold">
 								{m.add_place()}
-								<select
-									className="h-11 max-w-72 rounded-md border border-input bg-card px-3 font-normal"
+								<FieldSelect
+									className="max-w-72 font-normal"
 									value={target}
 									onChange={(e) => setTarget(e.target.value)}
 								>
@@ -358,7 +361,7 @@ function PersonRow({
 											{sessionLabel(id)}
 										</option>
 									))}
-								</select>
+								</FieldSelect>
 							</label>
 							<Button
 								variant="outline"

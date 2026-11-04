@@ -3,6 +3,7 @@ import { Button } from '@app/ui/components/button'
 import { Marker } from '@app/ui/components/marker'
 import { createFileRoute, getRouteApi } from '@tanstack/react-router'
 import { cn } from 'cn'
+import { Check, Printer, ScanLine, TriangleAlert, Users, X } from 'lucide-react'
 import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { FormError } from '#/components/auth-shell'
 import {
@@ -13,7 +14,8 @@ import {
 } from '#/components/check-in/offline-queue'
 import { Scanner } from '#/components/check-in/scanner'
 import { useLiveCheckIns } from '#/components/check-in/use-live-check-ins'
-import { Field, FieldInput } from '#/components/field'
+import { Field, FieldInput, FieldSelect } from '#/components/field'
+import { EmptyState } from '#/components/page'
 import { actionMessage } from '#/lib/errors'
 import { formatShortDayTime, formatTime } from '#/lib/format'
 import { m } from '#/paraglide/messages'
@@ -168,12 +170,11 @@ function CheckIn() {
 	}, [roster, query])
 
 	return (
-		<div className="flex flex-col gap-4">
-			<div className="flex flex-col gap-3 print:hidden">
+		<div className="flex flex-col gap-6">
+			<div className="grid gap-4 rounded-xl bg-card p-5 shadow-card sm:grid-cols-[1fr_auto] sm:items-end print:hidden">
 				<Field id="checkin-session" label={m.checkin_session_label()}>
-					<select
+					<FieldSelect
 						id="checkin-session"
-						className="h-11 rounded-md border border-input bg-card px-3"
 						value={selected}
 						onChange={(e) => {
 							setSelected(e.target.value)
@@ -189,16 +190,22 @@ function CheckIn() {
 								{s.room ? ` · ${s.room}` : ''}
 							</option>
 						))}
-					</select>
+					</FieldSelect>
 				</Field>
-				<p className="flex items-center gap-3 rounded-xl bg-card p-4">
-					{session && (
-						<Marker color={session.markerColor} shape={session.markerShape} className="size-8" />
-					)}
-					<span className="font-display text-3xl font-semibold">
-						{m.checkin_counter({ here: String(here), expected: String(expected) })}
-					</span>
-				</p>
+				<div className="flex min-w-56 flex-col gap-2">
+					<p className="flex items-center gap-2.5">
+						{session && <Marker color={session.markerColor} shape={session.markerShape} />}
+						<span className="text-2xl font-bold tabular-nums">
+							{m.checkin_counter({ here: String(here), expected: String(expected) })}
+						</span>
+					</p>
+					<div className="h-2 overflow-hidden rounded-full bg-accent" aria-hidden>
+						<div
+							className="h-full rounded-full bg-success transition-[width]"
+							style={{ width: `${expected ? Math.min(100, (here / expected) * 100) : 0}%` }}
+						/>
+					</div>
+				</div>
 			</div>
 
 			{page.anonymised && <p className="rounded-xl bg-tint-warning p-4">{m.data_deleted()}</p>}
@@ -228,44 +235,59 @@ function CheckIn() {
 
 			{page.canCheckIn && !page.anonymised && (
 				<div className="flex flex-col gap-4 print:hidden">
-					<div className="flex flex-col gap-3">
-						<div>
-							<Button
-								variant={scanning ? 'outline' : 'default'}
-								onClick={() => setScanning(!scanning)}
-							>
-								{scanning ? m.scanner_stop() : m.scanner_start()}
-							</Button>
-						</div>
-						{scanning && (
-							<Scanner onScan={(text) => (pending ? undefined : send({ sessionId, scan: text }))} />
-						)}
-					</div>
-
-					<form onSubmit={submitCode} noValidate className="flex flex-wrap items-end gap-2">
-						<Field id="checkin-code" label={m.checkin_code_label()}>
-							<FieldInput
-								id="checkin-code"
-								autoComplete="off"
-								autoCapitalize="characters"
-								spellCheck={false}
-								placeholder="K7Q2-XA"
-								className="max-w-48 font-mono uppercase"
-								value={code}
-								onChange={(e) => setCode(e.target.value)}
-							/>
-						</Field>
-						<Button type="submit" variant="outline" aria-disabled={pending || undefined}>
-							{m.checkin_submit()}
+					<div className="flex flex-wrap items-end gap-x-4 gap-y-3">
+						<Button
+							variant={scanning ? 'outline' : 'default'}
+							onClick={() => setScanning(!scanning)}
+						>
+							{scanning ? <X /> : <ScanLine />}
+							{scanning ? m.scanner_stop() : m.scanner_start()}
 						</Button>
-					</form>
+						<span className="pb-3 text-sm text-muted-foreground max-sm:hidden" aria-hidden>
+							/
+						</span>
+						<form onSubmit={submitCode} noValidate className="flex flex-wrap items-end gap-2">
+							<Field id="checkin-code" label={m.checkin_code_label()}>
+								<FieldInput
+									id="checkin-code"
+									autoComplete="off"
+									autoCapitalize="characters"
+									spellCheck={false}
+									placeholder="K7Q2-XA"
+									className="max-w-48 font-mono uppercase"
+									value={code}
+									onChange={(e) => setCode(e.target.value)}
+								/>
+							</Field>
+							<Button type="submit" variant="outline" aria-disabled={pending || undefined}>
+								{m.checkin_submit()}
+							</Button>
+						</form>
+					</div>
+					{scanning && (
+						<Scanner onScan={(text) => (pending ? undefined : send({ sessionId, scan: text }))} />
+					)}
 				</div>
 			)}
 
 			<section aria-labelledby="checkin-names" className="flex flex-col gap-3 print:hidden">
-				<h2 id="checkin-names" className="text-lg font-bold">
-					{m.checkin_by_name()}
-				</h2>
+				<div className="flex flex-wrap items-center justify-between gap-2">
+					<h2 id="checkin-names" className="font-display text-lg font-semibold">
+						{m.checkin_by_name()}
+					</h2>
+					<Button
+						variant="outline"
+						size="sm"
+						onClick={async () => {
+							if (!roster) await loadRoster()
+							// Let React render the list before the print dialog opens.
+							setTimeout(() => window.print(), 50)
+						}}
+					>
+						<Printer />
+						{m.checkin_print()}
+					</Button>
+				</div>
 				{roster ? (
 					<>
 						<Field id="checkin-search" label={m.checkin_search_label()}>
@@ -280,7 +302,7 @@ function CheckIn() {
 						<p className="text-sm text-muted-foreground" aria-live="polite">
 							{m.checkin_matches({ count: String(matches.length) })}
 						</p>
-						<ul className="flex flex-col divide-y divide-border rounded-xl bg-card">
+						<ul className="flex flex-col divide-y divide-border rounded-xl bg-card shadow-card">
 							{matches.slice(0, 50).map((person) => (
 								<li key={person.registrationId} className="flex items-center gap-3 p-3">
 									<span className="flex-1">
@@ -327,30 +349,22 @@ function CheckIn() {
 						</ul>
 					</>
 				) : (
-					<div>
-						<Button
-							variant="outline"
-							onClick={() => {
-								focusLater('#checkin-search')
-								loadRoster()
-							}}
-						>
-							{m.checkin_show_names()}
-						</Button>
-					</div>
+					<EmptyState
+						icon={<Users />}
+						title={m.checkin_names_hint()}
+						action={
+							<Button
+								variant="outline"
+								onClick={() => {
+									focusLater('#checkin-search')
+									loadRoster()
+								}}
+							>
+								{m.checkin_show_names()}
+							</Button>
+						}
+					/>
 				)}
-				<div>
-					<Button
-						variant="ghost"
-						onClick={async () => {
-							if (!roster) await loadRoster()
-							// Let React render the list before the print dialog opens.
-							setTimeout(() => window.print(), 50)
-						}}
-					>
-						{m.checkin_print()}
-					</Button>
-				</div>
 			</section>
 
 			{roster && (
@@ -390,7 +404,7 @@ function ScanResult({
 	if (shown.kind === 'error') return <FormError message={shown.message} />
 	if (shown.kind === 'undone') {
 		return (
-			<p className="rounded-xl bg-card p-5 text-lg font-bold">
+			<p className="rounded-xl bg-card shadow-card p-5 text-lg font-bold">
 				{m.checkin_undone({ name: shown.name })}
 			</p>
 		)
@@ -416,7 +430,11 @@ function ScanResult({
 			{result.ok ? (
 				<>
 					<p className="text-lg font-bold">
-						<span aria-hidden="true">{result.status === 'checked_in' ? '✓ ' : '! '}</span>
+						{result.status === 'checked_in' ? (
+							<Check aria-hidden className="mr-1 inline size-5 align-[-3px]" strokeWidth={3} />
+						) : (
+							<TriangleAlert aria-hidden className="mr-1 inline size-5 align-[-3px]" />
+						)}
 						{result.status === 'checked_in'
 							? m.checkin_done()
 							: m.checkin_already({ time: time(result.at) })}

@@ -1,5 +1,7 @@
 import { Button } from '@app/ui/components/button'
 import { Marker, type MarkerColor, type MarkerShape } from '@app/ui/components/marker'
+import { cn } from 'cn'
+import { Check, ChevronDown, ChevronUp, Plus, X } from 'lucide-react'
 import { useState } from 'react'
 import { FormError } from '#/components/auth-shell'
 import { m } from '#/paraglide/messages'
@@ -27,7 +29,10 @@ export function RankList({
 	title: heading = m.rank_title(),
 	savedMessage = m.ranking_saved(),
 	saveLabel = m.save_ranking(),
+	hideTitle = false,
 }: {
+	/** In a dialog the dialog's title names the list. */
+	hideTitle?: boolean
 	workshops: RankableWorkshop[]
 	initial: string[]
 	rules: { min: number; max: number }
@@ -106,15 +111,26 @@ export function RankList({
 	return (
 		<section aria-labelledby="rank-title" className="flex flex-col gap-4">
 			<div>
-				<h2 id="rank-title" className="font-display text-xl font-medium">
+				<h2
+					id="rank-title"
+					className={cn('font-display text-xl font-semibold', hideTitle && 'sr-only')}
+				>
 					{heading}
 				</h2>
 				<p className="text-muted-foreground">
 					{m.rank_intro({ min: String(rules.min), max: String(rules.max) })}
 				</p>
-				<p className="mt-1 font-mono text-sm" aria-live="polite">
-					{m.rank_count({ count: String(ranked.length), max: String(rules.max) })}
-				</p>
+				<div className="mt-3 flex items-center gap-3" aria-live="polite">
+					<div className="h-1.5 flex-1 overflow-hidden rounded-full bg-accent" aria-hidden>
+						<div
+							className="h-full rounded-full bg-primary transition-[width]"
+							style={{ width: `${Math.min(100, (ranked.length / rules.max) * 100)}%` }}
+						/>
+					</div>
+					<p className="text-sm font-bold tabular-nums">
+						{m.rank_count({ count: String(ranked.length), max: String(rules.max) })}
+					</p>
+				</div>
 			</div>
 
 			<p aria-live="polite" className="sr-only">
@@ -126,36 +142,44 @@ export function RankList({
 					const workshop = byId.get(id)
 					if (!workshop) return null
 					return (
-						<li key={id} className="flex items-center gap-2 rounded-xl bg-card p-2 pl-3">
-							<span className="w-5 font-mono">{index + 1}</span>
+						<li
+							key={id}
+							className="flex items-center gap-2.5 rounded-xl bg-card p-2 pl-3 shadow-card"
+						>
+							<span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-ink text-sm font-bold text-white tabular-nums">
+								{index + 1}
+							</span>
 							<Marker color={workshop.markerColor} shape={workshop.markerShape} />
 							<WorkshopName workshop={workshop} contentLocale={contentLocale} />
 							<Button
 								variant="outline"
-								size="icon"
+								size="icon-lg"
+								className="max-sm:size-9"
 								aria-label={m.move_up({ workshop: workshop.title })}
 								aria-disabled={index === 0 || undefined}
 								onClick={() => move(index, -1)}
 							>
-								<span aria-hidden="true">↑</span>
+								<ChevronUp aria-hidden />
 							</Button>
 							<Button
 								variant="outline"
-								size="icon"
+								size="icon-lg"
+								className="max-sm:size-9"
 								aria-label={m.move_down({ workshop: workshop.title })}
 								aria-disabled={index === ranked.length - 1 || undefined}
 								onClick={() => move(index, 1)}
 							>
-								<span aria-hidden="true">↓</span>
+								<ChevronDown aria-hidden />
 							</Button>
 							<Button
 								variant="ghost"
-								size="icon"
+								size="icon-lg"
+								className="text-muted-foreground hover:bg-tint-danger hover:text-destructive max-sm:size-9"
 								aria-label={m.remove_from_ranking({ workshop: workshop.title })}
 								data-rank-remove={id}
 								onClick={() => remove(id)}
 							>
-								<span aria-hidden="true">×</span>
+								<X aria-hidden />
 							</Button>
 						</li>
 					)
@@ -171,19 +195,26 @@ export function RankList({
 					</div>
 					<ul className="flex flex-col gap-2">
 						{unranked.map((workshop) => (
-							<li key={workshop.id} className="flex items-center gap-2 rounded-xl bg-card p-2 pl-3">
-								<span className="w-5" />
+							<li
+								key={workshop.id}
+								className="flex items-center gap-2.5 rounded-xl border border-dashed border-edge/50 bg-card/60 p-2 pl-3"
+							>
+								<span
+									className="size-7 shrink-0 rounded-full border-2 border-dashed border-edge/50"
+									aria-hidden
+								/>
 								<Marker color={workshop.markerColor} shape={workshop.markerShape} />
 								<WorkshopName workshop={workshop} contentLocale={contentLocale} />
 								<Button
 									variant="outline"
-									size="icon"
+									size="icon-lg"
+									className="max-sm:size-9"
 									aria-label={m.add_to_ranking({ workshop: workshop.title })}
 									aria-disabled={ranked.length >= rules.max || undefined}
 									data-rank-add={workshop.id}
 									onClick={() => add(workshop.id)}
 								>
-									<span aria-hidden="true">+</span>
+									<Plus aria-hidden />
 								</Button>
 							</li>
 						))}
@@ -191,12 +222,26 @@ export function RankList({
 				</>
 			)}
 
-			<FormError message={error} />
-			<p aria-live="polite" className="font-bold empty:hidden">
-				{saved}
-			</p>
-			<div className="sticky bottom-3">
-				<Button className="w-full shadow-md" aria-disabled={pending || undefined} onClick={save}>
+			<div
+				className={cn(
+					'sticky bottom-0 z-10 flex flex-col gap-2 border-t border-border pt-3 backdrop-blur',
+					hideTitle
+						? '-mx-6 -mb-6 bg-card/95 px-6 pb-6'
+						: '-mx-4 bg-background/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]',
+				)}
+			>
+				<FormError message={error} />
+				<p
+					aria-live="polite"
+					className={cn(
+						'flex items-center gap-2 rounded-lg bg-tint-success px-3 py-2 text-sm font-bold',
+						!saved && 'hidden',
+					)}
+				>
+					<Check aria-hidden className="size-4 shrink-0 text-success" strokeWidth={3} />
+					{saved}
+				</p>
+				<Button className="w-full" aria-disabled={pending || undefined} onClick={save}>
 					{saveLabel}
 				</Button>
 			</div>
@@ -212,13 +257,20 @@ function WorkshopName({
 	contentLocale: string
 }) {
 	return (
-		<span className="flex-1">
-			<span className="block font-bold" lang={contentLocale}>
+		<span className="min-w-0 flex-1">
+			<span className="block leading-snug font-bold" lang={contentLocale}>
 				{workshop.title}
 			</span>
 			{workshop.times.length > 0 && (
-				<span className="font-mono text-sm text-muted-foreground">
-					{workshop.times.join(' · ')}
+				<span className="mt-1 flex flex-wrap gap-1">
+					{workshop.times.map((time) => (
+						<span
+							key={time}
+							className="rounded bg-accent px-1.5 py-px text-xs font-bold whitespace-nowrap text-muted-foreground tabular-nums"
+						>
+							{time}
+						</span>
+					))}
 				</span>
 			)}
 		</span>

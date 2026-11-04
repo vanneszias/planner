@@ -1,5 +1,7 @@
 import { Input } from '@app/ui/components/input'
 import { Label } from '@app/ui/components/label'
+import { cn } from 'cn'
+import { ChevronDown } from 'lucide-react'
 import type { ComponentProps, ReactNode } from 'react'
 import { fieldMessage } from '#/lib/errors'
 
@@ -54,5 +56,32 @@ export function FieldInput({
 			aria-describedby={describedBy || undefined}
 			{...props}
 		/>
+	)
+}
+
+/** A native select styled like Input, with a chevron. */
+export function FieldSelect({ className, children, ...props }: ComponentProps<'select'>) {
+	return (
+		<div className={cn('relative', className)}>
+			<select
+				className="h-11 w-full cursor-pointer appearance-none rounded-md border border-input bg-card pr-10 pl-3 text-base shadow-xs"
+				{...props}
+			>
+				{children}
+			</select>
+			<ChevronDown
+				aria-hidden
+				className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-muted-foreground"
+			/>
+		</div>
+	)
+}
+
+/** Cancel then submit, right-aligned on wider screens; full width stacked on phones. */
+export function FormActions({ children }: { children: ReactNode }) {
+	return (
+		<div className="flex flex-col-reverse gap-2 border-t border-border pt-5 sm:flex-row sm:justify-end">
+			{children}
+		</div>
 	)
 }

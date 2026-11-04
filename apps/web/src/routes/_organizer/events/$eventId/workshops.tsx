@@ -1,10 +1,13 @@
 import type { Workshop, WorkshopInput } from '@app/domain'
 import { Button } from '@app/ui/components/button'
+import { ConfirmDialog, Dialog } from '@app/ui/components/dialog'
 import { Marker } from '@app/ui/components/marker'
 import { createFileRoute, getRouteApi, useRouter } from '@tanstack/react-router'
+import { Plus, Shapes } from 'lucide-react'
 import { type FormEvent, useState } from 'react'
 import { FormError } from '#/components/auth-shell'
-import { Field, FieldInput } from '#/components/field'
+import { Field, FieldInput, FormActions } from '#/components/field'
+import { EmptyState, PageToolbar, RowActions } from '#/components/page'
 import { actionMessage } from '#/lib/errors'
 import { m } from '#/paraglide/messages'
 import { deleteWorkshopFn, saveWorkshopFn } from '#/server/events'
@@ -15,94 +18,120 @@ export const Route = createFileRoute('/_organizer/events/$eventId/workshops')({
 const eventRoute = getRouteApi('/_organizer/events/$eventId')
 
 function Workshops() {
-	const { event, workshops, canEdit, ageGroups, workshopAgeGroups } = eventRoute.useLoaderData()
+	const { event, workshops, sessions, canEdit, ageGroups, workshopAgeGroups } =
+		eventRoute.useLoaderData()
 	const labelOf = new Map(ageGroups.map((group) => [group.id, group.label]))
 	const router = useRouter()
 	// null: no form open; 'new': adding; otherwise the workshop being edited.
 	const [editing, setEditing] = useState<'new' | Workshop | null>(null)
+	const [deleting, setDeleting] = useState<Workshop | null>(null)
 
-	async function remove(workshop: Workshop) {
-		if (!window.confirm(m.delete_workshop_confirm({ title: workshop.title }))) return
-		await deleteWorkshopFn({ data: workshop.id })
-		await router.invalidate()
+	const stats = new Map<string, { sessions: number; places: number }>()
+	for (const session of sessions) {
+		const current = stats.get(session.workshopId) ?? { sessions: 0, places: 0 }
+		stats.set(session.workshopId, {
+			sessions: current.sessions + 1,
+			places: current.places + session.capacity,
+		})
 	}
 
 	return (
-		<div className="flex flex-col gap-4">
-			{canEdit && editing === null && (
-				<div>
-					<Button onClick={() => setEditing('new')}>{m.add_workshop()}</Button>
-				</div>
-			)}
-
-			{editing === 'new' && (
-				<WorkshopForm
-					eventId={event.id}
-					onDone={async () => {
-						setEditing(null)
-						await router.invalidate()
-					}}
-				/>
-			)}
-
-			{workshops.length === 0 && editing === null && (
-				<p className="rounded-xl bg-card p-6">{m.workshops_empty()}</p>
-			)}
-
-			<ul className="flex flex-col gap-3">
-				{workshops.map((workshop) =>
-					editing !== null && editing !== 'new' && editing.id === workshop.id ? (
-						<li key={workshop.id}>
-							<WorkshopForm
-								eventId={event.id}
-								workshop={workshop}
-								onDone={async () => {
-									setEditing(null)
-									await router.invalidate()
-								}}
-							/>
-						</li>
-					) : (
-						<li key={workshop.id} className="flex items-start gap-3 rounded-xl bg-card p-4">
-							<Marker color={workshop.markerColor} shape={workshop.markerShape} className="mt-1" />
-							<div className="flex-1">
-								<p className="font-bold">{workshop.title}</p>
-								{workshop.facilitatorName && (
-									<p className="text-sm text-muted-foreground">{workshop.facilitatorName}</p>
-								)}
-								{workshopAgeGroups[workshop.id]?.length ? (
-									<p className="text-sm font-bold">
-										{m.for_ages({
-											groups: (workshopAgeGroups[workshop.id] ?? [])
-												.map((id) => labelOf.get(id))
-												.join(', '),
-										})}
-									</p>
-								) : null}
-								{workshop.description && <p className="mt-1 text-sm">{workshop.description}</p>}
-							</div>
-							{canEdit && (
-								<div className="flex gap-1">
-									<Button
-										variant="ghost"
-										aria-label={`${m.edit()}: ${workshop.title}`}
-										onClick={() => setEditing(workshop)}
-									>
-										{m.edit()}
-									</Button>
-									<Button
-										variant="ghost"
-										aria-label={`${m.delete()}: ${workshop.title}`}
-										onClick={() => remove(workshop)}
-									>
-										{m.delete()}
-									</Button>
-								</div>
-							)}
-						</li>
-					),
+		<div className="flex flex-col gap-6">
+			<PageToolbar summary={m.workshops_summary({ count: String(workshops.length) })}>
+				{canEdit && (
+					<Button onClick={() => setEditing('new')}>
+						<Plus />
+						{m.add_workshop()}
+					</Button>
 				)}
-			</ul>
+			</PageToolbar>
+
+			{workshops.length === 0 && <EmptyState icon={<Shapes />} title={m.workshops_empty()} />}
+
+			{workshops.length > 0 && (
+				<ul className="divide-y divide-border overflow-hidden rounded-xl bg-card shadow-card">
+					{workshops.map((workshop) => {
+						const groups = (workshopAgeGroups[workshop.id] ?? []).map((id) => labelOf.get(id))
+						const stat = stats.get(workshop.id)
+						return (
+							<li key={workshop.id} className="flex items-start gap-3 px-4 py-3">
+								<Marker
+									color={workshop.markerColor}
+									shape={workshop.markerShape}
+									className="mt-0.5"
+								/>
+								<div className="min-w-0 flex-1">
+									<div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+										<p className="font-bold">{workshop.title}</p>
+										{groups.length > 0 && (
+											<span className="rounded-full bg-accent px-2 py-0.5 text-xs font-bold">
+												{m.for_ages({ groups: groups.join(', ') })}
+											</span>
+										)}
+									</div>
+									<p className="text-sm text-muted-foreground">
+										{[
+											workshop.facilitatorName,
+											stat
+												? `${m.workshop_sessions({ count: String(stat.sessions) })} · ${m.workshop_places_total({ count: String(stat.places) })}`
+												: m.no_sessions_yet(),
+										]
+											.filter(Boolean)
+											.join(' · ')}
+									</p>
+									{workshop.description && (
+										<p className="mt-1 line-clamp-2 text-sm">{workshop.description}</p>
+									)}
+								</div>
+								{canEdit && (
+									<RowActions
+										label={workshop.title}
+										onEdit={() => setEditing(workshop)}
+										onDelete={() => setDeleting(workshop)}
+									/>
+								)}
+							</li>
+						)
+					})}
+				</ul>
+			)}
+
+			<Dialog
+				open={editing !== null}
+				onOpenChange={(open) => !open && setEditing(null)}
+				title={editing === 'new' ? m.add_workshop() : (editing?.title ?? '')}
+				description={editing !== null && editing !== 'new' ? m.edit_workshop_title() : undefined}
+				icon={
+					editing !== null &&
+					editing !== 'new' && <Marker color={editing.markerColor} shape={editing.markerShape} />
+				}
+				closeLabel={m.close()}
+			>
+				{editing !== null && (
+					<WorkshopForm
+						eventId={event.id}
+						workshop={editing === 'new' ? undefined : editing}
+						onDone={async () => {
+							setEditing(null)
+							await router.invalidate()
+						}}
+					/>
+				)}
+			</Dialog>
+			<ConfirmDialog
+				open={deleting !== null}
+				onOpenChange={(open) => !open && setDeleting(null)}
+				title={deleting ? m.delete_workshop_title({ title: deleting.title }) : ''}
+				description={m.delete_workshop_body()}
+				confirmLabel={m.delete()}
+				cancelLabel={m.cancel()}
+				onConfirm={async () => {
+					if (!deleting) return
+					await deleteWorkshopFn({ data: deleting.id })
+					setDeleting(null)
+					await router.invalidate()
+				}}
+			/>
 		</div>
 	)
 }
@@ -146,7 +175,7 @@ function WorkshopForm({
 
 	const prefix = workshop?.id ?? 'new'
 	return (
-		<form onSubmit={submit} noValidate className="flex flex-col gap-4 rounded-xl bg-card p-5">
+		<form onSubmit={submit} noValidate className="flex flex-col gap-5">
 			<Field id={`${prefix}-title`} label={m.workshop_title_label()} error={issues.title}>
 				<FieldInput
 					id={`${prefix}-title`}
@@ -160,7 +189,7 @@ function WorkshopForm({
 				<textarea
 					id={`${prefix}-description`}
 					rows={3}
-					className="rounded-md border border-input bg-card px-3 py-2"
+					className="rounded-md border border-input bg-card px-3 py-2 shadow-xs"
 					value={values.description}
 					onChange={(e) => set('description', e.target.value)}
 				/>
@@ -212,14 +241,14 @@ function WorkshopForm({
 				</fieldset>
 			)}
 			<FormError message={error} />
-			<div className="flex gap-2">
+			<FormActions>
+				<Button type="button" variant="outline" onClick={() => onDone()}>
+					{m.cancel()}
+				</Button>
 				<Button type="submit" disabled={pending}>
 					{m.save_workshop()}
 				</Button>
-				<Button type="button" variant="ghost" onClick={() => onDone()}>
-					{m.cancel()}
-				</Button>
-			</div>
+			</FormActions>
 		</form>
 	)
 }

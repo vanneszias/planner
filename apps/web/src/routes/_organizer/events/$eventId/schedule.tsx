@@ -1,13 +1,16 @@
 import type { CreateSessionsInput } from '@app/domain'
 import { utcToZoned } from '@app/domain/time'
 import { Button } from '@app/ui/components/button'
+import { ConfirmDialog, Dialog } from '@app/ui/components/dialog'
 import { Marker } from '@app/ui/components/marker'
 import { createFileRoute, getRouteApi, Link, useRouter } from '@tanstack/react-router'
+import { CalendarClock, Plus, TriangleAlert } from 'lucide-react'
 import { type FormEvent, useState } from 'react'
 import { FormError } from '#/components/auth-shell'
-import { Field, FieldInput } from '#/components/field'
+import { Field, FieldInput, FieldSelect, FormActions } from '#/components/field'
+import { EmptyState, PageToolbar, RowActions } from '#/components/page'
 import { actionMessage, fieldMessage } from '#/lib/errors'
-import { formatTime, groupByDay } from '#/lib/format'
+import { formatTime, groupByDay, groupBySlot } from '#/lib/format'
 import { m } from '#/paraglide/messages'
 import { createSessionsFn, deleteSessionFn, updateSessionFn } from '#/server/events'
 
@@ -20,7 +23,8 @@ function Schedule() {
 	const { event, workshops, sessions, conflicts, canEdit } = eventRoute.useLoaderData()
 	const router = useRouter()
 	const [adding, setAdding] = useState(false)
-	const [editing, setEditing] = useState<string | null>(null)
+	const [editing, setEditing] = useState<SessionRow | null>(null)
+	const [deleting, setDeleting] = useState<SessionRow | null>(null)
 
 	const titles = new Map(sessions.map((s) => [s.id, s.workshopTitle]))
 	const conflictsOf = new Map<string, string[]>()
@@ -29,122 +33,156 @@ function Schedule() {
 		conflictsOf.set(b, [...(conflictsOf.get(b) ?? []), titles.get(a) ?? ''])
 	}
 
-	async function remove(sessionId: string) {
-		if (!window.confirm(m.delete_session_confirm())) return
-		await deleteSessionFn({ data: sessionId })
-		await router.invalidate()
-	}
-
 	if (workshops.length === 0) {
 		return (
-			<p className="rounded-xl bg-card p-6">
-				<Link
-					to="/events/$eventId/workshops"
-					params={{ eventId: event.id }}
-					className="font-bold text-primary underline underline-offset-4"
-				>
-					{m.schedule_needs_workshops()}
-				</Link>
-			</p>
+			<EmptyState
+				icon={<CalendarClock />}
+				title={m.schedule_needs_workshops()}
+				action={
+					<Button asChild variant="outline">
+						<Link to="/events/$eventId/workshops" params={{ eventId: event.id }}>
+							{m.add_workshop()}
+						</Link>
+					</Button>
+				}
+			/>
 		)
 	}
 
+	const days = groupByDay(sessions, event.timezone)
 	return (
-		<div className="flex flex-col gap-6">
-			{canEdit &&
-				(adding ? (
-					<AddSessionsForm
+		<div className="flex flex-col gap-8">
+			<PageToolbar
+				summary={m.sessions_summary({
+					sessions: String(sessions.length),
+					days: String(days.length),
+				})}
+			>
+				{canEdit && (
+					<Button onClick={() => setAdding(true)}>
+						<Plus />
+						{m.add_sessions()}
+					</Button>
+				)}
+			</PageToolbar>
+
+			{sessions.length === 0 && <EmptyState icon={<CalendarClock />} title={m.sessions_empty()} />}
+
+			{days.map((day) => (
+				<section key={day.label} aria-label={day.label} className="flex flex-col gap-4">
+					<h2 className="font-display text-xl font-semibold first-letter:uppercase">{day.label}</h2>
+					{groupBySlot(day.items).map((slot) => (
+						<div key={slot.startsAt.getTime()} className="flex flex-col gap-2">
+							<h3 className="sticky top-14 z-10 -mx-1 flex items-baseline gap-3 bg-background/95 px-1 py-1.5 backdrop-blur">
+								<span className="font-mono text-base font-semibold tabular-nums">
+									{formatTime(slot.startsAt, event.timezone)}–
+									{formatTime(slot.endsAt, event.timezone)}
+								</span>
+								<span className="text-sm text-muted-foreground">
+									{m.slot_count({ count: String(slot.items.length) })}
+								</span>
+							</h3>
+							<ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+								{slot.items.map((session) => {
+									const clashes = conflictsOf.get(session.id)
+									const label = `${session.workshopTitle} ${formatTime(session.startsAt, event.timezone)}`
+									return (
+										<li
+											key={session.id}
+											className="group flex flex-col gap-2 rounded-lg border-l-4 bg-card py-3 pr-2 pl-3 shadow-card"
+											style={{ borderLeftColor: `var(--marker-${session.markerColor})` }}
+										>
+											<div className="flex items-start gap-2.5">
+												<Marker
+													color={session.markerColor}
+													shape={session.markerShape}
+													className="mt-0.5"
+												/>
+												<div className="min-w-0 flex-1">
+													<p className="truncate font-bold leading-snug">{session.workshopTitle}</p>
+													<p className="text-sm text-muted-foreground">
+														{session.room ?? m.no_room()} ·{' '}
+														{m.places({ count: String(session.capacity) })}
+													</p>
+												</div>
+												{canEdit && (
+													<RowActions
+														label={label}
+														onEdit={() => setEditing(session)}
+														onDelete={() => setDeleting(session)}
+													/>
+												)}
+											</div>
+											{clashes?.map((other) => (
+												<p
+													key={other}
+													className="flex items-center gap-1.5 rounded-md bg-tint-warning px-2 py-1 text-sm font-bold"
+												>
+													<TriangleAlert className="size-4 shrink-0" aria-hidden />
+													{m.room_conflict({ other })}
+												</p>
+											))}
+										</li>
+									)
+								})}
+							</ul>
+						</div>
+					))}
+				</section>
+			))}
+
+			<Dialog
+				open={adding}
+				onOpenChange={setAdding}
+				title={m.add_sessions()}
+				closeLabel={m.close()}
+			>
+				<AddSessionsForm
+					onDone={async (saved) => {
+						setAdding(false)
+						if (saved) await router.invalidate()
+					}}
+				/>
+			</Dialog>
+			<Dialog
+				open={editing !== null}
+				onOpenChange={(open) => !open && setEditing(null)}
+				title={editing?.workshopTitle ?? m.edit_session_title()}
+				description={m.edit_session_title()}
+				icon={editing && <Marker color={editing.markerColor} shape={editing.markerShape} />}
+				closeLabel={m.close()}
+			>
+				{editing && (
+					<EditSessionForm
+						session={editing}
 						onDone={async (saved) => {
-							setAdding(false)
+							setEditing(null)
 							if (saved) await router.invalidate()
 						}}
 					/>
-				) : (
-					<div>
-						<Button onClick={() => setAdding(true)}>{m.add_sessions()}</Button>
-					</div>
-				))}
-
-			{sessions.length === 0 && !adding && (
-				<p className="rounded-xl bg-card p-6">{m.sessions_empty()}</p>
-			)}
-
-			{groupByDay(sessions, event.timezone).map((day) => (
-				<section key={day.label} aria-label={day.label} className="flex flex-col gap-2">
-					<h2 className="font-display text-lg font-medium first-letter:uppercase">{day.label}</h2>
-					<ul className="flex flex-col gap-2">
-						{day.items.map((session) => {
-							const clashes = conflictsOf.get(session.id)
-							const label = `${session.workshopTitle} ${formatTime(session.startsAt, event.timezone)}`
-							if (editing === session.id) {
-								return (
-									<li key={session.id}>
-										<EditSessionForm
-											session={session}
-											onDone={async (saved) => {
-												setEditing(null)
-												if (saved) await router.invalidate()
-											}}
-										/>
-									</li>
-								)
-							}
-							return (
-								<li key={session.id} className="flex flex-col gap-2 rounded-xl bg-card p-4">
-									<div className="flex items-center justify-between gap-3">
-										<span className="font-mono">
-											{formatTime(session.startsAt, event.timezone)}–
-											{formatTime(session.endsAt, event.timezone)}
-										</span>
-										{canEdit && (
-											<span className="-my-2 flex">
-												<Button
-													variant="ghost"
-													className="px-2"
-													aria-label={`${m.edit()}: ${label}`}
-													onClick={() => setEditing(session.id)}
-												>
-													{m.edit()}
-												</Button>
-												<Button
-													variant="ghost"
-													className="px-2"
-													aria-label={`${m.delete()}: ${label}`}
-													onClick={() => remove(session.id)}
-												>
-													{m.delete()}
-												</Button>
-											</span>
-										)}
-									</div>
-									<div className="flex items-start gap-3">
-										<Marker
-											color={session.markerColor}
-											shape={session.markerShape}
-											className="mt-0.5"
-										/>
-										<div>
-											<p className="font-bold">{session.workshopTitle}</p>
-											<p className="text-sm text-muted-foreground">
-												{session.room ?? m.no_room()} ·{' '}
-												{m.places({ count: String(session.capacity) })}
-											</p>
-										</div>
-									</div>
-									{clashes?.map((other) => (
-										<p
-											key={other}
-											className="rounded-md bg-tint-warning px-3 py-1 text-sm font-bold"
-										>
-											{m.room_conflict({ other })}
-										</p>
-									))}
-								</li>
-							)
-						})}
-					</ul>
-				</section>
-			))}
+				)}
+			</Dialog>
+			<ConfirmDialog
+				open={deleting !== null}
+				onOpenChange={(open) => !open && setDeleting(null)}
+				title={
+					deleting
+						? m.delete_session_title({
+								title: deleting.workshopTitle,
+								time: formatTime(deleting.startsAt, event.timezone),
+							})
+						: ''
+				}
+				description={m.cannot_undo()}
+				confirmLabel={m.delete()}
+				cancelLabel={m.cancel()}
+				onConfirm={async () => {
+					if (!deleting) return
+					await deleteSessionFn({ data: deleting.id })
+					setDeleting(null)
+					await router.invalidate()
+				}}
+			/>
 		</div>
 	)
 }
@@ -180,11 +218,10 @@ function AddSessionsForm({ onDone }: { onDone: (saved: boolean) => Promise<void>
 	}
 
 	return (
-		<form onSubmit={submit} noValidate className="flex flex-col gap-4 rounded-xl bg-card p-5">
+		<form onSubmit={submit} noValidate className="flex flex-col gap-5">
 			<Field id="workshopId" label={m.workshop_label()} error={issues.workshopId}>
-				<select
+				<FieldSelect
 					id="workshopId"
-					className="h-11 rounded-md border border-input bg-card px-3"
 					value={workshopId}
 					onChange={(e) => setWorkshopId(e.target.value)}
 				>
@@ -193,7 +230,7 @@ function AddSessionsForm({ onDone }: { onDone: (saved: boolean) => Promise<void>
 							{workshop.title}
 						</option>
 					))}
-				</select>
+				</FieldSelect>
 			</Field>
 			<div className="grid gap-4 sm:grid-cols-2">
 				<Field id="room" label={m.room_label()} error={issues.room}>
@@ -288,14 +325,14 @@ function AddSessionsForm({ onDone }: { onDone: (saved: boolean) => Promise<void>
 			</fieldset>
 
 			<FormError message={error} />
-			<div className="flex gap-2">
+			<FormActions>
+				<Button type="button" variant="outline" onClick={() => onDone(false)}>
+					{m.cancel()}
+				</Button>
 				<Button type="submit" disabled={pending}>
 					{m.save_sessions()}
 				</Button>
-				<Button type="button" variant="ghost" onClick={() => onDone(false)}>
-					{m.cancel()}
-				</Button>
-			</div>
+			</FormActions>
 		</form>
 	)
 }
@@ -339,11 +376,7 @@ function EditSessionForm({
 
 	const slotError = issues['slot.date'] ?? issues['slot.end'] ?? issues['slots.0.date']
 	return (
-		<form onSubmit={submit} noValidate className="flex flex-col gap-4 rounded-xl bg-card p-5">
-			<p className="flex items-center gap-3 font-bold">
-				<Marker color={session.markerColor} shape={session.markerShape} />
-				{session.workshopTitle}
-			</p>
+		<form onSubmit={submit} noValidate className="flex flex-col gap-5">
 			<div className="flex flex-wrap items-end gap-3">
 				<Field id={`${id}-date`} label={m.date_label()}>
 					<FieldInput
@@ -396,14 +429,14 @@ function EditSessionForm({
 				</Field>
 			</div>
 			<FormError message={error} />
-			<div className="flex gap-2">
+			<FormActions>
+				<Button type="button" variant="outline" onClick={() => onDone(false)}>
+					{m.cancel()}
+				</Button>
 				<Button type="submit" disabled={pending}>
 					{m.save_session()}
 				</Button>
-				<Button type="button" variant="ghost" onClick={() => onDone(false)}>
-					{m.cancel()}
-				</Button>
-			</div>
+			</FormActions>
 		</form>
 	)
 }

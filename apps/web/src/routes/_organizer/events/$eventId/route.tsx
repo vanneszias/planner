@@ -1,4 +1,6 @@
-import { createFileRoute, Link, Outlet } from '@tanstack/react-router'
+import { createFileRoute, Link, Outlet, useLocation } from '@tanstack/react-router'
+import { CalendarDays } from 'lucide-react'
+import { useEffect, useRef } from 'react'
 import { StatusLabel } from '#/components/status-label'
 import { formatDateRange } from '#/lib/format'
 import { m } from '#/paraglide/messages'
@@ -13,9 +15,19 @@ export const Route = createFileRoute('/_organizer/events/$eventId')({
 function EventLayout() {
 	const { event } = Route.useLoaderData()
 	const params = { eventId: event.id }
+	// On phones the tab row scrolls: keep the current tab in view.
+	const tabs = useRef<HTMLElement>(null)
+	const pathname = useLocation({ select: (location) => location.pathname })
+	// biome-ignore lint/correctness/useExhaustiveDependencies: the pathname is what moves the active tab
+	useEffect(() => {
+		const nav = tabs.current
+		const active = nav?.querySelector<HTMLElement>('[aria-current="page"]')
+		if (nav && active)
+			nav.scrollLeft = active.offsetLeft - (nav.clientWidth - active.offsetWidth) / 2
+	}, [pathname])
 	// TanStack marks the current tab with data-status="active" (and aria-current="page").
 	const tab =
-		'-mb-px border-b-2 border-transparent px-1 pb-2 font-bold text-muted-foreground hover:text-foreground data-[status=active]:border-primary data-[status=active]:text-foreground'
+		'-mb-px border-b-2 border-transparent pb-3 text-[0.9375rem] font-bold text-muted-foreground hover:text-foreground data-[status=active]:border-primary data-[status=active]:text-foreground'
 
 	return (
 		<div className="flex flex-col gap-6">
@@ -26,11 +38,15 @@ function EventLayout() {
 					</h1>
 					<StatusLabel status={event.status} />
 				</div>
-				<p className="text-muted-foreground">{formatDateRange(event.startsOn, event.endsOn)}</p>
+				<p className="mt-1 flex items-center gap-2 text-muted-foreground">
+					<CalendarDays aria-hidden className="size-4" />
+					{formatDateRange(event.startsOn, event.endsOn)}
+				</p>
 			</div>
 			<nav
 				aria-label={event.name}
-				className="print:hidden -mx-4 flex gap-5 overflow-x-auto border-b border-border px-4 whitespace-nowrap"
+				ref={tabs}
+				className="print:hidden -mx-4 flex gap-6 overflow-x-auto border-b border-border px-4 whitespace-nowrap [scrollbar-width:none] max-sm:[mask-image:linear-gradient(to_right,black_85%,transparent)]"
 			>
 				<Link to="/events/$eventId" params={params} activeOptions={{ exact: true }} className={tab}>
 					{m.nav_overview()}

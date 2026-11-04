@@ -3,7 +3,7 @@ import { Button } from '@app/ui/components/button'
 import { createFileRoute, getRouteApi, useRouter } from '@tanstack/react-router'
 import { type FormEvent, type ReactNode, useState } from 'react'
 import { FormError } from '#/components/auth-shell'
-import { Field, FieldInput } from '#/components/field'
+import { Field, FieldInput, FieldSelect } from '#/components/field'
 import { RadioCards } from '#/components/radio-cards'
 import { actionMessage, fieldMessage } from '#/lib/errors'
 import { timeZones } from '#/lib/time-zones'
@@ -119,9 +119,8 @@ function Settings() {
 						</div>
 						<div className="grid gap-4 sm:grid-cols-2">
 							<Field id="timezone" label={m.timezone_label()} error={issues.timezone}>
-								<select
+								<FieldSelect
 									id="timezone"
-									className="h-11 rounded-md border border-input bg-card px-3"
 									value={values.timezone}
 									onChange={(e) => set('timezone', e.target.value)}
 								>
@@ -130,23 +129,22 @@ function Settings() {
 											{zone.replace('_', ' ')}
 										</option>
 									))}
-								</select>
+								</FieldSelect>
 							</Field>
 							<Field
 								id="defaultLocale"
 								label={m.content_language_label()}
 								hint={m.content_language_hint()}
 							>
-								<select
+								<FieldSelect
 									id="defaultLocale"
 									aria-describedby="defaultLocale-hint"
-									className="h-11 rounded-md border border-input bg-card px-3"
 									value={values.defaultLocale}
 									onChange={(e) => set('defaultLocale', e.target.value as 'en' | 'nl')}
 								>
 									<option value="en">{m.language_en()}</option>
 									<option value="nl">{m.language_nl()}</option>
-								</select>
+								</FieldSelect>
 							</Field>
 						</div>
 					</Section>
@@ -199,7 +197,7 @@ function Settings() {
 						/>
 					</Section>
 
-					<details className="rounded-xl bg-card p-5 [&_summary]:cursor-pointer">
+					<details className="rounded-xl bg-card shadow-card p-5 [&_summary]:cursor-pointer">
 						<summary className="min-h-11 content-center text-lg font-bold">
 							{m.more_options()}
 						</summary>
@@ -317,7 +315,7 @@ function Settings() {
 
 function Section({ title, hint, children }: { title: string; hint?: string; children: ReactNode }) {
 	return (
-		<section className="flex flex-col gap-4 rounded-xl bg-card p-5">
+		<section className="flex flex-col gap-4 rounded-xl bg-card shadow-card p-5">
 			<div>
 				<h2 className="text-lg font-bold">{title}</h2>
 				{hint && <p className="text-sm text-muted-foreground">{hint}</p>}
@@ -419,7 +417,11 @@ function WebAddressForm() {
 	}
 
 	return (
-		<form onSubmit={submit} noValidate className="flex flex-col gap-4 rounded-xl bg-card p-5">
+		<form
+			onSubmit={submit}
+			noValidate
+			className="flex flex-col gap-4 rounded-xl bg-card shadow-card p-5"
+		>
 			<Field id="slug" label={m.web_address_label()} hint={m.web_address_hint()} error={issue}>
 				<div className="flex items-center gap-1">
 					<span className="font-mono text-muted-foreground">/{organizationSlug}/</span>
@@ -469,7 +471,11 @@ function AgeGroupsForm() {
 	}
 
 	return (
-		<form onSubmit={submit} noValidate className="flex flex-col gap-4 rounded-xl bg-card p-5">
+		<form
+			onSubmit={submit}
+			noValidate
+			className="flex flex-col gap-4 rounded-xl bg-card shadow-card p-5"
+		>
 			<div>
 				<h2 className="text-lg font-bold">{m.age_groups_title()}</h2>
 				<p className="text-sm text-muted-foreground">{m.age_groups_hint()}</p>
