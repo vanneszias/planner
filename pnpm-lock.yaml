@@ -75,6 +75,9 @@ importers:
 
   apps/jobs:
     devDependencies:
+      '@app/brand':
+        specifier: workspace:*
+        version: link:../../packages/brand
       '@app/config':
         specifier: workspace:*
         version: link:../../packages/config

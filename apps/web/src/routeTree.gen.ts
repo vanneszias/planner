@@ -19,11 +19,17 @@ import { Route as OrganizerAuditRouteImport } from './routes/_organizer/audit'
 import { Route as OrganizerHomeRouteImport } from './routes/_organizer/home'
 import { Route as OrganizerTeamRouteImport } from './routes/_organizer/team'
 import { Route as InvitationsInvitationIdRouteImport } from './routes/invitations/$invitationId'
+import { Route as MCodeRouteImport } from './routes/m/$code'
 import { Route as RTokenRouteImport } from './routes/r/$token'
 import { Route as OrganizerEventsEventIdRouteRouteImport } from './routes/_organizer/events/$eventId/route'
 import { Route as OrganizerEventsNewRouteImport } from './routes/_organizer/events/new'
+import { Route as OrganizerPollsIndexRouteImport } from './routes/_organizer/polls/index'
+import { Route as OrganizerPollsPollIdRouteImport } from './routes/_organizer/polls/$pollId'
+import { Route as OrganizerPollsGroupsRouteImport } from './routes/_organizer/polls/groups'
+import { Route as OrganizerPollsNewRouteImport } from './routes/_organizer/polls/new'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiLiveEventIdRouteImport } from './routes/api/live/$eventId'
+import { Route as MRTokenRouteImport } from './routes/m/r/$token'
 import { Route as OrganizerEventsEventIdIndexRouteImport } from './routes/_organizer/events/$eventId/index'
 import { Route as OrganizerEventsEventIdAllocationRouteImport } from './routes/_organizer/events/$eventId/allocation'
 import { Route as OrganizerEventsEventIdCheckInRouteImport } from './routes/_organizer/events/$eventId/check-in'
@@ -31,6 +37,7 @@ import { Route as OrganizerEventsEventIdParticipantsRouteImport } from './routes
 import { Route as OrganizerEventsEventIdScheduleRouteImport } from './routes/_organizer/events/$eventId/schedule'
 import { Route as OrganizerEventsEventIdSettingsRouteImport } from './routes/_organizer/events/$eventId/settings'
 import { Route as OrganizerEventsEventIdWorkshopsRouteImport } from './routes/_organizer/events/$eventId/workshops'
+import { Route as ApiLivePollCodeRouteImport } from './routes/api/live/poll/$code'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -81,6 +88,11 @@ const InvitationsInvitationIdRoute = InvitationsInvitationIdRouteImport.update({
   path: '/invitations/$invitationId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MCodeRoute = MCodeRouteImport.update({
+  id: '/m/$code',
+  path: '/m/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RTokenRoute = RTokenRouteImport.update({
   id: '/r/$token',
   path: '/r/$token',
@@ -97,6 +109,26 @@ const OrganizerEventsNewRoute = OrganizerEventsNewRouteImport.update({
   path: '/events/new',
   getParentRoute: () => OrganizerRoute,
 } as any)
+const OrganizerPollsIndexRoute = OrganizerPollsIndexRouteImport.update({
+  id: '/polls/',
+  path: '/polls/',
+  getParentRoute: () => OrganizerRoute,
+} as any)
+const OrganizerPollsPollIdRoute = OrganizerPollsPollIdRouteImport.update({
+  id: '/polls/$pollId',
+  path: '/polls/$pollId',
+  getParentRoute: () => OrganizerRoute,
+} as any)
+const OrganizerPollsGroupsRoute = OrganizerPollsGroupsRouteImport.update({
+  id: '/polls/groups',
+  path: '/polls/groups',
+  getParentRoute: () => OrganizerRoute,
+} as any)
+const OrganizerPollsNewRoute = OrganizerPollsNewRouteImport.update({
+  id: '/polls/new',
+  path: '/polls/new',
+  getParentRoute: () => OrganizerRoute,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -105,6 +137,11 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 const ApiLiveEventIdRoute = ApiLiveEventIdRouteImport.update({
   id: '/api/live/$eventId',
   path: '/api/live/$eventId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MRTokenRoute = MRTokenRouteImport.update({
+  id: '/m/r/$token',
+  path: '/m/r/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OrganizerEventsEventIdIndexRoute =
@@ -149,6 +186,11 @@ const OrganizerEventsEventIdWorkshopsRoute =
     path: '/workshops',
     getParentRoute: () => OrganizerEventsEventIdRouteRoute,
   } as any)
+const ApiLivePollCodeRoute = ApiLivePollCodeRouteImport.update({
+  id: '/api/live/poll/$code',
+  path: '/api/live/poll/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -160,17 +202,24 @@ export interface FileRoutesByFullPath {
   '/home': typeof OrganizerHomeRoute
   '/team': typeof OrganizerTeamRoute
   '/invitations/$invitationId': typeof InvitationsInvitationIdRoute
+  '/m/$code': typeof MCodeRoute
   '/r/$token': typeof RTokenRoute
   '/events/$eventId': typeof OrganizerEventsEventIdRouteRouteWithChildren
   '/events/new': typeof OrganizerEventsNewRoute
+  '/polls/$pollId': typeof OrganizerPollsPollIdRoute
+  '/polls/groups': typeof OrganizerPollsGroupsRoute
+  '/polls/new': typeof OrganizerPollsNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/live/$eventId': typeof ApiLiveEventIdRoute
+  '/m/r/$token': typeof MRTokenRoute
+  '/polls/': typeof OrganizerPollsIndexRoute
   '/events/$eventId/allocation': typeof OrganizerEventsEventIdAllocationRoute
   '/events/$eventId/check-in': typeof OrganizerEventsEventIdCheckInRoute
   '/events/$eventId/participants': typeof OrganizerEventsEventIdParticipantsRoute
   '/events/$eventId/schedule': typeof OrganizerEventsEventIdScheduleRoute
   '/events/$eventId/settings': typeof OrganizerEventsEventIdSettingsRoute
   '/events/$eventId/workshops': typeof OrganizerEventsEventIdWorkshopsRoute
+  '/api/live/poll/$code': typeof ApiLivePollCodeRoute
   '/events/$eventId/': typeof OrganizerEventsEventIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -183,16 +232,23 @@ export interface FileRoutesByTo {
   '/home': typeof OrganizerHomeRoute
   '/team': typeof OrganizerTeamRoute
   '/invitations/$invitationId': typeof InvitationsInvitationIdRoute
+  '/m/$code': typeof MCodeRoute
   '/r/$token': typeof RTokenRoute
   '/events/new': typeof OrganizerEventsNewRoute
+  '/polls/$pollId': typeof OrganizerPollsPollIdRoute
+  '/polls/groups': typeof OrganizerPollsGroupsRoute
+  '/polls/new': typeof OrganizerPollsNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/live/$eventId': typeof ApiLiveEventIdRoute
+  '/m/r/$token': typeof MRTokenRoute
+  '/polls': typeof OrganizerPollsIndexRoute
   '/events/$eventId/allocation': typeof OrganizerEventsEventIdAllocationRoute
   '/events/$eventId/check-in': typeof OrganizerEventsEventIdCheckInRoute
   '/events/$eventId/participants': typeof OrganizerEventsEventIdParticipantsRoute
   '/events/$eventId/schedule': typeof OrganizerEventsEventIdScheduleRoute
   '/events/$eventId/settings': typeof OrganizerEventsEventIdSettingsRoute
   '/events/$eventId/workshops': typeof OrganizerEventsEventIdWorkshopsRoute
+  '/api/live/poll/$code': typeof ApiLivePollCodeRoute
   '/events/$eventId': typeof OrganizerEventsEventIdIndexRoute
 }
 export interface FileRoutesById {
@@ -207,17 +263,24 @@ export interface FileRoutesById {
   '/_organizer/home': typeof OrganizerHomeRoute
   '/_organizer/team': typeof OrganizerTeamRoute
   '/invitations/$invitationId': typeof InvitationsInvitationIdRoute
+  '/m/$code': typeof MCodeRoute
   '/r/$token': typeof RTokenRoute
   '/_organizer/events/$eventId': typeof OrganizerEventsEventIdRouteRouteWithChildren
   '/_organizer/events/new': typeof OrganizerEventsNewRoute
+  '/_organizer/polls/$pollId': typeof OrganizerPollsPollIdRoute
+  '/_organizer/polls/groups': typeof OrganizerPollsGroupsRoute
+  '/_organizer/polls/new': typeof OrganizerPollsNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/live/$eventId': typeof ApiLiveEventIdRoute
+  '/m/r/$token': typeof MRTokenRoute
+  '/_organizer/polls/': typeof OrganizerPollsIndexRoute
   '/_organizer/events/$eventId/allocation': typeof OrganizerEventsEventIdAllocationRoute
   '/_organizer/events/$eventId/check-in': typeof OrganizerEventsEventIdCheckInRoute
   '/_organizer/events/$eventId/participants': typeof OrganizerEventsEventIdParticipantsRoute
   '/_organizer/events/$eventId/schedule': typeof OrganizerEventsEventIdScheduleRoute
   '/_organizer/events/$eventId/settings': typeof OrganizerEventsEventIdSettingsRoute
   '/_organizer/events/$eventId/workshops': typeof OrganizerEventsEventIdWorkshopsRoute
+  '/api/live/poll/$code': typeof ApiLivePollCodeRoute
   '/_organizer/events/$eventId/': typeof OrganizerEventsEventIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -232,17 +295,24 @@ export interface FileRouteTypes {
     | '/home'
     | '/team'
     | '/invitations/$invitationId'
+    | '/m/$code'
     | '/r/$token'
     | '/events/$eventId'
     | '/events/new'
+    | '/polls/$pollId'
+    | '/polls/groups'
+    | '/polls/new'
     | '/api/auth/$'
     | '/api/live/$eventId'
+    | '/m/r/$token'
+    | '/polls/'
     | '/events/$eventId/allocation'
     | '/events/$eventId/check-in'
     | '/events/$eventId/participants'
     | '/events/$eventId/schedule'
     | '/events/$eventId/settings'
     | '/events/$eventId/workshops'
+    | '/api/live/poll/$code'
     | '/events/$eventId/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -255,16 +325,23 @@ export interface FileRouteTypes {
     | '/home'
     | '/team'
     | '/invitations/$invitationId'
+    | '/m/$code'
     | '/r/$token'
     | '/events/new'
+    | '/polls/$pollId'
+    | '/polls/groups'
+    | '/polls/new'
     | '/api/auth/$'
     | '/api/live/$eventId'
+    | '/m/r/$token'
+    | '/polls'
     | '/events/$eventId/allocation'
     | '/events/$eventId/check-in'
     | '/events/$eventId/participants'
     | '/events/$eventId/schedule'
     | '/events/$eventId/settings'
     | '/events/$eventId/workshops'
+    | '/api/live/poll/$code'
     | '/events/$eventId'
   id:
     | '__root__'
@@ -278,17 +355,24 @@ export interface FileRouteTypes {
     | '/_organizer/home'
     | '/_organizer/team'
     | '/invitations/$invitationId'
+    | '/m/$code'
     | '/r/$token'
     | '/_organizer/events/$eventId'
     | '/_organizer/events/new'
+    | '/_organizer/polls/$pollId'
+    | '/_organizer/polls/groups'
+    | '/_organizer/polls/new'
     | '/api/auth/$'
     | '/api/live/$eventId'
+    | '/m/r/$token'
+    | '/_organizer/polls/'
     | '/_organizer/events/$eventId/allocation'
     | '/_organizer/events/$eventId/check-in'
     | '/_organizer/events/$eventId/participants'
     | '/_organizer/events/$eventId/schedule'
     | '/_organizer/events/$eventId/settings'
     | '/_organizer/events/$eventId/workshops'
+    | '/api/live/poll/$code'
     | '/_organizer/events/$eventId/'
   fileRoutesById: FileRoutesById
 }
@@ -300,9 +384,12 @@ export interface RootRouteChildren {
   SignUpRoute: typeof SignUpRoute
   OrgEventRoute: typeof OrgEventRoute
   InvitationsInvitationIdRoute: typeof InvitationsInvitationIdRoute
+  MCodeRoute: typeof MCodeRoute
   RTokenRoute: typeof RTokenRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiLiveEventIdRoute: typeof ApiLiveEventIdRoute
+  MRTokenRoute: typeof MRTokenRoute
+  ApiLivePollCodeRoute: typeof ApiLivePollCodeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -377,6 +464,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InvitationsInvitationIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/m/$code': {
+      id: '/m/$code'
+      path: '/m/$code'
+      fullPath: '/m/$code'
+      preLoaderRoute: typeof MCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/r/$token': {
       id: '/r/$token'
       path: '/r/$token'
@@ -398,6 +492,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrganizerEventsNewRouteImport
       parentRoute: typeof OrganizerRoute
     }
+    '/_organizer/polls/': {
+      id: '/_organizer/polls/'
+      path: '/polls'
+      fullPath: '/polls/'
+      preLoaderRoute: typeof OrganizerPollsIndexRouteImport
+      parentRoute: typeof OrganizerRoute
+    }
+    '/_organizer/polls/$pollId': {
+      id: '/_organizer/polls/$pollId'
+      path: '/polls/$pollId'
+      fullPath: '/polls/$pollId'
+      preLoaderRoute: typeof OrganizerPollsPollIdRouteImport
+      parentRoute: typeof OrganizerRoute
+    }
+    '/_organizer/polls/groups': {
+      id: '/_organizer/polls/groups'
+      path: '/polls/groups'
+      fullPath: '/polls/groups'
+      preLoaderRoute: typeof OrganizerPollsGroupsRouteImport
+      parentRoute: typeof OrganizerRoute
+    }
+    '/_organizer/polls/new': {
+      id: '/_organizer/polls/new'
+      path: '/polls/new'
+      fullPath: '/polls/new'
+      preLoaderRoute: typeof OrganizerPollsNewRouteImport
+      parentRoute: typeof OrganizerRoute
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -410,6 +532,13 @@ declare module '@tanstack/react-router' {
       path: '/api/live/$eventId'
       fullPath: '/api/live/$eventId'
       preLoaderRoute: typeof ApiLiveEventIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/m/r/$token': {
+      id: '/m/r/$token'
+      path: '/m/r/$token'
+      fullPath: '/m/r/$token'
+      preLoaderRoute: typeof MRTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_organizer/events/$eventId/': {
@@ -461,6 +590,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrganizerEventsEventIdWorkshopsRouteImport
       parentRoute: typeof OrganizerEventsEventIdRouteRoute
     }
+    '/api/live/poll/$code': {
+      id: '/api/live/poll/$code'
+      path: '/api/live/poll/$code'
+      fullPath: '/api/live/poll/$code'
+      preLoaderRoute: typeof ApiLivePollCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -498,6 +634,10 @@ interface OrganizerRouteChildren {
   OrganizerTeamRoute: typeof OrganizerTeamRoute
   OrganizerEventsEventIdRouteRoute: typeof OrganizerEventsEventIdRouteRouteWithChildren
   OrganizerEventsNewRoute: typeof OrganizerEventsNewRoute
+  OrganizerPollsPollIdRoute: typeof OrganizerPollsPollIdRoute
+  OrganizerPollsGroupsRoute: typeof OrganizerPollsGroupsRoute
+  OrganizerPollsNewRoute: typeof OrganizerPollsNewRoute
+  OrganizerPollsIndexRoute: typeof OrganizerPollsIndexRoute
 }
 
 const OrganizerRouteChildren: OrganizerRouteChildren = {
@@ -507,6 +647,10 @@ const OrganizerRouteChildren: OrganizerRouteChildren = {
   OrganizerEventsEventIdRouteRoute:
     OrganizerEventsEventIdRouteRouteWithChildren,
   OrganizerEventsNewRoute: OrganizerEventsNewRoute,
+  OrganizerPollsPollIdRoute: OrganizerPollsPollIdRoute,
+  OrganizerPollsGroupsRoute: OrganizerPollsGroupsRoute,
+  OrganizerPollsNewRoute: OrganizerPollsNewRoute,
+  OrganizerPollsIndexRoute: OrganizerPollsIndexRoute,
 }
 
 const OrganizerRouteWithChildren = OrganizerRoute._addFileChildren(
@@ -521,9 +665,12 @@ const rootRouteChildren: RootRouteChildren = {
   SignUpRoute: SignUpRoute,
   OrgEventRoute: OrgEventRoute,
   InvitationsInvitationIdRoute: InvitationsInvitationIdRoute,
+  MCodeRoute: MCodeRoute,
   RTokenRoute: RTokenRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiLiveEventIdRoute: ApiLiveEventIdRoute,
+  MRTokenRoute: MRTokenRoute,
+  ApiLivePollCodeRoute: ApiLivePollCodeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -14,7 +14,8 @@ import { getCookie, getRequestUrl, setCookie } from '@tanstack/react-start/serve
 const cookieName = (eventId: string) => `${brand.slug}.p.${eventId}`
 const maxAge = 60 * 60 * 24 * 180
 
-async function signature(registrationId: string, stamp: string): Promise<string> {
+/** HMAC-SHA-256 with the app secret, URL-safe base64. Also signs poll respondent cookies. */
+export async function hmac(text: string): Promise<string> {
 	const key = await crypto.subtle.importKey(
 		'raw',
 		new TextEncoder().encode(env.BETTER_AUTH_SECRET),
@@ -22,19 +23,18 @@ async function signature(registrationId: string, stamp: string): Promise<string>
 		false,
 		['sign'],
 	)
-	const mac = await crypto.subtle.sign(
-		'HMAC',
-		key,
-		new TextEncoder().encode(`participant:${registrationId}:${stamp}`),
-	)
+	const mac = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(text))
 	return btoa(String.fromCharCode(...new Uint8Array(mac)))
 		.replace(/\+/g, '-')
 		.replace(/\//g, '_')
 		.replace(/=+$/, '')
 }
 
+const signature = (registrationId: string, stamp: string) =>
+	hmac(`participant:${registrationId}:${stamp}`)
+
 /** Constant-time comparison, so signatures can't be guessed byte by byte. */
-function equal(a: string, b: string): boolean {
+export function equal(a: string, b: string): boolean {
 	if (a.length !== b.length) return false
 	let diff = 0
 	for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i)

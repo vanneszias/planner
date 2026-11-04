@@ -4,7 +4,8 @@
 	"type": "module",
 	"exports": {
 		".": "./src/index.ts",
-		"./time": "./src/time.ts"
+		"./time": "./src/time.ts",
+		"./poll-grid": "./src/poll-grid.ts"
 	},
 	"scripts": {
 		"typecheck": "tsc --noEmit",

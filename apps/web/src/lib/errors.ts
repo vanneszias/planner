@@ -36,6 +36,10 @@ export function fieldMessage(code: string | undefined): string | null {
 			return m.field_outside_event()
 		case 'number':
 			return m.field_number()
+		case 'in_past':
+			return m.field_in_past()
+		case 'max_days':
+			return m.field_max_days()
 		case 'too_small':
 		case 'too_large':
 			return m.field_out_of_range()

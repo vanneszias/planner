@@ -10,6 +10,7 @@
 		"cf-typegen": "wrangler types --strict-vars=false -c wrangler.jsonc -c ../coordinator/wrangler.jsonc"
 	},
 	"devDependencies": {
+		"@app/brand": "workspace:*",
 		"@app/config": "workspace:*",
 		"@app/db": "workspace:*",
 		"@app/domain": "workspace:*",
