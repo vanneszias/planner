@@ -1,0 +1,36 @@
+name: Preview cleanup
+
+# Deletes a pull request's dev environment (docs/previews.md) when it closes.
+# Run it by hand for an environment that was left behind.
+on:
+  pull_request:
+    types: [closed]
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: Pull request number
+        required: true
+
+env:
+  CLOUDFLARE_ACCOUNT_ID: 6495d15c9d09b19ddc65f0a01892a183
+
+jobs:
+  down:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    # Same group as the preview job in ci.yml: cancels a deploy still running.
+    concurrency:
+      group: preview-${{ github.event.pull_request.number || inputs.pr }}
+      cancel-in-progress: true
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      PR: ${{ github.event.pull_request.number || inputs.pr }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: scripts/preview.sh down "$PR"

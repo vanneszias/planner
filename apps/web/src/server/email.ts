@@ -10,7 +10,8 @@ export async function sendEmail(email: OutgoingEmail): Promise<void> {
 /** Many emails at once: queue batches of 100 (the Queues sendBatch limit), not one call each. */
 export async function sendEmails(emails: readonly OutgoingEmail[]): Promise<void> {
 	if (env.EMAIL_DELIVERY === 'console') {
-		// Local dev only: emails contain sign-in links, so this must never run deployed.
+		// Local dev and pull request previews only (docs/previews.md): emails contain
+		// sign-in links, so production must never log them.
 		for (const email of emails) {
 			console.log(`\n✉️  To: ${email.to}\nSubject: ${email.subject}\n\n${email.text}\n`)
 		}

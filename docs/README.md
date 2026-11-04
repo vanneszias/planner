@@ -16,6 +16,7 @@ decisions; no application code exists yet.
 | [mvp-and-roadmap.md](mvp-and-roadmap.md)         | MVP scope, milestones, roadmap phases, validation experiments, risks                             |
 | [allocation-mvp.md](allocation-mvp.md)           | Allocation engine scope for the MVP: inputs, outputs, strategies, lifecycle                      |
 | [availability-polls.md](availability-polls.md)   | "Find an evening": painted availability grid, auto or manual decision, groups                    |
+| [previews.md](previews.md)                       | A dev environment per pull request: resources, differences, cleanup                              |
 
 Each claim about Cloudflare behaviour links to the official page it came from.
 Anything marked **unverified** still needs a doc check or a test.
