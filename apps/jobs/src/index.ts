@@ -1,5 +1,16 @@
-import { createDb } from '@app/db'
-import { type ExportMessage, expireExports, failExport, runExport, runRetention } from '@app/domain'
+import { brand } from '@app/brand'
+import { createDb, type Db } from '@app/db'
+import {
+	deleteExpiredPolls,
+	type ExportMessage,
+	expireExports,
+	failExport,
+	pollById,
+	pollOutcomeEmails,
+	resolveDuePolls,
+	runExport,
+	runRetention,
+} from '@app/domain'
 import { r2Files } from '@app/platform'
 
 /**
@@ -41,14 +52,43 @@ export default {
 		}
 	},
 
-	/** Daily: anonymise events past their retention date, then delete expired exports. */
-	async scheduled(_controller, env) {
+	/**
+	 * Every 15 minutes: decide auto polls past their deadline. Daily: anonymise
+	 * events past their retention date, delete old polls and expired exports.
+	 */
+	async scheduled(controller, env) {
 		const db = createDb(env.DB)
+		if (controller.cron === '*/15 * * * *') {
+			await decidePolls(db, env)
+			return
+		}
 		const files = r2Files(env.FILES)
 		const retention = await runRetention(db, files)
 		const expired = await expireExports(db, files)
+		const deletedPolls = await deleteExpiredPolls(db)
 		// IDs and counts only (security-privacy.md, "Logs").
-		console.log('Retention run', { ...retention, expiredExports: expired })
+		console.log('Retention run', { ...retention, expiredExports: expired, deletedPolls })
 		if (retention.failed.length > 0) throw new Error('Some events could not be anonymised')
 	},
 } satisfies ExportedHandler<Env, JobMessage>
+
+/** Confirms or flags due auto polls, then queues the outcome emails (claimed, so sent once). */
+async function decidePolls(db: Db, env: Env) {
+	const resolved = await resolveDuePolls(db)
+	for (const { pollId } of resolved) {
+		const poll = await pollById(db, pollId)
+		if (!poll) continue
+		const emails = await pollOutcomeEmails(db, poll, { url: env.APP_URL, name: brand.name })
+		for (let i = 0; i < emails.length; i += 100) {
+			await env.JOBS.sendBatch(
+				emails.slice(i, i + 100).map((email) => ({ body: { kind: 'email', ...email } })),
+			)
+		}
+	}
+	if (resolved.length > 0) {
+		console.log('Polls decided', {
+			confirmed: resolved.filter((r) => r.outcome === 'confirmed').map((r) => r.pollId),
+			needsDecision: resolved.filter((r) => r.outcome === 'needs_decision').map((r) => r.pollId),
+		})
+	}
+}

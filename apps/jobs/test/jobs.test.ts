@@ -92,4 +92,47 @@ describe('jobs', () => {
 		expect(byEvent(recent.eventId)).toMatchObject({ email: 'ana@example.com' })
 		expect(await env.FILES.get('exports/x/old.csv')).toBeNull()
 	})
+
+	it('decides auto polls past their deadline and queues the emails, once', async () => {
+		const { organizationId } = await seed('2099-01-01')
+		const [poll] = await db
+			.insert(schema.poll)
+			.values({
+				organizationId,
+				shareCode: `share-${organizationId}`,
+				title: 'Prayer evening',
+				timezone: 'Europe/Brussels',
+				startsOn: '2099-01-05',
+				endsOn: '2099-01-05',
+				dayStartMinutes: 19 * 60,
+				dayEndMinutes: 21 * 60,
+				durationMinutes: 60,
+				decisionMode: 'auto',
+				deadlineAt: new Date(Date.now() - 60_000),
+			})
+			.returning()
+		const start = Date.UTC(2099, 0, 5, 18) // 19:00 in Brussels
+		await db.insert(schema.pollRespondent).values({
+			organizationId,
+			pollId: poll?.id as string,
+			displayName: 'Anna',
+			email: 'anna@example.com',
+			availability: { free: [start, start + 1_800_000], ifNeeded: [] },
+		})
+		const send = vi.spyOn(env.JOBS, 'sendBatch')
+		const cron = { scheduledTime: Date.now(), cron: '*/15 * * * *', noRetry: () => {} }
+
+		await worker.scheduled(cron, env)
+		await worker.scheduled(cron, env)
+
+		const [decided] = await db
+			.select()
+			.from(schema.poll)
+			.where(eq(schema.poll.id, poll?.id as string))
+		expect(decided).toMatchObject({ status: 'confirmed', confirmedStartsAt: new Date(start) })
+		expect(send).toHaveBeenCalledTimes(1)
+		expect(send.mock.calls[0]?.[0]).toEqual([
+			{ body: expect.objectContaining({ kind: 'email', to: 'anna@example.com' }) },
+		])
+	})
 })

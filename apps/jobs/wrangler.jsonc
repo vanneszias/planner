@@ -9,7 +9,11 @@
 	"workers_dev": false,
 	"preview_urls": false,
 	// Always "eu" when deployed. Local dev clears it (see apps/web/vite.config.ts).
-	"vars": { "COORDINATOR_JURISDICTION": "eu" },
+	"vars": {
+		"COORDINATOR_JURISDICTION": "eu",
+		// The web Worker's origin, for links in poll emails (same as BETTER_AUTH_URL in apps/web).
+		"APP_URL": "https://event-web.zias.workers.dev"
+	},
 	"d1_databases": [
 		{
 			"binding": "DB",
@@ -20,6 +24,8 @@
 	],
 	"r2_buckets": [{ "binding": "FILES", "bucket_name": "event-files", "jurisdiction": "eu" }],
 	"queues": {
+		// Poll outcome emails after an automatic decision go back onto the same queue.
+		"producers": [{ "binding": "JOBS", "queue": "event-jobs" }],
 		"consumers": [
 			{ "queue": "event-jobs", "max_retries": 5, "dead_letter_queue": "event-jobs-dlq" }
 		]
@@ -34,5 +40,6 @@
 		]
 	},
 	// Daily at 03:00 UTC: retention cleanup (docs/domain-model.md).
-	"triggers": { "crons": ["0 3 * * *"] }
+	// Every 15 minutes: automatic poll decisions at their deadline (docs/availability-polls.md).
+	"triggers": { "crons": ["0 3 * * *", "*/15 * * * *"] }
 }

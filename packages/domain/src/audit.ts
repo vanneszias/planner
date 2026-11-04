@@ -35,6 +35,7 @@ export const auditCategories = [
 	'export',
 	'retention',
 	'organization',
+	'poll',
 ] as const
 export type AuditCategory = (typeof auditCategories)[number]
 

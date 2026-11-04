@@ -3,6 +3,7 @@ import { Button } from '@app/ui/components/button'
 import { createFileRoute, getRouteApi, useRouter } from '@tanstack/react-router'
 import { type FormEvent, type ReactNode, useState } from 'react'
 import { FormError } from '#/components/auth-shell'
+import { Checkbox } from '#/components/checkbox'
 import { Field, FieldInput } from '#/components/field'
 import { RadioCards } from '#/components/radio-cards'
 import { actionMessage, fieldMessage } from '#/lib/errors'
@@ -368,31 +369,6 @@ function MomentFields({
 				</p>
 			)}
 		</fieldset>
-	)
-}
-
-function Checkbox({
-	id,
-	label,
-	checked,
-	onChange,
-}: {
-	id: string
-	label: string
-	checked: boolean
-	onChange: (checked: boolean) => void
-}) {
-	return (
-		<label htmlFor={id} className="flex min-h-11 cursor-pointer items-center gap-3">
-			<input
-				id={id}
-				type="checkbox"
-				checked={checked}
-				onChange={(e) => onChange(e.target.checked)}
-				className="size-5 shrink-0 accent-[var(--kelp)]"
-			/>
-			{label}
-		</label>
 	)
 }
 

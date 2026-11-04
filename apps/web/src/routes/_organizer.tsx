@@ -56,6 +56,9 @@ function OrganizerLayout() {
 						<Link to="/home" className={navLink}>
 							{m.nav_events()}
 						</Link>
+						<Link to="/polls" className={navLink}>
+							{m.nav_polls()}
+						</Link>
 						<Link to="/team" className={navLink}>
 							{m.nav_team()}
 						</Link>

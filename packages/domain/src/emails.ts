@@ -3,8 +3,9 @@ import { chunk, rowsPerInsert } from './d1-limits.ts'
 
 export type EmailClaim = {
 	organizationId: string
-	eventId: string
-	registrationId: string
+	/** Null for mail that isn't about an event, such as availability polls. */
+	eventId: string | null
+	registrationId: string | null
 	kind: string
 	key: string
 }

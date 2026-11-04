@@ -43,6 +43,7 @@ const categoryLabels: Record<AuditCategory, () => string> = {
 	export: m.audit_category_export,
 	retention: m.audit_category_retention,
 	organization: m.audit_category_organization,
+	poll: m.audit_category_poll,
 }
 
 /** Plain words for each action; unknown ones show their code. */
