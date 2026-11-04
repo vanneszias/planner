@@ -1,6 +1,7 @@
 import type { CreateEventInput } from '@app/domain'
 import { Button } from '@app/ui/components/button'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { cn } from 'cn'
 import { type FormEvent, useEffect, useRef, useState } from 'react'
 import { FormError } from '#/components/auth-shell'
 import { Field, FieldInput, FieldSelect } from '#/components/field'
@@ -111,9 +112,26 @@ function NewEvent() {
 	return (
 		<form onSubmit={submit} noValidate className="mx-auto flex max-w-xl flex-col gap-6">
 			<div>
-				<p className="text-sm text-muted-foreground">
+				<p className="sr-only">
 					{m.step_of({ step: String(step + 1), total: String(totalSteps) })}
 				</p>
+				<ol aria-hidden className="mb-4 grid grid-cols-4 gap-2">
+					{[m.step_name(), m.step_dates(), m.step_mode(), m.step_sessions()].map((label, index) => (
+						<li key={label} className="flex flex-col gap-1.5">
+							<span
+								className={cn('h-1.5 rounded-full', index <= step ? 'bg-primary' : 'bg-accent')}
+							/>
+							<span
+								className={cn(
+									'text-xs font-bold',
+									index === step ? 'text-foreground' : 'text-muted-foreground',
+								)}
+							>
+								{label}
+							</span>
+						</li>
+					))}
+				</ol>
 				<h1
 					ref={heading}
 					tabIndex={-1}

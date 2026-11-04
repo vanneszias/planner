@@ -81,7 +81,7 @@ on `#FBE9E7` 14.0:1, on `#FFF4D6` 14.9:1), never coloured text on coloured fill.
 | Sea       | `#1F7FB8` | diamond               |
 | Grape     | `#7A4FC9` | star                  |
 | Bubblegum | `#CF3F86` | hexagon               |
-| Sky       | `#2A95C2` | plus                  |
+| Sky       | `#14A3A0` | plus                  |
 | Moss      | `#6B7A2E` | half-moon             |
 
 Rules:

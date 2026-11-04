@@ -346,7 +346,66 @@ function Participants() {
 						</div>
 					)}
 
-					<div className="overflow-x-auto rounded-xl bg-card shadow-card">
+					{/* Phones: one card per participant instead of a squeezed table. */}
+					<ul className="divide-y divide-border rounded-xl bg-card shadow-card sm:hidden">
+						{visible.map((p) => (
+							<li key={p.id} className="flex items-start gap-3 p-4">
+								{canWrite && (
+									<input
+										type="checkbox"
+										aria-label={m.select_participant({ name: p.displayName })}
+										className="mt-0.5 size-5 shrink-0 accent-[var(--kelp)]"
+										checked={selected.has(p.id)}
+										onChange={(e) => toggle(p.id, e.target.checked)}
+									/>
+								)}
+								<div className="flex min-w-0 flex-1 flex-col gap-1">
+									<p className="font-bold">{p.displayName || m.anonymous()}</p>
+									{(p.email ?? p.guardianEmail) && (
+										<p className="text-sm break-all text-muted-foreground">
+											{p.email ?? p.guardianEmail}
+										</p>
+									)}
+									<p className="text-sm text-muted-foreground">
+										{[
+											p.ageGroupId ? groupLabel.get(p.ageGroupId) : null,
+											p.isMinor ? m.minor() : null,
+											showSessions ? m.workshop_sessions({ count: String(p.bookings) }) : null,
+										]
+											.filter(Boolean)
+											.join(' · ')}
+									</p>
+									{ranks && (
+										<div className="mt-1 flex flex-wrap items-center justify-between gap-2">
+											<span
+												className={cn(
+													'inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-bold',
+													p.ranked ? 'bg-tint-success' : 'bg-accent text-muted-foreground',
+												)}
+											>
+												{p.ranked && <Check aria-hidden className="size-3" strokeWidth={3} />}
+												{p.ranked ? m.ranked_yes() : m.ranked_no()}
+											</span>
+											{canWrite && (
+												<Button
+													variant="outline"
+													size="sm"
+													aria-label={m.enter_ranking_for({ name: p.displayName })}
+													onClick={() => openRanking(p.id, p.displayName)}
+												>
+													{p.ranked ? m.view_ranking() : m.enter_ranking()}
+												</Button>
+											)}
+										</div>
+									)}
+								</div>
+							</li>
+						))}
+						{matches.length === 0 && (
+							<li className="p-6 text-center text-muted-foreground">{m.no_matches()}</li>
+						)}
+					</ul>
+					<div className="overflow-x-auto rounded-xl bg-card shadow-card max-sm:hidden">
 						<table className="w-full text-left text-sm">
 							<thead className="border-b border-border bg-accent/50 text-xs tracking-wide text-muted-foreground uppercase">
 								<tr>
@@ -440,8 +499,7 @@ function Participants() {
 															onClick={() => openRanking(p.id, p.displayName)}
 														>
 															<Pencil />
-															<span className="sm:hidden">{m.ranking_short()}</span>
-															<span className="max-sm:hidden">{m.enter_ranking()}</span>
+															{p.ranked ? m.view_ranking() : m.enter_ranking()}
 														</Button>
 													)}
 												</span>

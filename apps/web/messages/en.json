@@ -549,5 +549,15 @@
 	"quick_actions": "Get things done",
 	"invite_team_link": "Invite your team",
 	"invite_team_hint": "Editors can build the programme with you.",
-	"ranking_short": "Ranking"
+	"ranking_short": "Ranking",
+	"view_ranking": "View ranking",
+	"my_day_left": "You can book {count} more. Open time slots are marked below.",
+	"step_name": "Name",
+	"step_dates": "Dates",
+	"step_mode": "Choosing",
+	"step_sessions": "Sessions",
+	"allocation_title": "Plan the sessions",
+	"allocation_capacity": "Places vs. needed",
+	"allocation_capacity_body": "{places} places for {needed} needed ({people} people × {per})",
+	"allocation_ranked_label": "Ranked their favourites"
 }

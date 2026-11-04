@@ -549,5 +549,15 @@
 	"quick_actions": "Snel aan de slag",
 	"invite_team_link": "Nodig je team uit",
 	"invite_team_hint": "Editors bouwen samen met jou het programma.",
-	"ranking_short": "Ranglijst"
+	"ranking_short": "Ranglijst",
+	"view_ranking": "Ranglijst bekijken",
+	"my_day_left": "Je kunt er nog {count} boeken. Vrije tijdsblokken staan hieronder.",
+	"step_name": "Naam",
+	"step_dates": "Data",
+	"step_mode": "Kiezen",
+	"step_sessions": "Sessies",
+	"allocation_title": "De sessies plannen",
+	"allocation_capacity": "Plaatsen t.o.v. nodig",
+	"allocation_capacity_body": "{places} plaatsen voor {needed} nodig ({people} mensen × {per})",
+	"allocation_ranked_label": "Favorieten gerangschikt"
 }

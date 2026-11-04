@@ -3,12 +3,12 @@ import { Button } from '@app/ui/components/button'
 import { ConfirmDialog, Dialog } from '@app/ui/components/dialog'
 import { Marker } from '@app/ui/components/marker'
 import { createFileRoute, getRouteApi, useRouter } from '@tanstack/react-router'
-import { Plus, Shapes, Trash2 } from 'lucide-react'
+import { Pencil, Plus, Shapes, Trash2 } from 'lucide-react'
 import { type FormEvent, useState } from 'react'
 import { FormError } from '#/components/auth-shell'
 import { Field, FieldInput, FormActions } from '#/components/field'
 import { MarkerPicker } from '#/components/marker-picker'
-import { EmptyState, PageToolbar, RowActions } from '#/components/page'
+import { EmptyState, PageToolbar } from '#/components/page'
 import { actionMessage } from '#/lib/errors'
 import { m } from '#/paraglide/messages'
 import { deleteWorkshopFn, saveWorkshopFn } from '#/server/events'
@@ -57,7 +57,7 @@ function Workshops() {
 						return (
 							<li
 								key={workshop.id}
-								className="group flex items-center gap-3 px-4 py-3 hover:bg-accent/30"
+								className="group relative flex items-center gap-3 px-4 py-3 hover:bg-accent/40"
 							>
 								<Marker
 									color={workshop.markerColor}
@@ -69,7 +69,8 @@ function Workshops() {
 										{canEdit ? (
 											<button
 												type="button"
-												className="text-left font-bold hover:underline hover:underline-offset-4"
+												aria-label={`${m.edit()}: ${workshop.title}`}
+												className="text-left font-bold after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:outline-3 focus-visible:after:-outline-offset-3 focus-visible:after:outline-ring"
 												onClick={() => setEditing(workshop)}
 											>
 												{workshop.title}
@@ -98,7 +99,10 @@ function Workshops() {
 									)}
 								</div>
 								{canEdit && (
-									<RowActions label={workshop.title} onEdit={() => setEditing(workshop)} />
+									<Pencil
+										aria-hidden
+										className="size-4 shrink-0 text-edge opacity-0 transition-opacity group-hover:opacity-100"
+									/>
 								)}
 							</li>
 						)

@@ -240,15 +240,15 @@ function CheckIn() {
 
 			{page.canCheckIn && !page.anonymised && (
 				<div className="flex flex-col gap-4 rounded-xl bg-card p-5 shadow-card print:hidden">
-					<div className="flex flex-wrap items-end gap-x-4 gap-y-3">
+					<div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:gap-x-4">
 						<Button
-							variant={scanning || expected === 0 ? 'outline' : 'default'}
+							variant={scanning ? 'outline' : 'default'}
 							onClick={() => setScanning(!scanning)}
 						>
 							{scanning ? <X /> : <ScanLine />}
 							{scanning ? m.scanner_stop() : m.scanner_start()}
 						</Button>
-						<span className="flex h-10 items-center text-sm font-bold text-muted-foreground">
+						<span className="flex items-center gap-3 text-sm font-bold text-muted-foreground before:h-px before:flex-1 before:bg-border after:h-px after:flex-1 after:bg-border sm:h-10 sm:before:hidden sm:after:hidden">
 							{m.or_divider()}
 						</span>
 						<form onSubmit={submitCode} noValidate className="flex flex-wrap items-end gap-2">

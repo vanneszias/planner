@@ -1,8 +1,5 @@
-import { Button } from '@app/ui/components/button'
 import { getRouteApi } from '@tanstack/react-router'
-import { Pencil, Trash2 } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { m } from '#/paraglide/messages'
 
 /** One line of context on the left, the page's primary action on the right. */
 export function PageToolbar({ summary, children }: { summary?: ReactNode; children?: ReactNode }) {
@@ -37,48 +34,6 @@ export function EmptyState({
 			{body && <p className="max-w-md text-sm text-muted-foreground">{body}</p>}
 			{action && <div className="mt-1">{action}</div>}
 		</div>
-	)
-}
-
-/**
- * Edit and delete as quiet icon buttons; the labels name the row for screen readers.
- */
-export function RowActions({
-	label,
-	onEdit,
-	onDelete,
-}: {
-	label: string
-	onEdit?: () => void
-	onDelete?: () => void
-}) {
-	return (
-		<span className="-my-1 flex shrink-0 gap-0.5 self-center">
-			{onEdit && (
-				<Button
-					variant="ghost"
-					size="icon-sm"
-					className="text-muted-foreground hover:text-foreground"
-					aria-label={`${m.edit()}: ${label}`}
-					title={m.edit()}
-					onClick={onEdit}
-				>
-					<Pencil />
-				</Button>
-			)}
-			{onDelete && (
-				<Button
-					variant="ghost"
-					size="icon-sm"
-					className="text-muted-foreground hover:bg-tint-danger hover:text-destructive"
-					aria-label={`${m.delete()}: ${label}`}
-					title={m.delete()}
-					onClick={onDelete}
-				>
-					<Trash2 />
-				</Button>
-			)}
-		</span>
 	)
 }
 

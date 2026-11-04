@@ -80,6 +80,7 @@ function AllocationPage() {
 	if (anonymised) return <p className="rounded-xl bg-tint-warning p-6">{m.data_deleted()}</p>
 
 	const workshopById = new Map(workshops.map((w) => [w.id, w]))
+	const places = sessions.reduce((sum, s) => sum + s.capacity, 0)
 	const sessionById = new Map(sessions.map((s) => [s.id, s]))
 	const sessionLabel = (id: string) => {
 		const s = sessionById.get(id)
@@ -114,13 +115,41 @@ function AllocationPage() {
 
 	return (
 		<div className="flex flex-col gap-6">
-			<section className="flex flex-col gap-4 rounded-xl bg-card shadow-card p-5">
-				<p className="font-bold">
-					{m.allocation_progress({
-						ranked: String(progress.ranked),
-						total: String(progress.registrations),
-					})}
-				</p>
+			<section className="flex flex-col gap-5 rounded-xl bg-card p-5 shadow-card sm:p-6">
+				<h2 className="text-lg font-bold">{m.allocation_title()}</h2>
+				<dl className="grid gap-3 sm:grid-cols-2">
+					<div className="flex flex-col gap-1.5 rounded-lg bg-background p-4">
+						<dt className="text-sm font-bold text-muted-foreground">
+							{m.allocation_ranked_label()}
+						</dt>
+						<dd className="text-2xl font-bold tabular-nums">
+							{progress.ranked}{' '}
+							<span className="text-sm font-normal text-muted-foreground">
+								{m.stat_of({ total: String(progress.registrations) })}
+							</span>
+						</dd>
+						<dd className="h-1.5 overflow-hidden rounded-full bg-accent" aria-hidden>
+							<span
+								className="block h-full rounded-full bg-primary"
+								style={{
+									width: `${progress.registrations ? (progress.ranked / progress.registrations) * 100 : 0}%`,
+								}}
+							/>
+						</dd>
+					</div>
+					<div className="flex flex-col gap-1.5 rounded-lg bg-background p-4">
+						<dt className="text-sm font-bold text-muted-foreground">{m.allocation_capacity()}</dt>
+						<dd className="text-2xl font-bold tabular-nums">{places}</dd>
+						<dd className="text-sm text-muted-foreground">
+							{m.allocation_capacity_body({
+								places: String(places),
+								needed: String(progress.registrations * event.sessionsPerParticipant),
+								people: String(progress.registrations),
+								per: String(event.sessionsPerParticipant),
+							})}
+						</dd>
+					</div>
+				</dl>
 				{canEdit && (
 					<>
 						<RadioCards

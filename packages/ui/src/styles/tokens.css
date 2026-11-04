@@ -37,7 +37,7 @@
 	--marker-sea: #1f7fb8;
 	--marker-grape: #7a4fc9;
 	--marker-bubblegum: #cf3f86;
-	--marker-sky: #2a95c2;
+	--marker-sky: #14a3a0; /* teal, kept well apart from sea */
 	--marker-moss: #6b7a2e;
 
 	/* shadcn/ui semantic variables */

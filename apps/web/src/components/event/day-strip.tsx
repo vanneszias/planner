@@ -69,15 +69,18 @@ export function DayStrip({
 							if ('open' in session) {
 								segments.push(
 									<Segment key={session.id} time={formatTime(session.startsAt, timeZone)} muted>
-										<div className="flex flex-wrap items-center justify-between gap-2">
-											<div>
-												<p className="font-bold text-muted-foreground">{m.open_slot()}</p>
-												<p className="text-sm text-muted-foreground">
-													{m.until_time({ time: formatTime(session.endsAt, timeZone) })}
-												</p>
-											</div>
+										<div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+											<p className="text-sm text-muted-foreground">
+												{m.open_slot()} ·{' '}
+												{m.until_time({ time: formatTime(session.endsAt, timeZone) })}
+											</p>
 											{onBrowse && (
-												<Button variant="outline" size="sm" onClick={onBrowse}>
+												<Button
+													variant="link"
+													size="sm"
+													className="h-auto px-0 text-sm"
+													onClick={onBrowse}
+												>
 													{m.open_slot_action()}
 												</Button>
 											)}
@@ -129,7 +132,7 @@ function Segment({
 		<li
 			className={cn(
 				'relative flex gap-4 p-4 [&+&]:border-t-[1.5px] [&+&]:border-dashed [&+&]:border-line [&+&]:before:absolute [&+&]:before:-top-2 [&+&]:before:-left-2 [&+&]:before:size-4 [&+&]:before:rounded-full [&+&]:before:bg-background [&+&]:after:absolute [&+&]:after:-top-2 [&+&]:after:-right-2 [&+&]:after:size-4 [&+&]:after:rounded-full [&+&]:after:bg-background',
-				muted && 'bg-[repeating-linear-gradient(135deg,transparent_0_8px,var(--accent)_8px_9px)]',
+				muted && 'py-2.5 text-muted-foreground [&>span:first-child]:font-normal',
 			)}
 		>
 			<span className="w-12 shrink-0 font-bold tabular-nums">{time}</span>

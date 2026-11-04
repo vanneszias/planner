@@ -27,9 +27,9 @@ function EventLayout() {
 	const { event } = Route.useLoaderData()
 	const params = { eventId: event.id }
 	const pathname = useLocation({ select: (location) => location.pathname })
-	// Keep the current pill in view on phones.
+	// Keep the current tab in view on phones.
 	const pills = useRef<HTMLElement>(null)
-	// biome-ignore lint/correctness/useExhaustiveDependencies: the pathname is what moves the active pill
+	// biome-ignore lint/correctness/useExhaustiveDependencies: the pathname is what moves the active tab
 	useEffect(() => {
 		const nav = pills.current
 		const active = nav?.querySelector<HTMLElement>('[aria-current="page"]')
@@ -72,27 +72,11 @@ function EventLayout() {
 					</span>
 				</p>
 			</div>
-			{/* Phones: the sections as a scrolling row of pills; the current one scrolls into view. */}
+			{/* One tab strip; on phones it scrolls and keeps the current tab in view. */}
 			<nav
 				aria-label={event.name}
 				ref={pills}
-				className="-mx-4 flex snap-x gap-1.5 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:hidden print:hidden"
-			>
-				{sections.map((section) => (
-					<Link
-						key={section.path}
-						to={routes[section.path]}
-						params={params}
-						activeOptions={{ exact: section.path === '' }}
-						className="shrink-0 snap-start rounded-full border border-border bg-card px-3.5 py-2 text-sm font-bold whitespace-nowrap text-muted-foreground data-[status=active]:border-ink data-[status=active]:bg-ink data-[status=active]:text-white"
-					>
-						{section.label}
-					</Link>
-				))}
-			</nav>
-			<nav
-				aria-label={event.name}
-				className="flex gap-6 border-b border-border max-sm:hidden print:hidden"
+				className="flex gap-6 overflow-x-auto border-b border-border [scrollbar-width:none] max-sm:-mx-4 max-sm:scroll-px-4 max-sm:gap-5 max-sm:px-4 max-sm:[mask-image:linear-gradient(to_right,black_calc(100%-2.5rem),transparent)] print:hidden"
 			>
 				{sections.map((section) => (
 					<Link

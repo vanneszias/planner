@@ -4,11 +4,11 @@ import { Button } from '@app/ui/components/button'
 import { ConfirmDialog, Dialog } from '@app/ui/components/dialog'
 import { Marker } from '@app/ui/components/marker'
 import { createFileRoute, getRouteApi, Link, useRouter } from '@tanstack/react-router'
-import { CalendarClock, Plus, Trash2, TriangleAlert } from 'lucide-react'
+import { CalendarClock, Pencil, Plus, Trash2, TriangleAlert } from 'lucide-react'
 import { type FormEvent, useState } from 'react'
 import { FormError } from '#/components/auth-shell'
 import { Field, FieldInput, FieldSelect, FormActions } from '#/components/field'
-import { EmptyState, PageToolbar, RowActions } from '#/components/page'
+import { EmptyState, PageToolbar } from '#/components/page'
 import { actionMessage, fieldMessage } from '#/lib/errors'
 import { formatTime, groupByDay, groupBySlot } from '#/lib/format'
 import { m } from '#/paraglide/messages'
@@ -72,7 +72,7 @@ function Schedule() {
 			{days.length > 1 && (
 				<nav
 					aria-label={m.jump_to_day()}
-					className="sticky top-14 z-20 -mx-4 -my-4 flex gap-2 overflow-x-auto bg-background/95 px-4 py-2 backdrop-blur [scrollbar-width:none]"
+					className="sticky top-14 z-20 -mx-4 -my-4 flex gap-2 overflow-x-auto border-b border-border bg-background px-4 py-2 [scrollbar-width:none]"
 				>
 					{days.map((day, index) => (
 						<a
@@ -97,7 +97,7 @@ function Schedule() {
 					{groupBySlot(day.items).map((slot) => (
 						<div key={slot.startsAt.getTime()} className="flex flex-col gap-2">
 							<h3
-								className={`sticky z-10 -mx-1 flex items-baseline gap-3 bg-background/95 px-1 py-1.5 backdrop-blur ${days.length > 1 ? 'top-[6.5rem]' : 'top-14'}`}
+								className={`sticky z-10 -mx-1 flex items-baseline gap-3 bg-background px-1 py-1.5 ${days.length > 1 ? 'top-[6.5rem]' : 'top-14'}`}
 							>
 								<span className="text-base font-bold tabular-nums">
 									{formatTime(slot.startsAt, event.timezone)}–
@@ -114,7 +114,7 @@ function Schedule() {
 									return (
 										<li
 											key={session.id}
-											className="group flex flex-col gap-2 rounded-lg bg-card py-3 pr-2 pl-3 shadow-card"
+											className="group relative flex flex-col gap-2 rounded-lg bg-card py-3 pr-3 pl-3 shadow-card has-[button:hover]:ring-1 has-[button:hover]:ring-edge"
 										>
 											<div className="flex items-start gap-2.5">
 												<Marker
@@ -123,7 +123,21 @@ function Schedule() {
 													className="mt-0.5"
 												/>
 												<div className="min-w-0 flex-1">
-													<p className="truncate font-bold leading-snug">{session.workshopTitle}</p>
+													{canEdit ? (
+														// The title is the card's one control; its hit area covers the whole card.
+														<button
+															type="button"
+															aria-label={`${m.edit()}: ${label}`}
+															className="block max-w-full truncate text-left leading-snug font-bold after:absolute after:inset-0 after:rounded-lg focus-visible:outline-none focus-visible:after:outline-3 focus-visible:after:outline-offset-2 focus-visible:after:outline-ring"
+															onClick={() => setEditing(session)}
+														>
+															{session.workshopTitle}
+														</button>
+													) : (
+														<p className="truncate leading-snug font-bold">
+															{session.workshopTitle}
+														</p>
+													)}
 													<p className="text-sm text-muted-foreground">
 														{session.room ?? m.no_room()} ·{' '}
 														{booking
@@ -147,7 +161,12 @@ function Schedule() {
 														</span>
 													)}
 												</div>
-												{canEdit && <RowActions label={label} onEdit={() => setEditing(session)} />}
+												{canEdit && (
+													<Pencil
+														aria-hidden
+														className="mt-0.5 size-4 shrink-0 text-edge opacity-0 transition-opacity group-hover:opacity-100"
+													/>
+												)}
 											</div>
 											{clashes?.map((other) => (
 												<p

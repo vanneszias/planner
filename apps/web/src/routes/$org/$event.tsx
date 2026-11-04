@@ -437,26 +437,33 @@ function EventPage() {
 						title={rankingMode ? m.my_day_empty_ranking() : m.my_day_empty()}
 					/>
 				) : (
-					<DayStrip
-						openSlots={
-							bookingMode && open && mine.length < event.sessionsPerParticipant ? openSlots : []
-						}
-						onBrowse={() => setTab('programme')}
-						timeZone={event.timezone}
-						contentLocale={event.defaultLocale}
-						sessions={mine.map((s) => {
-							const w = workshopById.get(s.workshopId)
-							return {
-								id: s.id,
-								startsAt: s.startsAt,
-								endsAt: s.endsAt,
-								room: s.room,
-								title: w?.title ?? '',
-								markerColor: w?.markerColor ?? 'sea',
-								markerShape: w?.markerShape ?? 'circle',
+					<div className="flex flex-col gap-3">
+						{bookingMode && open && mine.length < event.sessionsPerParticipant && (
+							<p className="text-sm font-bold text-muted-foreground">
+								{m.my_day_left({ count: String(event.sessionsPerParticipant - mine.length) })}
+							</p>
+						)}
+						<DayStrip
+							openSlots={
+								bookingMode && open && mine.length < event.sessionsPerParticipant ? openSlots : []
 							}
-						})}
-					/>
+							onBrowse={() => setTab('programme')}
+							timeZone={event.timezone}
+							contentLocale={event.defaultLocale}
+							sessions={mine.map((s) => {
+								const w = workshopById.get(s.workshopId)
+								return {
+									id: s.id,
+									startsAt: s.startsAt,
+									endsAt: s.endsAt,
+									room: s.room,
+									title: w?.title ?? '',
+									markerColor: w?.markerColor ?? 'sea',
+									markerShape: w?.markerShape ?? 'circle',
+								}
+							})}
+						/>
+					</div>
 				)
 			) : null}
 			{tab === 'myday' && me?.explanation && (
@@ -480,7 +487,7 @@ function EventPage() {
 					{groupByDay(sessions, event.timezone).length > 1 && (
 						<nav
 							aria-label={m.jump_to_day()}
-							className="sticky top-0 z-10 -mx-4 flex gap-2 overflow-x-auto bg-background/95 px-4 py-2 backdrop-blur [scrollbar-width:none] lg:mx-0 lg:px-0"
+							className="sticky top-0 z-10 -mx-4 flex gap-2 overflow-x-auto border-b border-border bg-background px-4 py-2 [scrollbar-width:none] lg:mx-0 lg:px-0"
 						>
 							{groupByDay(sessions, event.timezone).map((day, index) => (
 								<a
@@ -555,7 +562,7 @@ function EventPage() {
 														me &&
 															state &&
 															state.action === null &&
-															'bg-background/70 [&_.session-name]:text-muted-foreground [&_.session-title>svg]:opacity-50',
+															'bg-background/70 [&_.session-name]:text-muted-foreground',
 													)}
 												>
 													<div className="session-title flex flex-1 items-start gap-3">
@@ -596,6 +603,11 @@ function EventPage() {
 																		: m.places({ count: String(session.capacity) })}
 																</span>
 															</p>
+															{!bookingMode && workshop.description && (
+																<p className="mt-1 line-clamp-2 text-sm" lang={event.defaultLocale}>
+																	{workshop.description}
+																</p>
+															)}
 														</div>
 													</div>
 													{open && state?.action === 'book' && (

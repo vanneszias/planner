@@ -158,18 +158,18 @@ export function RankList({
 					return (
 						<li
 							key={id}
-							className="flex flex-wrap items-center gap-x-2.5 gap-y-2 rounded-xl bg-card p-2 pl-3 shadow-card"
+							className="grid grid-cols-[auto_auto_minmax(0,1fr)_auto] items-center gap-x-2.5 gap-y-1.5 rounded-xl bg-card p-2 pl-3 shadow-card"
 						>
 							<span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-ink text-sm font-bold text-white tabular-nums">
 								{index + 1}
 							</span>
 							<Marker color={workshop.markerColor} shape={workshop.markerShape} />
-							<WorkshopName workshop={workshop} contentLocale={contentLocale} />
-							<span className="flex shrink-0 gap-1 max-sm:w-full max-sm:justify-end max-sm:border-t max-sm:border-border max-sm:pt-2">
+							<WorkshopName workshop={workshop} contentLocale={contentLocale} hideTimes />
+							<span className="flex shrink-0 gap-1">
 								<Button
 									variant="outline"
 									size="icon-lg"
-									className="max-sm:size-9 aria-disabled:border-line aria-disabled:text-edge aria-disabled:opacity-100"
+									className="size-9 aria-disabled:border-line aria-disabled:text-edge aria-disabled:opacity-100"
 									aria-label={m.move_up({ workshop: workshop.title })}
 									aria-disabled={index === 0 || undefined}
 									onClick={() => move(index, -1)}
@@ -179,7 +179,7 @@ export function RankList({
 								<Button
 									variant="outline"
 									size="icon-lg"
-									className="max-sm:size-9 aria-disabled:border-line aria-disabled:text-edge aria-disabled:opacity-100"
+									className="size-9 aria-disabled:border-line aria-disabled:text-edge aria-disabled:opacity-100"
 									aria-label={m.move_down({ workshop: workshop.title })}
 									aria-disabled={index === ranked.length - 1 || undefined}
 									onClick={() => move(index, 1)}
@@ -189,7 +189,7 @@ export function RankList({
 								<Button
 									variant="ghost"
 									size="icon-lg"
-									className="text-muted-foreground hover:bg-tint-danger hover:text-destructive max-sm:size-9"
+									className="size-9 text-muted-foreground hover:bg-tint-danger hover:text-destructive"
 									aria-label={m.remove_from_ranking({ workshop: workshop.title })}
 									data-rank-remove={id}
 									onClick={() => remove(id)}
@@ -197,6 +197,9 @@ export function RankList({
 									<X aria-hidden />
 								</Button>
 							</span>
+							{workshop.times.length > 0 && (
+								<Times times={workshop.times} className="col-span-2 col-start-3" />
+							)}
 						</li>
 					)
 				})}
@@ -277,27 +280,35 @@ export function RankList({
 function WorkshopName({
 	workshop,
 	contentLocale,
+	hideTimes = false,
 }: {
 	workshop: RankableWorkshop
 	contentLocale: string
+	/** Ranked rows show the times on a row of their own, below the controls. */
+	hideTimes?: boolean
 }) {
 	return (
 		<span className="min-w-0 flex-1">
 			<span className="block leading-snug font-bold" lang={contentLocale}>
 				{workshop.title}
 			</span>
-			{workshop.times.length > 0 && (
-				<span className="mt-1 flex flex-wrap gap-1">
-					{workshop.times.map((time) => (
-						<span
-							key={time}
-							className="rounded bg-accent px-1.5 py-0.5 text-xs font-semibold whitespace-nowrap text-muted-foreground tabular-nums"
-						>
-							{time}
-						</span>
-					))}
+			{!hideTimes && workshop.times.length > 0 && <Times times={workshop.times} className="mt-1" />}
+		</span>
+	)
+}
+
+/** A workshop's session times as small chips that wrap cleanly. */
+function Times({ times, className }: { times: string[]; className?: string }) {
+	return (
+		<span className={cn('flex flex-wrap gap-1', className)}>
+			{times.map((time) => (
+				<span
+					key={time}
+					className="rounded bg-accent px-1.5 py-0.5 text-[0.8125rem] font-semibold whitespace-nowrap text-muted-foreground tabular-nums"
+				>
+					{time}
 				</span>
-			)}
+			))}
 		</span>
 	)
 }

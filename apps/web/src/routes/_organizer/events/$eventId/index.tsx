@@ -103,6 +103,38 @@ function Overview() {
 			</dl>
 
 			<div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+				{ready && (
+					<section
+						aria-labelledby="next-step"
+						className="flex min-w-0 flex-col gap-3 rounded-xl bg-tint-success p-5 ring-1 ring-primary/20"
+					>
+						<h2 id="next-step" className="text-lg font-bold">
+							{m.next_title()}
+						</h2>
+						<p className="text-muted-foreground">
+							{ranks
+								? m.next_rank_body({
+										ranked: String(participation.ranked),
+										total: String(participation.registrations),
+									})
+								: m.next_book_body({
+										booked: String(participation.booked),
+										places: String(places),
+									})}
+						</p>
+						<div className="mt-auto">
+							<Button asChild>
+								<Link
+									to={ranks ? '/events/$eventId/allocation' : '/events/$eventId/check-in'}
+									params={params}
+								>
+									{ranks ? m.next_rank_action() : m.next_book_action()}
+									<ChevronRight />
+								</Link>
+							</Button>
+						</div>
+					</section>
+				)}
 				{!ready && (
 					<section
 						aria-labelledby="checklist"
@@ -152,7 +184,7 @@ function Overview() {
 								{m.published_notice()}
 							</p>
 							<div className="flex items-center gap-2 rounded-lg border border-border bg-background py-1 pr-1 pl-3">
-								<span className="min-w-0 flex-1 truncate font-mono text-sm">{publicPath}</span>
+								<span className="min-w-0 flex-1 truncate text-sm">{publicPath}</span>
 								<CopyButton text={() => new URL(publicPath, window.location.origin).href} />
 							</div>
 						</>
@@ -176,38 +208,6 @@ function Overview() {
 					</div>
 					<FormError message={error} />
 				</section>
-				{ready && (
-					<section
-						aria-labelledby="next-step"
-						className="flex min-w-0 flex-col gap-3 rounded-xl bg-card p-5 shadow-card"
-					>
-						<h2 id="next-step" className="text-lg font-bold">
-							{m.next_title()}
-						</h2>
-						<p className="text-muted-foreground">
-							{ranks
-								? m.next_rank_body({
-										ranked: String(participation.ranked),
-										total: String(participation.registrations),
-									})
-								: m.next_book_body({
-										booked: String(participation.booked),
-										places: String(places),
-									})}
-						</p>
-						<div className="mt-auto">
-							<Button asChild variant="outline" size="sm">
-								<Link
-									to={ranks ? '/events/$eventId/allocation' : '/events/$eventId/check-in'}
-									params={params}
-								>
-									{ranks ? m.next_rank_action() : m.next_book_action()}
-									<ChevronRight />
-								</Link>
-							</Button>
-						</div>
-					</section>
-				)}
 			</div>
 
 			<Manage

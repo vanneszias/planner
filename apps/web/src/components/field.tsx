@@ -98,12 +98,12 @@ export function PrefixedInput({
 }: ComponentProps<typeof FieldInput> & { prefix: string }) {
 	return (
 		<div className="flex h-10 min-w-0 items-stretch overflow-hidden rounded-md border border-input bg-card shadow-xs focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-ring has-aria-invalid:border-destructive">
-			<span className="flex shrink-0 items-center border-r border-border bg-accent px-3 font-mono text-sm whitespace-nowrap text-muted-foreground">
+			<span className="flex shrink-0 items-center border-r border-border bg-accent px-3 text-sm whitespace-nowrap text-muted-foreground">
 				{prefix}
 			</span>
 			<FieldInput
 				className={cn(
-					'h-full min-w-0 rounded-none border-0 font-mono shadow-none focus-visible:outline-none',
+					'h-full min-w-0 rounded-none border-0 shadow-none focus-visible:outline-none',
 					className,
 				)}
 				{...props}
