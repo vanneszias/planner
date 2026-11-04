@@ -26,18 +26,22 @@ export default defineConfig(({ command }) => {
 				}
 			: {}
 
+	// scripts/preview.sh builds against one pull request's own resources.
+	const configFile = process.env.PREVIEW_CONFIG ? 'wrangler.preview.json' : 'wrangler.jsonc'
+
 	return {
 		resolve: { tsconfigPaths: true },
 		plugins: [
 			cloudflare({
 				viteEnvironment: { name: 'ssr' },
+				configPath: `./${configFile}`,
 				config: localWeb,
 				// Run the other Workers in the same local session, so bindings between
 				// them (the coordinator Durable Object, the jobs queue) work in dev.
 				auxiliaryWorkers: [
-					{ configPath: '../coordinator/wrangler.jsonc' },
-					{ configPath: '../jobs/wrangler.jsonc', config: local },
-					{ configPath: '../api/wrangler.jsonc', config: local },
+					{ configPath: `../coordinator/${configFile}` },
+					{ configPath: `../jobs/${configFile}`, config: local },
+					{ configPath: `../api/${configFile}`, config: local },
 				],
 			}),
 			paraglideVitePlugin(paraglideOptions),

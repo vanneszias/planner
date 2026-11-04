@@ -90,14 +90,12 @@ production; sign-in works with all four methods; UI renders in English and Dutch
   `event-files`, Queues `event-jobs` and `event-jobs-dlq` (all verified).
 - [x] Production deploy: `https://event-web.zias.workers.dev`,
   `https://event-api.zias.workers.dev`; `coordinator` and `jobs` have no public URL.
-- [x] **Previews use per-version preview URLs** (decision 2026-10-30), not a
-  separate environment: pull requests upload a `web` version with alias
-  `pr-<number>`. Previews share the production D1, R2 and queues, so
-  **migrations must be additive** (add, deploy code that handles both, then
-  remove) and preview testing must not create real participant data.
+- [x] ~~Previews use per-version preview URLs~~ (2026-10-30), superseded
+  2026-11-04: **each pull request gets its own environment** (own D1 database,
+  queue and Workers), deleted when it closes. See [previews.md](previews.md).
 - [x] Private GitHub repository `vanneszias/planner`, default branch `main`.
 - [x] CI workflow (`.github/workflows/ci.yml`): checks on every PR and push to
-  `main`; preview upload on PRs; migrations and ordered deploy on `main`.
+  `main`; a preview environment per PR; migrations and ordered deploy on `main`.
 - [ ] `CLOUDFLARE_API_TOKEN` GitHub secret (owner creates the token: "Edit
   Cloudflare Workers" template plus D1, Queues and Workers R2 Storage edit).
   Preview and deploy jobs fail until it exists.
