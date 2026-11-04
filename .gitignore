@@ -10,6 +10,7 @@ dist-ssr
 coverage
 
 # Generated
+wrangler.preview.json
 **/src/paraglide
 
 # Local secrets
