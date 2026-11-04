@@ -96,8 +96,8 @@ function AuditLog() {
 				<p className="text-muted-foreground">{m.audit_intro()}</p>
 			</div>
 
-			<div className="flex flex-wrap items-end gap-3">
-				<label className="flex flex-col gap-1 text-sm font-bold">
+			<div className="grid gap-3 sm:grid-cols-3">
+				<label className="flex min-w-0 flex-col gap-1.5 text-sm font-bold">
 					{m.audit_filter_event()}
 					<FieldSelect
 						value={search.event ?? ''}
@@ -111,7 +111,7 @@ function AuditLog() {
 						))}
 					</FieldSelect>
 				</label>
-				<label className="flex flex-col gap-1 text-sm font-bold">
+				<label className="flex min-w-0 flex-col gap-1.5 text-sm font-bold">
 					{m.audit_filter_category()}
 					<FieldSelect
 						value={search.category ?? ''}
@@ -127,7 +127,7 @@ function AuditLog() {
 						))}
 					</FieldSelect>
 				</label>
-				<label className="flex flex-col gap-1 text-sm font-bold">
+				<label className="flex min-w-0 flex-col gap-1.5 text-sm font-bold">
 					{m.audit_filter_person()}
 					<FieldSelect
 						value={search.person ?? ''}
@@ -180,9 +180,9 @@ function AuditLog() {
 								) : (
 									<tr
 										key={row.entry.id}
-										className="border-b border-border align-top last:border-0 max-sm:grid max-sm:grid-cols-[auto_1fr] max-sm:gap-x-3 max-sm:px-3 max-sm:py-2.5 max-sm:[&>td]:p-0"
+										className="border-b border-border align-top last:border-0 max-sm:grid max-sm:grid-cols-[6.5rem_minmax(0,1fr)] max-sm:gap-x-3 max-sm:px-3 max-sm:py-2.5 max-sm:[&>td]:p-0"
 									>
-										<td className="p-3 whitespace-nowrap text-muted-foreground tabular-nums max-sm:row-span-3">
+										<td className="w-32 p-3 whitespace-nowrap text-muted-foreground tabular-nums max-sm:row-span-3">
 											{clockRange(row.firstAt, row.entry.createdAt)}
 										</td>
 										<td className="p-3">

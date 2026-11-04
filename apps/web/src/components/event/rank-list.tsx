@@ -2,7 +2,7 @@ import { Button } from '@app/ui/components/button'
 import { Marker, type MarkerColor, type MarkerShape } from '@app/ui/components/marker'
 import { cn } from 'cn'
 import { Check, ChevronDown, ChevronUp, Plus, X } from 'lucide-react'
-import { Fragment, useState } from 'react'
+import { useState } from 'react'
 import { FormError } from '#/components/auth-shell'
 import { m } from '#/paraglide/messages'
 
@@ -48,9 +48,12 @@ export function RankList({
 	const [announcement, setAnnouncement] = useState('')
 	const [error, setError] = useState<string | null>(null)
 	const [saved, setSaved] = useState<string | null>(null)
+	// What the server has: a ranking that matches it needs no save.
+	const [stored, setStored] = useState(initial.join())
 	const [pending, setPending] = useState(false)
 	const unranked = workshops.filter((w) => !ranked.includes(w.id))
 	const missing = Math.max(0, rules.min - ranked.length)
+	const upToDate = ranked.length > 0 && ranked.join() === stored
 	const title = (id: string) => byId.get(id)?.title ?? ''
 
 	function update(next: string[], moved: string) {
@@ -107,6 +110,7 @@ export function RankList({
 		setPending(false)
 		if (problem) return setError(problem)
 		setSaved(savedMessage)
+		setStored(ranked.join())
 	}
 
 	return (
@@ -200,12 +204,8 @@ export function RankList({
 						{unranked.map((workshop) => (
 							<li
 								key={workshop.id}
-								className="flex items-center gap-2.5 rounded-xl border border-dashed border-edge/50 bg-card/60 p-2 pl-3"
+								className="flex items-center gap-2.5 rounded-xl bg-card p-2 pl-3 shadow-card"
 							>
-								<span
-									className="size-7 shrink-0 rounded-full border-2 border-dashed border-edge/50"
-									aria-hidden
-								/>
 								<Marker color={workshop.markerColor} shape={workshop.markerShape} />
 								<WorkshopName workshop={workshop} contentLocale={contentLocale} />
 								<Button
@@ -244,18 +244,25 @@ export function RankList({
 					<Check aria-hidden className="size-4 shrink-0 text-success" strokeWidth={3} />
 					{saved}
 				</p>
-				{missing > 0 && !error && (
-					<p className="text-center text-sm font-bold text-muted-foreground">
-						{m.rank_need_more({ count: String(missing) })}
-					</p>
-				)}
 				<Button
-					className="w-full"
-					variant={missing > 0 ? 'outline' : 'default'}
-					aria-disabled={pending || missing > 0 || undefined}
-					onClick={save}
+					className={cn(
+						'w-full',
+						(missing > 0 || upToDate) &&
+							'bg-accent text-muted-foreground hover:bg-accent aria-disabled:opacity-100',
+					)}
+					aria-disabled={pending || missing > 0 || upToDate || undefined}
+					onClick={missing > 0 || upToDate ? undefined : save}
 				>
-					{saveLabel}
+					{missing > 0 ? (
+						m.rank_pick_more({ count: String(missing) })
+					) : upToDate ? (
+						<>
+							<Check aria-hidden />
+							{m.ranking_all_saved()}
+						</>
+					) : (
+						saveLabel
+					)}
 				</Button>
 			</div>
 		</section>
@@ -275,12 +282,14 @@ function WorkshopName({
 				{workshop.title}
 			</span>
 			{workshop.times.length > 0 && (
-				<span className="block text-sm text-muted-foreground tabular-nums">
-					{workshop.times.map((time, index) => (
-						<Fragment key={time}>
-							{index > 0 && ' · '}
-							<span className="whitespace-nowrap">{time}</span>
-						</Fragment>
+				<span className="mt-1 flex flex-wrap gap-1">
+					{workshop.times.map((time) => (
+						<span
+							key={time}
+							className="rounded bg-accent px-1.5 py-0.5 text-xs font-semibold whitespace-nowrap text-muted-foreground tabular-nums"
+						>
+							{time}
+						</span>
 					))}
 				</span>
 			)}

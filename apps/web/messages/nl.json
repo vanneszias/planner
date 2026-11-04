@@ -531,5 +531,14 @@
 	"section_label": "Onderdeel",
 	"checkin_nobody": "Hier wordt nog niemand verwacht",
 	"checkin_nobody_hint": "Mensen verschijnen zodra ze deze sessie boeken of de verdeling gepubliceerd is.",
-	"unsaved_changes": "Niet-opgeslagen wijzigingen"
+	"unsaved_changes": "Niet-opgeslagen wijzigingen",
+	"menu": "Menu",
+	"back_to_events": "Evenementen",
+	"import_short": "Importeren",
+	"ranking_all_saved": "Alles opgeslagen",
+	"rank_pick_more": "Kies er nog {count}",
+	"registered_as": "Je bent ingeschreven",
+	"allocation_booking_title": "Verdelen is voor rangschik-evenementen",
+	"allocation_booking_body": "In dit evenement boeken mensen zelf hun sessies, dus er valt niets te verdelen.",
+	"back_to_overview": "Terug naar het overzicht"
 }

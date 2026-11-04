@@ -1,11 +1,13 @@
 import type { Workshop } from '@app/domain'
 import { Button } from '@app/ui/components/button'
 import { Marker } from '@app/ui/components/marker'
-import { createFileRoute, getRouteApi, Navigate, useRouter } from '@tanstack/react-router'
+import { createFileRoute, getRouteApi, Link, useRouter } from '@tanstack/react-router'
+import { Shuffle } from 'lucide-react'
 import { useState } from 'react'
 import { FormError } from '#/components/auth-shell'
 import { Explanation } from '#/components/event/explanation'
 import { FieldSelect } from '#/components/field'
+import { EmptyState } from '#/components/page'
 import { RadioCards } from '#/components/radio-cards'
 import { actionMessage } from '#/lib/errors'
 import { formatShortDayTime } from '#/lib/format'
@@ -37,11 +39,24 @@ const moveErrors: Record<string, () => string> = {
 }
 
 /** Draft, review, adjust and publish (journeys.md, O6). */
-/** Booking events have no allocation: the tab is hidden, and a stale link goes to the overview. */
+/** Booking events have no allocation: the tab is hidden, and a stale link explains why. */
 function Allocation() {
 	const { event } = eventRoute.useLoaderData()
 	if (event.mode !== 'ranking')
-		return <Navigate to="/events/$eventId" params={{ eventId: event.id }} replace />
+		return (
+			<EmptyState
+				icon={<Shuffle />}
+				title={m.allocation_booking_title()}
+				body={m.allocation_booking_body()}
+				action={
+					<Button asChild variant="outline" size="sm">
+						<Link to="/events/$eventId" params={{ eventId: event.id }}>
+							{m.back_to_overview()}
+						</Link>
+					</Button>
+				}
+			/>
+		)
 	return <AllocationPage />
 }
 

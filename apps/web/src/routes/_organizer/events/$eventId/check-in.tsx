@@ -239,7 +239,7 @@ function CheckIn() {
 			)}
 
 			{page.canCheckIn && !page.anonymised && (
-				<div className="flex flex-col gap-4 print:hidden">
+				<div className="flex flex-col gap-4 rounded-xl bg-card p-5 shadow-card print:hidden">
 					<div className="flex flex-wrap items-end gap-x-4 gap-y-3">
 						<Button
 							variant={scanning ? 'outline' : 'default'}
@@ -248,7 +248,9 @@ function CheckIn() {
 							{scanning ? <X /> : <ScanLine />}
 							{scanning ? m.scanner_stop() : m.scanner_start()}
 						</Button>
-						<span className="pb-3 text-sm font-bold text-muted-foreground">{m.or_divider()}</span>
+						<span className="flex h-10 items-center text-sm font-bold text-muted-foreground">
+							{m.or_divider()}
+						</span>
 						<form onSubmit={submitCode} noValidate className="flex flex-wrap items-end gap-2">
 							<Field id="checkin-code" label={m.checkin_code_label()}>
 								<FieldInput
@@ -356,6 +358,7 @@ function CheckIn() {
 						<p className="text-sm text-muted-foreground">{m.checkin_names_hint()}</p>
 						<Button
 							variant="outline"
+							size="sm"
 							onClick={() => {
 								focusLater('#checkin-search')
 								loadRoster()

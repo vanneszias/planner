@@ -531,5 +531,14 @@
 	"section_label": "Section",
 	"checkin_nobody": "No one is expected here yet",
 	"checkin_nobody_hint": "People appear once they book this session or the allocation is published.",
-	"unsaved_changes": "Unsaved changes"
+	"unsaved_changes": "Unsaved changes",
+	"menu": "Menu",
+	"back_to_events": "Events",
+	"import_short": "Import",
+	"ranking_all_saved": "All changes saved",
+	"rank_pick_more": "Pick {count} more",
+	"registered_as": "You're registered",
+	"allocation_booking_title": "Allocation is for ranking events",
+	"allocation_booking_body": "In this event people book sessions themselves, so there is nothing to allocate.",
+	"back_to_overview": "Back to overview"
 }

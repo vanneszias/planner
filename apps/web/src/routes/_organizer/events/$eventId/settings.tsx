@@ -4,7 +4,7 @@ import { createFileRoute, getRouteApi, useRouter } from '@tanstack/react-router'
 import { Check, ChevronDown, Plus, Trash2 } from 'lucide-react'
 import { type ComponentProps, type FormEvent, type ReactNode, useState } from 'react'
 import { FormError } from '#/components/auth-shell'
-import { Field, FieldInput, FieldSelect } from '#/components/field'
+import { Field, FieldInput, FieldSelect, PrefixedInput } from '#/components/field'
 import { RadioCards } from '#/components/radio-cards'
 import { actionMessage, fieldMessage } from '#/lib/errors'
 import { timeZones } from '#/lib/time-zones'
@@ -379,7 +379,7 @@ function Section({
 } & Omit<ComponentProps<'form'>, 'title' | 'children'>) {
 	return (
 		<Tag
-			className="grid gap-x-8 gap-y-4 rounded-xl bg-card p-5 shadow-card md:grid-cols-[minmax(0,14rem)_minmax(0,1fr)] md:p-6"
+			className="grid gap-x-8 gap-y-4 rounded-xl bg-card p-5 shadow-card md:grid-cols-[minmax(0,14rem)_minmax(0,1fr)]"
 			{...props}
 		>
 			<div>
@@ -474,18 +474,13 @@ function WebAddressSection({
 	return (
 		<Section title={m.web_address_label()} hint={m.web_address_hint()}>
 			<Field id="slug" label={m.web_address_label()} error={issue}>
-				<div className="flex h-11 min-w-0 items-stretch overflow-hidden rounded-md border border-input bg-card shadow-xs focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-ring">
-					<span className="flex shrink-0 items-center border-r border-border bg-accent px-3 font-mono text-sm whitespace-nowrap text-muted-foreground">
-						/{organizationSlug}/
-					</span>
-					<FieldInput
-						id="slug"
-						error={issue}
-						className="h-full min-w-0 rounded-none border-0 font-mono shadow-none focus-visible:outline-none"
-						value={slug}
-						onChange={(e) => onChange(e.target.value)}
-					/>
-				</div>
+				<PrefixedInput
+					prefix={`/${organizationSlug}/`}
+					id="slug"
+					error={issue}
+					value={slug}
+					onChange={(e) => onChange(e.target.value)}
+				/>
 			</Field>
 		</Section>
 	)

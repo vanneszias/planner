@@ -33,8 +33,8 @@ export function DayStrip({
 		<div className="flex flex-col gap-6">
 			{groupByDay(sorted, timeZone).map((day) => (
 				<section key={day.label} aria-label={day.label} className="flex flex-col gap-2">
-					<h3 className="font-display text-lg font-medium first-letter:uppercase">{day.label}</h3>
-					<ol className="overflow-hidden rounded-2xl bg-card">
+					<h3 className="font-display text-lg font-semibold first-letter:uppercase">{day.label}</h3>
+					<ol className="overflow-hidden rounded-2xl bg-card shadow-card">
 						{day.items.flatMap((session, index) => {
 							const previous = day.items[index - 1]
 							const gap = previous

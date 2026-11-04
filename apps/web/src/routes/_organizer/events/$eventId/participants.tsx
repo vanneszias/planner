@@ -3,7 +3,7 @@ import { Dialog } from '@app/ui/components/dialog'
 import { Input } from '@app/ui/components/input'
 import { createFileRoute, getRouteApi, useRouter } from '@tanstack/react-router'
 import { cn } from 'cn'
-import { Check, ListOrdered, Mail, Printer, Search, Upload, UserPlus, Users } from 'lucide-react'
+import { Check, Mail, Pencil, Printer, Search, Upload, UserPlus, Users } from 'lucide-react'
 import { type FormEvent, useMemo, useState } from 'react'
 import { FormError } from '#/components/auth-shell'
 import { ExportsPanel } from '#/components/event/exports-panel'
@@ -77,6 +77,7 @@ function Participants() {
 	const visible = matches.slice(0, limit)
 	// Before allocation runs, a ranking event's session counts are all zero: noise.
 	const showSessions = !ranks || participants.some((p) => p.bookings > 0)
+	const showWaitlist = participants.some((p) => p.waitlisted > 0)
 	const allVisibleSelected = visible.length > 0 && visible.every((p) => selected.has(p.id))
 
 	function toggle(id: string, on: boolean) {
@@ -175,6 +176,7 @@ function Participants() {
 							onClick={() => setPanel('import')}
 						>
 							<Upload />
+							<span className="sm:hidden">{m.import_short()}</span>
 							<span className="max-sm:hidden">{m.import_csv()}</span>
 						</Button>
 						<Button onClick={() => setPanel('add')}>
@@ -362,8 +364,12 @@ function Participants() {
 									)}
 									<th className="p-3">{m.column_name()}</th>
 									<th className="p-3 max-md:hidden">{m.column_contact()}</th>
-									{showSessions && <th className="p-3 text-right">{m.column_sessions()}</th>}
-									<th className="p-3 text-right max-sm:hidden">{m.column_waitlist()}</th>
+									{showSessions && (
+										<th className="p-3 text-right max-sm:hidden">{m.column_sessions()}</th>
+									)}
+									{showWaitlist && (
+										<th className="p-3 text-right max-sm:hidden">{m.column_waitlist()}</th>
+									)}
 									{ranks && <th className="p-3">{m.column_ranked()}</th>}
 								</tr>
 							</thead>
@@ -384,9 +390,11 @@ function Participants() {
 												/>
 											</td>
 										)}
-										<td className="p-3">
-											<span className="block font-bold">{p.displayName || m.anonymous()}</span>
-											<span className="block max-w-[52vw] truncate text-muted-foreground md:hidden">
+										<td className="p-3 max-sm:w-full max-sm:max-w-0">
+											<span className="block font-bold max-sm:truncate">
+												{p.displayName || m.anonymous()}
+											</span>
+											<span className="block truncate text-muted-foreground md:hidden">
 												{p.email ?? p.guardianEmail}
 											</span>
 											<span className="block text-muted-foreground">
@@ -402,10 +410,14 @@ function Participants() {
 										<td className="p-3 break-all max-md:hidden">
 											{p.email ?? p.guardianEmail ?? '—'}
 										</td>
-										{showSessions && <td className="p-3 text-right tabular-nums">{p.bookings}</td>}
-										<td className="p-3 text-right tabular-nums max-sm:hidden">
-											{p.waitlisted || '—'}
-										</td>
+										{showSessions && (
+											<td className="p-3 text-right tabular-nums max-sm:hidden">{p.bookings}</td>
+										)}
+										{showWaitlist && (
+											<td className="p-3 text-right tabular-nums max-sm:hidden">
+												{p.waitlisted || '—'}
+											</td>
+										)}
 										{ranks && (
 											<td className="p-3">
 												<span className="flex items-center justify-between gap-2">
@@ -421,13 +433,13 @@ function Participants() {
 													{canWrite && (
 														<Button
 															variant="ghost"
-															size="icon-sm"
-															className="text-muted-foreground hover:text-foreground"
-															title={m.enter_ranking()}
+															size="sm"
+															className="text-muted-foreground hover:text-foreground max-sm:size-8 max-sm:px-0"
 															aria-label={m.enter_ranking_for({ name: p.displayName })}
 															onClick={() => openRanking(p.id, p.displayName)}
 														>
-															<ListOrdered />
+															<Pencil />
+															<span className="max-sm:hidden">{m.enter_ranking()}</span>
 														</Button>
 													)}
 												</span>

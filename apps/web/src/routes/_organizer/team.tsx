@@ -5,7 +5,7 @@ import { ConfirmDialog } from '@app/ui/components/dialog'
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { type FormEvent, useState } from 'react'
 import { FormError } from '#/components/auth-shell'
-import { Field, FieldInput } from '#/components/field'
+import { Field, FieldInput, PrefixedInput } from '#/components/field'
 import { RadioCards } from '#/components/radio-cards'
 import { actionMessage } from '#/lib/errors'
 import { m } from '#/paraglide/messages'
@@ -265,17 +265,14 @@ function OrganizationForm({ organization }: { organization: { name: string; slug
 				hint={m.web_address_hint()}
 				error={issues.slug}
 			>
-				<div className="flex items-center gap-1">
-					<span className="font-mono text-muted-foreground">/</span>
-					<FieldInput
-						id="org-slug"
-						hint
-						error={issues.slug}
-						className="font-mono"
-						value={slug}
-						onChange={(e) => setSlug(e.target.value)}
-					/>
-				</div>
+				<PrefixedInput
+					prefix="/"
+					id="org-slug"
+					hint
+					error={issues.slug}
+					value={slug}
+					onChange={(e) => setSlug(e.target.value)}
+				/>
 			</Field>
 			<FormError message={error} />
 			<div className="flex flex-wrap items-center gap-4">

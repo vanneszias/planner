@@ -4,7 +4,16 @@ import { Dialog } from '@app/ui/components/dialog'
 import { Marker } from '@app/ui/components/marker'
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { cn } from 'cn'
-import { Ban, CalendarDays, Check, CircleCheck, Hourglass, TriangleAlert, X } from 'lucide-react'
+import {
+	Ban,
+	CalendarDays,
+	Check,
+	ChevronDown,
+	CircleCheck,
+	Hourglass,
+	TriangleAlert,
+	X,
+} from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { BrandMark } from '#/components/brand-mark'
 import { DayStrip } from '#/components/event/day-strip'
@@ -206,7 +215,64 @@ function EventPage() {
 						body: m.book_intro({ count: String(event.sessionsPerParticipant) }),
 					}
 				: null
-	const rail = me ? null : (
+	const rail = me ? (
+		<>
+			<section className="flex flex-col gap-3 rounded-xl bg-card p-5 shadow-card">
+				<div>
+					<p className="text-sm font-bold text-muted-foreground">{m.registered_as()}</p>
+					<p className="font-display text-xl font-semibold">{m.hello_name({ name: me.name })}</p>
+				</div>
+				{bookingMode && (
+					<div className="flex flex-col gap-1.5">
+						<p className="text-sm font-bold tabular-nums">
+							{m.booked_count({
+								booked: String(mine.length),
+								total: String(event.sessionsPerParticipant),
+							})}
+						</p>
+						<span className="h-1.5 overflow-hidden rounded-full bg-accent" aria-hidden>
+							<span
+								className="block h-full rounded-full bg-primary"
+								style={{
+									width: `${Math.min(100, (mine.length / Math.max(1, event.sessionsPerParticipant)) * 100)}%`,
+								}}
+							/>
+						</span>
+					</div>
+				)}
+				<div role="tablist" aria-label={event.name} className="flex gap-1 rounded-lg bg-accent p-1">
+					{(
+						[
+							['programme', m.tab_programme()],
+							['myday', m.tab_my_day()],
+						] as const
+					).map(([value, label]) => (
+						<button
+							key={value}
+							type="button"
+							role="tab"
+							aria-selected={tab === value}
+							className={cn(
+								'min-h-10 flex-1 rounded-md text-sm font-bold text-muted-foreground',
+								tab === value && 'bg-card text-foreground shadow-card',
+							)}
+							onClick={() => setTab(value)}
+						>
+							{label}
+						</button>
+					))}
+				</div>
+			</section>
+			<Button
+				variant="ghost"
+				size="sm"
+				className="self-start text-muted-foreground hover:bg-tint-danger hover:text-destructive"
+				onClick={() => router.navigate({ to: '.', search: { cancel: true } })}
+			>
+				{m.cancel_registration()}
+			</Button>
+		</>
+	) : (
 		<>
 			{intro && (
 				<section className="flex flex-col items-start gap-3 rounded-xl bg-card p-5 shadow-card">
@@ -226,7 +292,7 @@ function EventPage() {
 	)
 
 	return (
-		<Shell page={page} aside={rail}>
+		<Shell page={page} aside={rail} compact={Boolean(me)}>
 			{me && cancel && (
 				<section className="flex flex-col gap-3 rounded-xl bg-tint-warning p-5">
 					<p>{m.cancel_registration_confirm({ event: event.name })}</p>
@@ -245,45 +311,6 @@ function EventPage() {
 						</Button>
 					</div>
 				</section>
-			)}
-
-			{me && (
-				<div className="flex flex-wrap items-baseline justify-between gap-2">
-					<p className="text-lg font-bold">{m.hello_name({ name: me.name })}</p>
-					{bookingMode && (
-						<p className="text-sm text-muted-foreground">
-							{m.booked_count({
-								booked: String(mine.length),
-								total: String(event.sessionsPerParticipant),
-							})}
-						</p>
-					)}
-				</div>
-			)}
-
-			{me && (
-				<div role="tablist" aria-label={event.name} className="flex gap-1 rounded-xl bg-accent p-1">
-					{(
-						[
-							['programme', m.tab_programme()],
-							['myday', m.tab_my_day()],
-						] as const
-					).map(([value, label]) => (
-						<button
-							key={value}
-							type="button"
-							role="tab"
-							aria-selected={tab === value}
-							className={cn(
-								'min-h-11 flex-1 rounded-lg font-bold text-muted-foreground',
-								tab === value && 'bg-card text-foreground',
-							)}
-							onClick={() => setTab(value)}
-						>
-							{label}
-						</button>
-					))}
-				</div>
 			)}
 
 			<div aria-live="polite" role="status">
@@ -460,9 +487,16 @@ function EventPage() {
 							<h3 className="font-display text-lg font-semibold first-letter:uppercase">
 								{day.label}
 							</h3>
-							{groupBySlot(day.items).map((slot) => (
-								<div key={slot.startsAt.getTime()} className="flex flex-col gap-2">
-									<h4 className="flex items-baseline gap-3">
+							{groupBySlot(day.items).map((slot, slotIndex) => (
+								<details
+									key={slot.startsAt.getTime()}
+									open={
+										slotIndex === 0 ||
+										slot.items.some((s) => booked.has(s.id) || waitlisted.has(s.id))
+									}
+									className="group/slot flex flex-col"
+								>
+									<summary className="flex min-h-10 cursor-pointer list-none items-center gap-3 rounded-lg [&::-webkit-details-marker]:hidden">
 										<span className="font-bold tabular-nums">
 											{formatTime(slot.startsAt, event.timezone)}–
 											{formatTime(slot.endsAt, event.timezone)}
@@ -470,8 +504,28 @@ function EventPage() {
 										<span className="text-sm text-muted-foreground">
 											{m.slot_count({ count: String(slot.items.length) })}
 										</span>
-									</h4>
-									<ul className="divide-y divide-border overflow-hidden rounded-xl bg-card shadow-card">
+										<span
+											aria-hidden
+											className="flex flex-1 items-center gap-1 overflow-hidden group-open/slot:hidden"
+										>
+											{slot.items.slice(0, 10).map((s) => {
+												const w = workshopById.get(s.workshopId)
+												return w ? (
+													<Marker
+														key={s.id}
+														color={w.markerColor}
+														shape={w.markerShape}
+														className="size-3.5"
+													/>
+												) : null
+											})}
+										</span>
+										<ChevronDown
+											aria-hidden
+											className="ml-auto size-4 shrink-0 text-muted-foreground transition-transform group-open/slot:rotate-180"
+										/>
+									</summary>
+									<ul className="mt-2 divide-y divide-border overflow-hidden rounded-xl bg-card shadow-card">
 										{slot.items.map((session) => {
 											const workshop = workshopById.get(session.workshopId)
 											if (!workshop) return null
@@ -621,22 +675,11 @@ function EventPage() {
 											)
 										})}
 									</ul>
-								</div>
+								</details>
 							))}
 						</div>
 					))}
 				</section>
-			)}
-
-			{me && tab === 'myday' && (
-				<div>
-					<Button
-						variant="ghost"
-						onClick={() => router.navigate({ to: '.', search: { cancel: true } })}
-					>
-						{m.cancel_registration()}
-					</Button>
-				</div>
 			)}
 		</Shell>
 	)
@@ -650,10 +693,13 @@ function EventPage() {
 function Shell({
 	page,
 	aside,
+	compact = false,
 	children,
 }: {
 	page: Page
 	aside?: React.ReactNode
+	/** Registered participants know the event: a smaller title gets them to their task. */
+	compact?: boolean
 	children: React.ReactNode
 }) {
 	const { event } = page
@@ -676,7 +722,10 @@ function Shell({
 				<header className="flex max-w-3xl flex-col gap-3 pt-2">
 					<h1
 						lang={event.defaultLocale}
-						className="font-display text-[clamp(1.875rem,7vw,2.75rem)] leading-[1.1] font-semibold text-balance wrap-break-word"
+						className={cn(
+							'font-display leading-[1.1] font-semibold text-balance wrap-break-word',
+							compact ? 'text-[clamp(1.5rem,5vw,2rem)]' : 'text-[clamp(1.875rem,7vw,2.75rem)]',
+						)}
 					>
 						{event.name}
 					</h1>

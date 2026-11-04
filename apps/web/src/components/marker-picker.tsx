@@ -61,31 +61,35 @@ function Swatches<T extends string>({
 	render: (option: T) => React.ReactNode
 }) {
 	return (
-		<fieldset className="flex flex-wrap items-center gap-1.5">
-			<legend className="sr-only">{legend}</legend>
-			{options.map((option) => (
-				<label
-					key={option}
-					title={option}
-					className={cn(
-						'grid size-10 cursor-pointer place-items-center rounded-lg border has-focus-visible:outline-3 has-focus-visible:outline-offset-2 has-focus-visible:outline-ring',
-						option === value
-							? 'border-ink bg-accent shadow-[inset_0_0_0_1px_var(--ink)]'
-							: 'border-transparent hover:bg-accent',
-					)}
-				>
-					<input
-						type="radio"
-						name={name}
-						value={option}
-						checked={option === value}
-						onChange={() => onChange(option)}
-						className="sr-only"
-						aria-label={option}
-					/>
-					{render(option)}
-				</label>
-			))}
+		<fieldset className="grid grid-cols-[4rem_1fr] items-center gap-x-3">
+			<legend className="contents">
+				<span className="text-sm font-bold text-muted-foreground">{legend}</span>
+			</legend>
+			<span className="grid grid-cols-8 gap-1 max-[420px]:grid-cols-4">
+				{options.map((option) => (
+					<label
+						key={option}
+						title={option}
+						className={cn(
+							'grid aspect-square w-full max-w-10 cursor-pointer place-items-center rounded-lg border has-focus-visible:outline-3 has-focus-visible:outline-offset-2 has-focus-visible:outline-ring',
+							option === value
+								? 'border-ink bg-accent shadow-[inset_0_0_0_1px_var(--ink)]'
+								: 'border-transparent hover:bg-accent',
+						)}
+					>
+						<input
+							type="radio"
+							name={name}
+							value={option}
+							checked={option === value}
+							onChange={() => onChange(option)}
+							className="sr-only"
+							aria-label={option}
+						/>
+						{render(option)}
+					</label>
+				))}
+			</span>
 		</fieldset>
 	)
 }

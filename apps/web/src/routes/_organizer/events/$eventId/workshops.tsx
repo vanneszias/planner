@@ -57,7 +57,7 @@ function Workshops() {
 						return (
 							<li
 								key={workshop.id}
-								className="group flex items-start gap-3 px-4 py-3 hover:bg-accent/30"
+								className="group flex items-center gap-3 px-4 py-3 hover:bg-accent/30"
 							>
 								<Marker
 									color={workshop.markerColor}
@@ -66,7 +66,17 @@ function Workshops() {
 								/>
 								<div className="min-w-0 flex-1">
 									<div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-										<p className="font-bold">{workshop.title}</p>
+										{canEdit ? (
+											<button
+												type="button"
+												className="text-left font-bold hover:underline hover:underline-offset-4"
+												onClick={() => setEditing(workshop)}
+											>
+												{workshop.title}
+											</button>
+										) : (
+											<p className="font-bold">{workshop.title}</p>
+										)}
 										{groups.length > 0 && (
 											<span className="rounded-full bg-accent px-2 py-0.5 text-xs font-bold">
 												{m.for_ages({ groups: groups.join(', ') })}

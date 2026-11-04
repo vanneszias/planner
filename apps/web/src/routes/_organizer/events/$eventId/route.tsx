@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useLocation, useNavigate } from '@tanstack/react-router'
-import { CalendarDays } from 'lucide-react'
+import { CalendarDays, ChevronLeft } from 'lucide-react'
 import { FieldSelect } from '#/components/field'
 import { StatusLabel } from '#/components/status-label'
 import { formatDateRange } from '#/lib/format'
@@ -49,6 +49,13 @@ function EventLayout() {
 	return (
 		<div className="flex flex-col gap-5 sm:gap-6">
 			<div className="flex flex-col gap-2 print:hidden">
+				<Link
+					to="/home"
+					className="-ml-1 flex w-fit items-center gap-1 rounded-md px-1 text-sm font-bold text-muted-foreground hover:text-foreground"
+				>
+					<ChevronLeft aria-hidden className="size-4" />
+					{m.back_to_events()}
+				</Link>
 				<h1 className="font-display text-[clamp(1.5rem,5vw,2.25rem)] leading-tight font-semibold text-balance wrap-break-word">
 					{event.name}
 				</h1>

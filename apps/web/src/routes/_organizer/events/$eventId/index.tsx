@@ -1,7 +1,7 @@
 import { Button } from '@app/ui/components/button'
 import { createFileRoute, getRouteApi, Link, useRouter } from '@tanstack/react-router'
 import { cn } from 'cn'
-import { Check, ChevronRight, Copy, ExternalLink, ShieldCheck } from 'lucide-react'
+import { Check, ChevronRight, Copy, ExternalLink } from 'lucide-react'
 import { useState } from 'react'
 import { FormError } from '#/components/auth-shell'
 import { actionMessage } from '#/lib/errors'
@@ -296,47 +296,42 @@ function Manage({
 					</div>
 				)}
 				<div className="flex flex-col gap-3 p-5">
-					<h3 id="retention" className="flex items-center gap-2 font-bold">
-						<ShieldCheck aria-hidden className="size-4 text-muted-foreground" />
-						{m.retention_title()}
-					</h3>
-					{retention.doneAt ? (
-						<p>
-							{m.retention_done({
-								date: day(new Date(retention.doneAt).toISOString().slice(0, 10)),
-							})}
-						</p>
-					) : (
-						<>
-							<p className="text-muted-foreground">
-								{m.retention_scheduled({ date: day(retention.date) })}
+					<div className="flex flex-wrap items-center gap-4">
+						<div className="min-w-56 flex-1">
+							<h3 id="retention" className="font-bold">
+								{m.retention_title()}
+							</h3>
+							<p className="text-sm text-muted-foreground">
+								{retention.doneAt
+									? m.retention_done({
+											date: day(new Date(retention.doneAt).toISOString().slice(0, 10)),
+										})
+									: m.retention_scheduled({ date: day(retention.date) })}
 							</p>
-							{retention.canAnonymise &&
-								(confirming ? (
-									<div className="flex flex-col gap-3 rounded-lg bg-tint-warning p-4">
-										<p>{m.retention_confirm()}</p>
-										<div className="flex flex-wrap gap-2">
-											<Button variant="destructive" disabled={pending} onClick={anonymise}>
-												{m.retention_anonymise_now()}
-											</Button>
-											<Button variant="ghost" onClick={() => setConfirming(false)}>
-												{m.cancel()}
-											</Button>
-										</div>
-									</div>
-								) : (
-									<div>
-										<Button
-											variant="outline"
-											size="sm"
-											className="text-destructive hover:text-destructive"
-											onClick={() => setConfirming(true)}
-										>
-											{m.retention_anonymise_now()}
-										</Button>
-									</div>
-								))}
-						</>
+						</div>
+						{!retention.doneAt && retention.canAnonymise && !confirming && (
+							<Button
+								variant="outline"
+								size="sm"
+								className="text-destructive hover:text-destructive"
+								onClick={() => setConfirming(true)}
+							>
+								{m.retention_anonymise_now()}
+							</Button>
+						)}
+					</div>
+					{confirming && (
+						<div className="flex flex-col gap-3 rounded-lg bg-tint-warning p-4">
+							<p>{m.retention_confirm()}</p>
+							<div className="flex flex-wrap gap-2">
+								<Button variant="destructive" size="sm" disabled={pending} onClick={anonymise}>
+									{m.retention_anonymise_now()}
+								</Button>
+								<Button variant="ghost" size="sm" onClick={() => setConfirming(false)}>
+									{m.cancel()}
+								</Button>
+							</div>
+						</div>
 					)}
 					<FormError message={error} />
 				</div>

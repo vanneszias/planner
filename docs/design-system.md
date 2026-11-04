@@ -102,11 +102,11 @@ Organizers can set a logo and one accent colour per event (MVP scope). The accen
 
 ## Typography
 
-| Role    | Face                                 | Why                                                                                                              | Use                                                                                    |
-| ------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| Display | **Unbounded** (OFL)                  | Wide and rounded, the feel of a hand-lettered festival poster; youthful without being childish                   | Event name, day headings, the big "next up" time. Never in buttons, forms or body text |
-| Body    | **Atkinson Hyperlegible Next** (OFL) | Designed by the Braille Institute for low-vision legibility; distinct letterforms (Il1, 0O); a quiet, human face | Everything else                                                                        |
-| Utility | **Atkinson Hyperlegible Mono** (OFL) | Same family, tabular figures                                                                                     | Times, seat counts, participant codes, data tables                                     |
+| Role    | Face                                 | Why                                                                                                                           | Use                                                                                    |
+| ------- | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| Display | **Unbounded** (OFL)                  | Wide and rounded, the feel of a hand-lettered festival poster; youthful without being childish                                | Event name, day headings, the big "next up" time. Never in buttons, forms or body text |
+| Body    | **Inter** (OFL)                      | Tuned for screens, with tabular figures; the `cv05` (tailed l) and `cv08` (serifed I) alternates are on, so Il1 stay distinct | Everything else, including times and counts (`tabular-nums`)                           |
+| Utility | **Atkinson Hyperlegible Mono** (OFL) | Braille Institute design; its slashed zero keeps 0 and O apart where it matters most                                          | Participant codes, URLs                                                                |
 
 - **Self-host all fonts** as Worker static assets. No Google Fonts CDN: it sends
   visitor IPs to a third party, which a German court (Munich, 2022) found to
@@ -117,15 +117,15 @@ Organizers can set a logo and one accent colour per event (MVP scope). The accen
 
 Type scale (rem, 1.25 ratio, body 1rem / 16px minimum on mobile):
 
-| Token     | Size           | Face / weight                       |
-| --------- | -------------- | ----------------------------------- |
-| `display` | 2.75 (clamped) | Unbounded 600                       |
-| `h1`      | 1.95           | Unbounded 500                       |
-| `h2`      | 1.56           | Atkinson Next 700                   |
-| `h3`      | 1.25           | Atkinson Next 700                   |
-| `body`    | 1.0            | Atkinson Next 400, line-height 1.55 |
-| `small`   | 0.875          | Atkinson Next 400                   |
-| `time`    | 1.0 / 1.25     | Atkinson Mono 500, tabular          |
+| Token     | Size           | Face / weight               |
+| --------- | -------------- | --------------------------- |
+| `display` | 2.75 (clamped) | Unbounded 600               |
+| `h1`      | 1.95           | Unbounded 500               |
+| `h2`      | 1.56           | Inter 700                   |
+| `h3`      | 1.25           | Inter 700                   |
+| `body`    | 1.0            | Inter 400, line-height 1.55 |
+| `small`   | 0.875          | Inter 400                   |
+| `time`    | 1.0 / 1.25     | Inter 700, tabular-nums     |
 
 ## Shape, space, depth
 

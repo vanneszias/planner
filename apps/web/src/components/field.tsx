@@ -64,7 +64,7 @@ export function FieldSelect({ className, children, ...props }: ComponentProps<'s
 	return (
 		<div className={cn('relative', className)}>
 			<select
-				className="h-11 w-full cursor-pointer appearance-none rounded-md border border-input bg-card pr-10 pl-3 text-base shadow-xs"
+				className="h-10 w-full cursor-pointer appearance-none rounded-md border border-input bg-card pr-10 pl-3 text-base font-normal shadow-xs aria-invalid:border-destructive"
 				{...props}
 			>
 				{children}
@@ -77,11 +77,36 @@ export function FieldSelect({ className, children, ...props }: ComponentProps<'s
 	)
 }
 
-/** Cancel then submit, right-aligned on wider screens; full width stacked on phones. */
+/**
+ * Cancel then submit, right-aligned on wider screens; full width stacked on phones.
+ * Sticks to the bottom of a scrolling dialog so the actions stay in reach.
+ */
 export function FormActions({ children }: { children: ReactNode }) {
 	return (
-		<div className="flex flex-col-reverse gap-2 border-t border-border pt-5 sm:flex-row sm:justify-end">
+		<div className="sticky -bottom-6 z-10 -mx-6 -mb-6 flex justify-end gap-2 border-t border-border bg-card px-6 py-4 max-sm:[&>*]:flex-1">
 			{children}
+		</div>
+	)
+}
+
+/** A FieldInput joined to a fixed prefix, e.g. the "/organization/" part of a web address. */
+export function PrefixedInput({
+	prefix,
+	className,
+	...props
+}: ComponentProps<typeof FieldInput> & { prefix: string }) {
+	return (
+		<div className="flex h-10 min-w-0 items-stretch overflow-hidden rounded-md border border-input bg-card shadow-xs focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-ring has-aria-invalid:border-destructive">
+			<span className="flex shrink-0 items-center border-r border-border bg-accent px-3 font-mono text-sm whitespace-nowrap text-muted-foreground">
+				{prefix}
+			</span>
+			<FieldInput
+				className={cn(
+					'h-full min-w-0 rounded-none border-0 font-mono shadow-none focus-visible:outline-none',
+					className,
+				)}
+				{...props}
+			/>
 		</div>
 	)
 }
