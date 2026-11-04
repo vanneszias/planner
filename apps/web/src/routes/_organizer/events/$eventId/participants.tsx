@@ -168,9 +168,14 @@ function Participants() {
 			<PageToolbar summary={m.participants_count({ count: String(participants.length) })}>
 				{canWrite && (
 					<>
-						<Button variant="outline" onClick={() => setPanel('import')}>
+						<Button
+							variant="outline"
+							aria-label={m.import_csv()}
+							title={m.import_csv()}
+							onClick={() => setPanel('import')}
+						>
 							<Upload />
-							{m.import_csv()}
+							<span className="max-sm:hidden">{m.import_csv()}</span>
 						</Button>
 						<Button onClick={() => setPanel('add')}>
 							<UserPlus />
@@ -253,8 +258,8 @@ function Participants() {
 				<EmptyState icon={<Users />} title={m.participants_empty()} />
 			) : (
 				<>
-					<div className="flex flex-wrap items-center gap-2">
-						<div className="relative min-w-60 flex-1">
+					<div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
+						<div className="relative col-span-2 min-w-60 flex-1">
 							<Search
 								aria-hidden
 								className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
@@ -274,7 +279,7 @@ function Participants() {
 						{ageGroups.length > 0 && (
 							<FieldSelect
 								aria-label={m.filter_age_group()}
-								className="w-full sm:w-44"
+								className="min-w-0 sm:w-44"
 								value={ageFilter}
 								onChange={(e) => setAgeFilter(e.target.value)}
 							>
@@ -290,7 +295,7 @@ function Participants() {
 						)}
 						<FieldSelect
 							aria-label={m.filter_status()}
-							className="w-full sm:w-48"
+							className="min-w-0 sm:w-48"
 							value={statusFilter}
 							onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
 						>
@@ -381,7 +386,7 @@ function Participants() {
 										)}
 										<td className="p-3">
 											<span className="block font-bold">{p.displayName || m.anonymous()}</span>
-											<span className="block text-muted-foreground break-all md:hidden">
+											<span className="block max-w-[52vw] truncate text-muted-foreground md:hidden">
 												{p.email ?? p.guardianEmail}
 											</span>
 											<span className="block text-muted-foreground">

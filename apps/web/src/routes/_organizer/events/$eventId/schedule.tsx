@@ -20,7 +20,8 @@ export const Route = createFileRoute('/_organizer/events/$eventId/schedule')({
 const eventRoute = getRouteApi('/_organizer/events/$eventId')
 
 function Schedule() {
-	const { event, workshops, sessions, conflicts, canEdit } = eventRoute.useLoaderData()
+	const { event, workshops, sessions, seats, conflicts, canEdit } = eventRoute.useLoaderData()
+	const booking = event.mode === 'booking'
 	const router = useRouter()
 	const [adding, setAdding] = useState(false)
 	const [editing, setEditing] = useState<SessionRow | null>(null)
@@ -89,8 +90,7 @@ function Schedule() {
 									return (
 										<li
 											key={session.id}
-											className="group flex flex-col gap-2 rounded-lg border-l-4 bg-card py-3 pr-2 pl-3 shadow-card"
-											style={{ borderLeftColor: `var(--marker-${session.markerColor})` }}
+											className="group flex flex-col gap-2 rounded-lg bg-card py-3 pr-2 pl-3 shadow-card"
 										>
 											<div className="flex items-start gap-2.5">
 												<Marker
@@ -102,8 +102,26 @@ function Schedule() {
 													<p className="truncate font-bold leading-snug">{session.workshopTitle}</p>
 													<p className="text-sm text-muted-foreground">
 														{session.room ?? m.no_room()} ·{' '}
-														{m.places({ count: String(session.capacity) })}
+														{booking
+															? m.seats_taken({
+																	taken: String(seats[session.id] ?? 0),
+																	capacity: String(session.capacity),
+																})
+															: m.places({ count: String(session.capacity) })}
 													</p>
+													{booking && (
+														<span
+															className="mt-1.5 block h-1 overflow-hidden rounded-full bg-accent"
+															aria-hidden
+														>
+															<span
+																className="block h-full rounded-full bg-primary"
+																style={{
+																	width: `${Math.min(100, ((seats[session.id] ?? 0) / Math.max(1, session.capacity)) * 100)}%`,
+																}}
+															/>
+														</span>
+													)}
 												</div>
 												{canEdit && (
 													<RowActions

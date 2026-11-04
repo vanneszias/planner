@@ -4,7 +4,7 @@ import { Dialog } from '@app/ui/components/dialog'
 import { Marker } from '@app/ui/components/marker'
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { cn } from 'cn'
-import { Ban, CalendarDays, Check, Hourglass } from 'lucide-react'
+import { Ban, CalendarDays, Check, CircleCheck, Hourglass, TriangleAlert, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { BrandMark } from '#/components/brand-mark'
 import { DayStrip } from '#/components/event/day-strip'
@@ -80,15 +80,16 @@ function EventPage() {
 		me && page.published ? 'myday' : 'programme',
 	)
 	const [registeringFor, setRegisteringFor] = useState<string | 'none' | null>(null)
-	const [notice, setNotice] = useState<string | null>(null)
+	const [notice, setNotice] = useState<{ text: string; ok: boolean } | null>(null)
 	const [busy, setBusy] = useState<string | null>(null)
 	const [cancelled, setCancelled] = useState(false)
 
 	const workshopById = new Map(workshops.map((w) => [w.id, w]))
-	const registeringWorkshop =
+	const registeringSession =
 		registeringFor && registeringFor !== 'none'
-			? workshopById.get(sessions.find((s) => s.id === registeringFor)?.workshopId ?? '')
+			? sessions.find((s) => s.id === registeringFor)
 			: undefined
+	const registeringWorkshop = workshopById.get(registeringSession?.workshopId ?? '')
 	const booked = new Set(me?.bookings.map((b) => b.sessionId))
 	const waitlisted = new Map(me?.waitlist.map((w) => [w.sessionId, w.position]))
 	const mine = sessions.filter((s) => booked.has(s.id))
@@ -135,7 +136,11 @@ function EventPage() {
 		const result = await run()
 		setBusy(null)
 		setNotice(
-			result.ok ? success : result.reason ? (refusals[result.reason] ?? m.error_generic)() : null,
+			result.ok
+				? { text: success, ok: true }
+				: result.reason
+					? { text: (refusals[result.reason] ?? m.error_generic)(), ok: false }
+					: null,
 		)
 		refocus.current = sessionId
 		await router.invalidate()
@@ -192,8 +197,36 @@ function EventPage() {
 		)
 	}
 
+	const intro =
+		rankingMode && !page.published && rankingOpen
+			? { title: m.rank_title(), body: m.register_intro() }
+			: bookingMode && open
+				? {
+						title: m.book_title(),
+						body: m.book_intro({ count: String(event.sessionsPerParticipant) }),
+					}
+				: null
+	const rail = me ? null : (
+		<>
+			{intro && (
+				<section className="flex flex-col items-start gap-3 rounded-xl bg-card p-5 shadow-card">
+					<h2 className="font-display text-xl font-semibold">{intro.title}</h2>
+					<p className="text-muted-foreground">{intro.body}</p>
+					<Button className="max-lg:self-start lg:w-full" onClick={() => setRegisteringFor('none')}>
+						{m.register_only()}
+					</Button>
+				</section>
+			)}
+			<ReturningForms
+				eventId={event.id}
+				turnstileSiteKey={page.turnstileSiteKey}
+				onSignedIn={() => router.invalidate()}
+			/>
+		</>
+	)
+
 	return (
-		<Shell page={page}>
+		<Shell page={page} aside={rail}>
 			{me && cancel && (
 				<section className="flex flex-col gap-3 rounded-xl bg-tint-warning p-5">
 					<p>{m.cancel_registration_confirm({ event: event.name })}</p>
@@ -253,19 +286,52 @@ function EventPage() {
 				</div>
 			)}
 
-			<p
-				aria-live="polite"
-				className="flex items-center gap-2 rounded-lg bg-accent px-4 py-3 font-bold empty:hidden"
-				role="status"
-			>
-				{notice}
-			</p>
+			<div aria-live="polite" role="status">
+				{notice && (
+					<p
+						className={cn(
+							'flex items-start gap-2.5 rounded-lg py-3 pr-2 pl-4 font-bold',
+							notice.ok ? 'bg-tint-success' : 'bg-tint-warning',
+						)}
+					>
+						{notice.ok ? (
+							<CircleCheck aria-hidden className="mt-0.5 size-5 shrink-0 text-success" />
+						) : (
+							<TriangleAlert aria-hidden className="mt-0.5 size-5 shrink-0" />
+						)}
+						<span className="flex-1">{notice.text}</span>
+						<Button
+							variant="ghost"
+							size="icon-sm"
+							className="-my-1"
+							aria-label={m.close()}
+							onClick={() => setNotice(null)}
+						>
+							<X />
+						</Button>
+					</p>
+				)}
+			</div>
 
 			<Dialog
 				open={registeringFor !== null}
 				onOpenChange={(isOpen) => !isOpen && setRegisteringFor(null)}
 				title={rankingMode ? m.register_title_rank() : m.register_title()}
-				description={m.register_intro()}
+				description={
+					registeringSession && registeringWorkshop ? (
+						<>
+							<span className="block font-bold text-foreground">
+								{registeringWorkshop.title} ·{' '}
+								{formatShortDayTime(registeringSession.startsAt, event.timezone)}–
+								{formatTime(registeringSession.endsAt, event.timezone)}
+								{registeringSession.room ? ` · ${registeringSession.room}` : ''}
+							</span>
+							{m.register_intro()}
+						</>
+					) : (
+						m.register_intro()
+					)
+				}
 				icon={
 					registeringWorkshop && (
 						<Marker
@@ -287,7 +353,9 @@ function EventPage() {
 						onDone={async (message, refusal) => {
 							setRegisteringFor(null)
 							setNotice(
-								refusal ? `${message} ${(refusals[refusal] ?? m.error_generic)()}` : message,
+								refusal
+									? { text: `${message} ${(refusals[refusal] ?? m.error_generic)()}`, ok: false }
+									: { text: message, ok: true },
 							)
 							await router.invalidate()
 						}}
@@ -322,37 +390,7 @@ function EventPage() {
 					) : (
 						<EmptyState icon={<Hourglass />} title={m.ranking_waiting()} />
 					)
-				) : (
-					rankingOpen && (
-						<section className="flex flex-wrap items-center gap-4 rounded-xl bg-card p-5 shadow-card">
-							<div className="min-w-56 flex-1">
-								<h2 className="font-display text-xl font-semibold">{m.rank_title()}</h2>
-								<p className="text-muted-foreground">{m.register_intro()}</p>
-							</div>
-							<Button onClick={() => setRegisteringFor('none')}>{m.register_only()}</Button>
-						</section>
-					)
-				))}
-
-			{bookingMode && !me && open && (
-				<section className="flex flex-wrap items-center gap-4 rounded-xl bg-card p-5 shadow-card">
-					<div className="min-w-56 flex-1">
-						<h2 className="font-display text-xl font-semibold">{m.book_title()}</h2>
-						<p className="text-muted-foreground">
-							{m.book_intro({ count: String(event.sessionsPerParticipant) })}
-						</p>
-					</div>
-					<Button onClick={() => setRegisteringFor('none')}>{m.register_only()}</Button>
-				</section>
-			)}
-
-			{!me && (
-				<ReturningForms
-					eventId={event.id}
-					turnstileSiteKey={page.turnstileSiteKey}
-					onSignedIn={() => router.invalidate()}
-				/>
-			)}
+				) : null)}
 
 			{tab === 'myday' && me ? (
 				mine.length === 0 ? (
@@ -400,7 +438,7 @@ function EventPage() {
 					{groupByDay(sessions, event.timezone).length > 1 && (
 						<nav
 							aria-label={m.jump_to_day()}
-							className="sticky top-0 z-10 -mx-4 flex gap-2 overflow-x-auto bg-background/95 px-4 py-2 backdrop-blur [scrollbar-width:none]"
+							className="sticky top-0 z-10 -mx-4 flex gap-2 overflow-x-auto bg-background/95 px-4 py-2 backdrop-blur [scrollbar-width:none] lg:mx-0 lg:px-0"
 						>
 							{groupByDay(sessions, event.timezone).map((day, index) => (
 								<a
@@ -604,13 +642,30 @@ function EventPage() {
 	)
 }
 
-/** Header and outer layout shared by every state of the page. */
-function Shell({ page, children }: { page: Page; children: React.ReactNode }) {
+/**
+ * Header and outer layout shared by every state of the page. With an `aside`
+ * (register and returning-participant actions), wide screens get a sticky
+ * left rail beside the programme.
+ */
+function Shell({
+	page,
+	aside,
+	children,
+}: {
+	page: Page
+	aside?: React.ReactNode
+	children: React.ReactNode
+}) {
 	const { event } = page
 	return (
 		<div className="min-h-dvh">
 			<div className="h-1.5" style={{ background: event.accentColor ?? 'var(--kelp)' }} />
-			<main className="mx-auto flex max-w-2xl flex-col gap-6 px-4 pt-4 pb-10">
+			<div
+				className={cn(
+					'mx-auto flex flex-col gap-6 px-4 pt-4 pb-10',
+					aside ? 'max-w-5xl' : 'max-w-2xl',
+				)}
+			>
 				<div className="flex items-center justify-between">
 					<span className="flex items-center gap-2 text-sm font-bold text-muted-foreground">
 						<BrandMark className="size-5" />
@@ -618,7 +673,7 @@ function Shell({ page, children }: { page: Page; children: React.ReactNode }) {
 					</span>
 					<LanguageSwitch />
 				</div>
-				<header className="flex flex-col gap-3 pt-2">
+				<header className="flex max-w-3xl flex-col gap-3 pt-2">
 					<h1
 						lang={event.defaultLocale}
 						className="font-display text-[clamp(1.875rem,7vw,2.75rem)] leading-[1.1] font-semibold text-balance wrap-break-word"
@@ -632,27 +687,22 @@ function Shell({ page, children }: { page: Page; children: React.ReactNode }) {
 						</span>
 						<span>{m.organized_by({ name: event.organizationName })}</span>
 					</p>
-					<MarkerRow workshops={page.workshops} />
+					{event.description && (
+						<p lang={event.defaultLocale} className="whitespace-pre-line">
+							{event.description}
+						</p>
+					)}
 				</header>
-				{event.description && (
-					<p lang={event.defaultLocale} className="whitespace-pre-line">
-						{event.description}
-					</p>
-				)}
-				{children}
-			</main>
-		</div>
-	)
-}
-
-/** A strip of the programme's stickers: the page's one burst of colour. */
-function MarkerRow({ workshops }: { workshops: Page['workshops'] }) {
-	if (workshops.length === 0) return null
-	return (
-		<div aria-hidden className="flex flex-wrap gap-1.5 pt-1">
-			{workshops.slice(0, 16).map((w) => (
-				<Marker key={w.id} color={w.markerColor} shape={w.markerShape} className="size-4" />
-			))}
+				<div
+					className={cn(
+						'flex flex-col gap-6',
+						aside && 'lg:grid lg:grid-cols-[19rem_minmax(0,1fr)] lg:items-start lg:gap-8',
+					)}
+				>
+					{aside && <aside className="flex flex-col gap-3 lg:sticky lg:top-6">{aside}</aside>}
+					<main className="flex min-w-0 flex-col gap-6">{children}</main>
+				</div>
+			</div>
 		</div>
 	)
 }

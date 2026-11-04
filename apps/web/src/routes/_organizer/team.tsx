@@ -55,27 +55,32 @@ function Team() {
 				</h1>
 			</div>
 
-			<ul className="flex flex-col gap-2">
+			<ul className="divide-y divide-border rounded-xl bg-card shadow-card">
 				{members.map((member) => (
-					<li
-						key={member.memberId}
-						className="flex flex-wrap items-center gap-3 rounded-xl bg-card shadow-card p-4"
-					>
-						<div className="flex-1">
+					<li key={member.memberId} className="flex flex-wrap items-center gap-3 px-4 py-3 sm:px-5">
+						<span
+							aria-hidden
+							className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent font-bold text-muted-foreground uppercase"
+						>
+							{(member.name || member.email).slice(0, 1)}
+						</span>
+						<div className="min-w-0 flex-1">
 							<p className="font-bold">
 								{member.name || member.email}
 								{member.userId === currentUserId && (
 									<span className="font-normal text-muted-foreground"> ({m.you()})</span>
 								)}
 							</p>
-							<p className="text-sm text-muted-foreground">{member.email}</p>
+							<p className="truncate text-sm text-muted-foreground">{member.email}</p>
 						</div>
-						<span className="rounded-full bg-accent px-3 py-1 text-sm font-bold">
+						<span className="rounded-full bg-accent px-2.5 py-0.5 text-sm font-bold">
 							{roleName(member.role)}
 						</span>
 						{canManage && member.userId !== currentUserId && (
 							<Button
 								variant="ghost"
+								size="sm"
+								className="text-muted-foreground hover:bg-tint-danger hover:text-destructive"
 								aria-label={`${m.remove_member()}: ${member.name || member.email}`}
 								onClick={() =>
 									setRemoving({ id: member.memberId, name: member.name || member.email })
@@ -119,8 +124,12 @@ function Team() {
 			)}
 
 			<FormError message={error} />
-			{canManage && organization && <OrganizationForm organization={organization} />}
-			{canManage && organization && <InviteForm organizationId={organization.id} />}
+			{canManage && organization && (
+				<div className="grid items-start gap-6 lg:grid-cols-2">
+					<InviteForm organizationId={organization.id} />
+					<OrganizationForm organization={organization} />
+				</div>
+			)}
 			<ConfirmDialog
 				open={removing !== null}
 				onOpenChange={(open) => !open && setRemoving(null)}

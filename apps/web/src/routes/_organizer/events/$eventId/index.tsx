@@ -1,16 +1,7 @@
 import { Button } from '@app/ui/components/button'
 import { createFileRoute, getRouteApi, Link, useRouter } from '@tanstack/react-router'
 import { cn } from 'cn'
-import {
-	CalendarClock,
-	Check,
-	ChevronRight,
-	Copy,
-	ExternalLink,
-	Shapes,
-	ShieldCheck,
-	Users,
-} from 'lucide-react'
+import { Check, ChevronRight, Copy, ExternalLink, ShieldCheck } from 'lucide-react'
 import { useState } from 'react'
 import { FormError } from '#/components/auth-shell'
 import { actionMessage } from '#/lib/errors'
@@ -61,26 +52,52 @@ function Overview() {
 
 	// Once everything is done the checklist has nothing to say: it steps aside.
 	const ready = published && steps.every((step) => step.done)
+	const participation = Route.useLoaderData()
+	const ranks = event.mode === 'ranking'
 	const places = sessions.reduce((sum, session) => sum + session.capacity, 0)
-	const stats = [
-		{ label: m.stat_workshops(), value: workshops.length, icon: <Shapes /> },
-		{ label: m.stat_sessions(), value: sessions.length, icon: <CalendarClock /> },
-		{ label: m.stat_places(), value: places, icon: <Users /> },
+	const stats: { label: string; value: number; of?: number; sub?: string }[] = [
+		{ label: m.stat_registered(), value: participation.registrations },
+		ranks
+			? { label: m.stat_ranked(), value: participation.ranked, of: participation.registrations }
+			: { label: m.stat_booked(), value: participation.booked, of: places },
+		{
+			label: m.stat_programme(),
+			value: sessions.length,
+			sub: m.stat_programme_sub({ workshops: String(workshops.length), places: String(places) }),
+		},
 	]
 
 	return (
 		<div className="flex flex-col gap-6">
-			<dl className="grid grid-cols-3 gap-2 sm:gap-4">
+			<dl className="grid gap-3 sm:grid-cols-3 sm:gap-4">
 				{stats.map((stat) => (
 					<div
 						key={stat.label}
-						className="flex flex-col gap-1 rounded-xl bg-card shadow-card p-4 sm:p-5"
+						className="flex flex-col gap-1 rounded-xl bg-card p-4 shadow-card sm:p-5"
 					>
-						<dt className="flex items-center gap-2 text-sm font-bold text-muted-foreground [&_svg]:size-4">
-							<span className="max-sm:hidden">{stat.icon}</span>
-							{stat.label}
-						</dt>
-						<dd className="text-2xl font-bold tabular-nums sm:text-3xl">{stat.value}</dd>
+						<dt className="text-sm font-bold text-muted-foreground">{stat.label}</dt>
+						<dd className="flex items-baseline gap-1.5">
+							<span className="text-3xl font-bold tabular-nums">{stat.value}</span>
+							{stat.of !== undefined && (
+								<span className="text-sm text-muted-foreground tabular-nums">
+									{m.stat_of({ total: String(stat.of) })}
+								</span>
+							)}
+							{stat.label === m.stat_programme() && (
+								<span className="text-sm text-muted-foreground">
+									{m.stat_sessions().toLowerCase()}
+								</span>
+							)}
+						</dd>
+						{stat.of !== undefined && (
+							<dd className="mt-1 h-1.5 overflow-hidden rounded-full bg-accent" aria-hidden>
+								<span
+									className="block h-full rounded-full bg-primary"
+									style={{ width: `${stat.of ? Math.min(100, (stat.value / stat.of) * 100) : 0}%` }}
+								/>
+							</dd>
+						)}
+						{stat.sub && <dd className="text-sm text-muted-foreground">{stat.sub}</dd>}
 					</div>
 				))}
 			</dl>
@@ -151,24 +168,55 @@ function Overview() {
 								</a>
 							</Button>
 						)}
-						{canPublish && (
-							<Button
-								variant={published ? 'outline' : 'default'}
-								size={published ? 'sm' : 'default'}
-								className={published ? 'text-destructive hover:text-destructive' : undefined}
-								disabled={pending}
-								onClick={() => setStatus(published ? 'draft' : 'published')}
-							>
-								{published ? m.unpublish_button() : m.publish_button()}
+						{canPublish && !published && (
+							<Button disabled={pending} onClick={() => setStatus('published')}>
+								{m.publish_button()}
 							</Button>
 						)}
 					</div>
 					<FormError message={error} />
 				</section>
-				{ready && <Retention eventId={event.id} />}
+				{ready && (
+					<section
+						aria-labelledby="next-step"
+						className="flex min-w-0 flex-col gap-3 rounded-xl bg-card p-5 shadow-card"
+					>
+						<h2 id="next-step" className="text-lg font-bold">
+							{m.next_title()}
+						</h2>
+						<p className="text-muted-foreground">
+							{ranks
+								? m.next_rank_body({
+										ranked: String(participation.ranked),
+										total: String(participation.registrations),
+									})
+								: m.next_book_body({
+										booked: String(participation.booked),
+										places: String(places),
+									})}
+						</p>
+						<div className="mt-auto">
+							<Button asChild variant="outline" size="sm">
+								<Link
+									to={ranks ? '/events/$eventId/allocation' : '/events/$eventId/check-in'}
+									params={params}
+								>
+									{ranks ? m.next_rank_action() : m.next_book_action()}
+									<ChevronRight />
+								</Link>
+							</Button>
+						</div>
+					</section>
+				)}
 			</div>
 
-			{!ready && <Retention eventId={event.id} />}
+			<Manage
+				eventId={event.id}
+				published={published}
+				canPublish={canPublish}
+				pending={pending}
+				onUnpublish={() => setStatus('draft')}
+			/>
 		</div>
 	)
 }
@@ -194,7 +242,19 @@ function CopyButton({ text }: { text: () => string }) {
 }
 
 /** When participant data goes (D6, D20), and "Anonymise now" (journeys.md, O9). */
-function Retention({ eventId }: { eventId: string }) {
+function Manage({
+	eventId,
+	published,
+	canPublish,
+	pending: unpublishing,
+	onUnpublish,
+}: {
+	eventId: string
+	published: boolean
+	canPublish: boolean
+	pending: boolean
+	onUnpublish: () => void
+}) {
 	const retention = Route.useLoaderData()
 	const router = useRouter()
 	const [confirming, setConfirming] = useState(false)
@@ -213,51 +273,74 @@ function Retention({ eventId }: { eventId: string }) {
 	}
 
 	return (
-		<section
-			aria-labelledby="retention"
-			className="flex flex-col gap-3 rounded-xl bg-card shadow-card p-5"
-		>
-			<h2 id="retention" className="flex items-center gap-2 text-lg font-bold">
-				<ShieldCheck aria-hidden className="size-5 text-muted-foreground" />
-				{m.retention_title()}
+		<section aria-labelledby="manage" className="flex flex-col gap-4">
+			<h2 id="manage" className="text-lg font-bold">
+				{m.manage_title()}
 			</h2>
-			{retention.doneAt ? (
-				<p>
-					{m.retention_done({ date: day(new Date(retention.doneAt).toISOString().slice(0, 10)) })}
-				</p>
-			) : (
-				<>
-					<p className="text-muted-foreground">
-						{m.retention_scheduled({ date: day(retention.date) })}
-					</p>
-					{retention.canAnonymise &&
-						(confirming ? (
-							<div className="flex flex-col gap-3 rounded-lg bg-tint-warning p-4">
-								<p>{m.retention_confirm()}</p>
-								<div className="flex flex-wrap gap-2">
-									<Button variant="destructive" disabled={pending} onClick={anonymise}>
-										{m.retention_anonymise_now()}
-									</Button>
-									<Button variant="ghost" onClick={() => setConfirming(false)}>
-										{m.cancel()}
-									</Button>
-								</div>
-							</div>
-						) : (
-							<div>
-								<Button
-									variant="outline"
-									size="sm"
-									className="text-destructive hover:text-destructive"
-									onClick={() => setConfirming(true)}
-								>
-									{m.retention_anonymise_now()}
-								</Button>
-							</div>
-						))}
-				</>
-			)}
-			<FormError message={error} />
+			<div className="divide-y divide-border rounded-xl bg-card shadow-card">
+				{published && canPublish && (
+					<div className="flex flex-wrap items-center gap-4 p-5">
+						<div className="min-w-56 flex-1">
+							<h3 className="font-bold">{m.unpublish_title()}</h3>
+							<p className="text-sm text-muted-foreground">{m.unpublish_body()}</p>
+						</div>
+						<Button
+							variant="outline"
+							size="sm"
+							className="text-destructive hover:text-destructive"
+							disabled={unpublishing}
+							onClick={onUnpublish}
+						>
+							{m.unpublish_button()}
+						</Button>
+					</div>
+				)}
+				<div className="flex flex-col gap-3 p-5">
+					<h3 id="retention" className="flex items-center gap-2 font-bold">
+						<ShieldCheck aria-hidden className="size-4 text-muted-foreground" />
+						{m.retention_title()}
+					</h3>
+					{retention.doneAt ? (
+						<p>
+							{m.retention_done({
+								date: day(new Date(retention.doneAt).toISOString().slice(0, 10)),
+							})}
+						</p>
+					) : (
+						<>
+							<p className="text-muted-foreground">
+								{m.retention_scheduled({ date: day(retention.date) })}
+							</p>
+							{retention.canAnonymise &&
+								(confirming ? (
+									<div className="flex flex-col gap-3 rounded-lg bg-tint-warning p-4">
+										<p>{m.retention_confirm()}</p>
+										<div className="flex flex-wrap gap-2">
+											<Button variant="destructive" disabled={pending} onClick={anonymise}>
+												{m.retention_anonymise_now()}
+											</Button>
+											<Button variant="ghost" onClick={() => setConfirming(false)}>
+												{m.cancel()}
+											</Button>
+										</div>
+									</div>
+								) : (
+									<div>
+										<Button
+											variant="outline"
+											size="sm"
+											className="text-destructive hover:text-destructive"
+											onClick={() => setConfirming(true)}
+										>
+											{m.retention_anonymise_now()}
+										</Button>
+									</div>
+								))}
+						</>
+					)}
+					<FormError message={error} />
+				</div>
+			</div>
 		</section>
 	)
 }

@@ -7,6 +7,7 @@ import { Plus, Shapes } from 'lucide-react'
 import { type FormEvent, useState } from 'react'
 import { FormError } from '#/components/auth-shell'
 import { Field, FieldInput, FormActions } from '#/components/field'
+import { MarkerPicker } from '#/components/marker-picker'
 import { EmptyState, PageToolbar, RowActions } from '#/components/page'
 import { actionMessage } from '#/lib/errors'
 import { m } from '#/paraglide/messages'
@@ -54,7 +55,10 @@ function Workshops() {
 						const groups = (workshopAgeGroups[workshop.id] ?? []).map((id) => labelOf.get(id))
 						const stat = stats.get(workshop.id)
 						return (
-							<li key={workshop.id} className="flex items-start gap-3 px-4 py-3">
+							<li
+								key={workshop.id}
+								className="group flex items-start gap-3 px-4 py-3 hover:bg-accent/30"
+							>
 								<Marker
 									color={workshop.markerColor}
 									shape={workshop.markerShape}
@@ -152,12 +156,16 @@ function WorkshopForm({
 		facilitatorName: workshop?.facilitatorName ?? '',
 		category: workshop?.category ?? '',
 		ageGroupIds: workshop ? (workshopAgeGroups[workshop.id] ?? []) : [],
+		markerColor: workshop?.markerColor,
+		markerShape: workshop?.markerShape,
 	})
 	const [issues, setIssues] = useState<Record<string, string>>({})
 	const [error, setError] = useState<string | null>(null)
 	const [pending, setPending] = useState(false)
-	const set = (key: Exclude<keyof WorkshopInput, 'ageGroupIds'>, value: string) =>
-		setValues((v) => ({ ...v, [key]: value }))
+	const set = (
+		key: Exclude<keyof WorkshopInput, 'ageGroupIds' | 'markerColor' | 'markerShape'>,
+		value: string,
+	) => setValues((v) => ({ ...v, [key]: value }))
 
 	async function submit(event: FormEvent) {
 		event.preventDefault()
@@ -216,6 +224,13 @@ function WorkshopForm({
 					/>
 				</Field>
 			</div>
+			{workshop && values.markerColor && values.markerShape && (
+				<MarkerPicker
+					color={values.markerColor}
+					shape={values.markerShape}
+					onChange={(marker) => setValues((v) => ({ ...v, ...marker }))}
+				/>
+			)}
 			{ageGroups.length > 0 && (
 				<fieldset className="flex flex-col gap-1">
 					<legend className="font-bold">{m.who_can_join()}</legend>

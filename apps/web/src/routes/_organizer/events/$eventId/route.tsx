@@ -1,6 +1,6 @@
-import { createFileRoute, Link, Outlet, useLocation } from '@tanstack/react-router'
+import { createFileRoute, Link, Outlet, useLocation, useNavigate } from '@tanstack/react-router'
 import { CalendarDays } from 'lucide-react'
-import { useEffect, useRef } from 'react'
+import { FieldSelect } from '#/components/field'
 import { StatusLabel } from '#/components/status-label'
 import { formatDateRange } from '#/lib/format'
 import { m } from '#/paraglide/messages'
@@ -12,22 +12,39 @@ export const Route = createFileRoute('/_organizer/events/$eventId')({
 	component: EventLayout,
 })
 
+const routes = {
+	'': '/events/$eventId',
+	'/workshops': '/events/$eventId/workshops',
+	'/schedule': '/events/$eventId/schedule',
+	'/allocation': '/events/$eventId/allocation',
+	'/participants': '/events/$eventId/participants',
+	'/check-in': '/events/$eventId/check-in',
+	'/settings': '/events/$eventId/settings',
+} as const
+type Section = { path: keyof typeof routes; label: string }
+
 function EventLayout() {
 	const { event } = Route.useLoaderData()
 	const params = { eventId: event.id }
-	// On phones the tab row scrolls: keep the current tab in view.
-	const tabs = useRef<HTMLElement>(null)
+	const navigate = useNavigate()
 	const pathname = useLocation({ select: (location) => location.pathname })
-	// biome-ignore lint/correctness/useExhaustiveDependencies: the pathname is what moves the active tab
-	useEffect(() => {
-		const nav = tabs.current
-		const active = nav?.querySelector<HTMLElement>('[aria-current="page"]')
-		if (nav && active)
-			nav.scrollLeft = active.offsetLeft - (nav.clientWidth - active.offsetWidth) / 2
-	}, [pathname])
+	const base = `/events/${event.id}`
+	const sections: Section[] = [
+		{ path: '', label: m.nav_overview() },
+		{ path: '/workshops', label: m.nav_workshops() },
+		{ path: '/schedule', label: m.nav_schedule() },
+		...(event.mode === 'ranking'
+			? [{ path: '/allocation' as const, label: m.nav_allocation() }]
+			: []),
+		{ path: '/participants', label: m.nav_participants() },
+		{ path: '/check-in', label: m.nav_check_in() },
+		{ path: '/settings', label: m.nav_settings() },
+	]
+	const current =
+		sections.find((s) => s.path && pathname.startsWith(`${base}${s.path}`))?.path ?? ''
 	// TanStack marks the current tab with data-status="active" (and aria-current="page").
 	const tab =
-		'-mb-px border-b-2 border-transparent pb-3 text-[0.9375rem] font-bold text-muted-foreground hover:text-foreground data-[status=active]:border-primary data-[status=active]:text-foreground'
+		'-mb-px border-b-2 border-transparent pb-3 text-[0.9375rem] font-bold whitespace-nowrap text-muted-foreground hover:text-foreground data-[status=active]:border-primary data-[status=active]:text-foreground'
 
 	return (
 		<div className="flex flex-col gap-5 sm:gap-6">
@@ -43,34 +60,34 @@ function EventLayout() {
 					</span>
 				</p>
 			</div>
+			{/* Phones: every section in one picker instead of a clipped tab strip. */}
+			<FieldSelect
+				aria-label={m.section_label()}
+				className="sm:hidden print:hidden"
+				value={current}
+				onChange={(e) => navigate({ to: routes[e.target.value as Section['path']], params })}
+			>
+				{sections.map((section) => (
+					<option key={section.path} value={section.path}>
+						{section.label}
+					</option>
+				))}
+			</FieldSelect>
 			<nav
 				aria-label={event.name}
-				ref={tabs}
-				className="print:hidden flex gap-6 overflow-x-auto border-b border-border whitespace-nowrap [scrollbar-width:none] max-sm:[mask-image:linear-gradient(to_right,black_85%,transparent)]"
+				className="flex gap-6 border-b border-border max-sm:hidden print:hidden"
 			>
-				<Link to="/events/$eventId" params={params} activeOptions={{ exact: true }} className={tab}>
-					{m.nav_overview()}
-				</Link>
-				<Link to="/events/$eventId/workshops" params={params} className={tab}>
-					{m.nav_workshops()}
-				</Link>
-				<Link to="/events/$eventId/schedule" params={params} className={tab}>
-					{m.nav_schedule()}
-				</Link>
-				{event.mode === 'ranking' && (
-					<Link to="/events/$eventId/allocation" params={params} className={tab}>
-						{m.nav_allocation()}
+				{sections.map((section) => (
+					<Link
+						key={section.path}
+						to={routes[section.path]}
+						params={params}
+						activeOptions={{ exact: section.path === '' }}
+						className={tab}
+					>
+						{section.label}
 					</Link>
-				)}
-				<Link to="/events/$eventId/participants" params={params} className={tab}>
-					{m.nav_participants()}
-				</Link>
-				<Link to="/events/$eventId/check-in" params={params} className={tab}>
-					{m.nav_check_in()}
-				</Link>
-				<Link to="/events/$eventId/settings" params={params} className={tab}>
-					{m.nav_settings()}
-				</Link>
+				))}
 			</nav>
 			<Outlet />
 		</div>

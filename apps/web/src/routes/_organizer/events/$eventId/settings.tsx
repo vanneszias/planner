@@ -23,7 +23,7 @@ type Moment = { date: string; time: string }
  * (progressive disclosure, journeys.md O2 step 4).
  */
 function Settings() {
-	const { event, window, canEdit } = eventRoute.useLoaderData()
+	const { event, window, canEdit, ageGroups } = eventRoute.useLoaderData()
 	const router = useRouter()
 	const [values, setValues] = useState({
 		name: event.name,
@@ -48,9 +48,23 @@ function Settings() {
 	const [status, setStatus] = useState<string | null>(null)
 	const [error, setError] = useState<string | null>(null)
 	const [pending, setPending] = useState(false)
+	const [slug, setSlug] = useState(event.slug)
+	const [slugIssue, setSlugIssue] = useState<string | undefined>()
+	const [groups, setGroups] = useState<{ id?: string; label: string }[]>(ageGroups)
+	const [groupIssues, setGroupIssues] = useState<Record<string, string>>({})
+	const [dirty, setDirty] = useState(false)
+	/** Any edit: mark the form dirty and clear the last "saved". */
+	const touched =
+		<T,>(apply: (value: T) => void) =>
+		(value: T) => {
+			apply(value)
+			setDirty(true)
+			setStatus(null)
+		}
 
 	const set = <K extends keyof typeof values>(key: K, value: (typeof values)[K]) => {
 		setValues((v) => ({ ...v, [key]: value }))
+		setDirty(true)
 		setStatus(null)
 	}
 	// A half-filled moment means "no window": date and time are both needed.
@@ -61,7 +75,27 @@ function Settings() {
 		formEvent.preventDefault()
 		setError(null)
 		setIssues({})
+		setSlugIssue(undefined)
+		setGroupIssues({})
 		setPending(true)
+		// One save button for the page: address, age groups, then everything else.
+		if (slug !== event.slug) {
+			const renamed = await renameEventSlugFn({ data: { eventId: event.id, slug } })
+			if (!renamed.ok) {
+				setPending(false)
+				return setSlugIssue(renamed.issues?.slug ?? 'required')
+			}
+			setSlug(renamed.data)
+		}
+		const kept = groups.filter((group) => group.label.trim())
+		if (JSON.stringify(kept) !== JSON.stringify(ageGroups)) {
+			const saved = await saveAgeGroupsFn({ data: { eventId: event.id, groups: kept } })
+			if (!saved.ok) {
+				setPending(false)
+				return setGroupIssues(saved.issues ?? {})
+			}
+			setGroups(saved.data)
+		}
 		const payload: UpdateEventInput = { ...values, opens: moment(opens), closes: moment(closes) }
 		const result = await updateEventFn({ data: { eventId: event.id, values: payload } })
 		setPending(false)
@@ -71,6 +105,7 @@ function Settings() {
 			return
 		}
 		setStatus(m.settings_saved())
+		setDirty(false)
 		await router.invalidate()
 	}
 
@@ -184,17 +219,20 @@ function Settings() {
 							id="opens"
 							label={m.opens_label()}
 							value={opens}
-							onChange={setOpens}
+							onChange={touched(setOpens)}
 							error={issues.opens}
 						/>
 						<MomentFields
 							id="closes"
 							label={m.closes_label()}
 							value={closes}
-							onChange={setCloses}
+							onChange={touched(setCloses)}
 							error={issues.closes}
 						/>
 					</Section>
+
+					<WebAddressSection slug={slug} onChange={touched(setSlug)} issue={slugIssue} />
+					<AgeGroupsSection groups={groups} onChange={touched(setGroups)} issues={groupIssues} />
 
 					<details className="group rounded-xl bg-card px-5 py-2 shadow-card open:pb-5">
 						<summary className="flex min-h-12 cursor-pointer list-none items-center gap-2 text-lg font-bold [&::-webkit-details-marker]:hidden">
@@ -303,6 +341,12 @@ function Settings() {
 				{canEdit && (
 					<div className="sticky bottom-0 z-10 -mx-4 flex flex-wrap items-center justify-end gap-4 border-t border-border bg-background/95 px-4 py-3 backdrop-blur">
 						<FormError message={error} />
+						{dirty && (
+							<p className="flex items-center gap-2 text-sm font-bold text-muted-foreground">
+								<span className="size-2 rounded-full bg-[var(--marker-sun)]" aria-hidden />
+								{m.unsaved_changes()}
+							</p>
+						)}
 						<p
 							aria-live="polite"
 							className="flex items-center gap-2 text-sm font-bold empty:hidden"
@@ -316,8 +360,6 @@ function Settings() {
 					</div>
 				)}
 			</form>
-			{canEdit && <WebAddressForm />}
-			{canEdit && <AgeGroupsForm />}
 		</div>
 	)
 }
@@ -346,19 +388,6 @@ function Section({
 			</div>
 			<div className="flex min-w-0 flex-col gap-4">{children}</div>
 		</Tag>
-	)
-}
-
-/** Save button and its confirmation, at the foot of a section that saves on its own. */
-function SectionSave({ children, status }: { children: ReactNode; status: string | null }) {
-	return (
-		<div className="flex flex-wrap items-center gap-3 border-t border-border pt-4">
-			{children}
-			<p aria-live="polite" className="flex items-center gap-2 text-sm font-bold empty:hidden">
-				{status && <Check aria-hidden className="size-4 text-success" strokeWidth={3} />}
-				{status}
-			</p>
-		</div>
 	)
 }
 
@@ -432,35 +461,18 @@ function Checkbox({
 }
 
 /** The event's public address. Renaming keeps old links and QR codes working (D19). */
-function WebAddressForm() {
-	const { event, organizationSlug } = eventRoute.useLoaderData()
-	const router = useRouter()
-	const [slug, setSlug] = useState(event.slug)
-	const [issue, setIssue] = useState<string | undefined>()
-	const [status, setStatus] = useState<string | null>(null)
-	const [pending, setPending] = useState(false)
-
-	async function submit(formEvent: FormEvent) {
-		formEvent.preventDefault()
-		setIssue(undefined)
-		setStatus(null)
-		setPending(true)
-		const result = await renameEventSlugFn({ data: { eventId: event.id, slug } })
-		setPending(false)
-		if (!result.ok) return setIssue(result.issues?.slug ?? 'required')
-		setSlug(result.data)
-		setStatus(m.address_saved())
-		await router.invalidate()
-	}
-
+function WebAddressSection({
+	slug,
+	onChange,
+	issue,
+}: {
+	slug: string
+	onChange: (slug: string) => void
+	issue?: string
+}) {
+	const { organizationSlug } = eventRoute.useLoaderData()
 	return (
-		<Section
-			as="form"
-			onSubmit={submit}
-			noValidate
-			title={m.web_address_label()}
-			hint={m.web_address_hint()}
-		>
+		<Section title={m.web_address_label()} hint={m.web_address_hint()}>
 			<Field id="slug" label={m.web_address_label()} error={issue}>
 				<div className="flex h-11 min-w-0 items-stretch overflow-hidden rounded-md border border-input bg-card shadow-xs focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-ring">
 					<span className="flex shrink-0 items-center border-r border-border bg-accent px-3 font-mono text-sm whitespace-nowrap text-muted-foreground">
@@ -471,50 +483,28 @@ function WebAddressForm() {
 						error={issue}
 						className="h-full min-w-0 rounded-none border-0 font-mono shadow-none focus-visible:outline-none"
 						value={slug}
-						onChange={(e) => setSlug(e.target.value)}
+						onChange={(e) => onChange(e.target.value)}
 					/>
 				</div>
 			</Field>
-			<SectionSave status={status}>
-				<Button type="submit" variant="outline" size="sm" disabled={pending || slug === event.slug}>
-					{m.save_address()}
-				</Button>
-			</SectionSave>
 		</Section>
 	)
 }
 
+type Group = { id?: string; label: string }
+
 /** Optional age groups (D2). Removing one also removes it from workshops. */
-function AgeGroupsForm() {
-	const { event, ageGroups } = eventRoute.useLoaderData()
-	const router = useRouter()
-	const [groups, setGroups] = useState<{ id?: string; label: string }[]>(ageGroups)
-	const [issues, setIssues] = useState<Record<string, string>>({})
-	const [status, setStatus] = useState<string | null>(null)
-	const [pending, setPending] = useState(false)
-
-	async function submit(formEvent: FormEvent) {
-		formEvent.preventDefault()
-		setIssues({})
-		setStatus(null)
-		setPending(true)
-		const kept = groups.filter((group) => group.label.trim())
-		const result = await saveAgeGroupsFn({ data: { eventId: event.id, groups: kept } })
-		setPending(false)
-		if (!result.ok) return setIssues(result.issues ?? {})
-		setGroups(result.data)
-		setStatus(m.age_groups_saved())
-		await router.invalidate()
-	}
-
+function AgeGroupsSection({
+	groups,
+	onChange,
+	issues,
+}: {
+	groups: Group[]
+	onChange: (groups: Group[]) => void
+	issues: Record<string, string>
+}) {
 	return (
-		<Section
-			as="form"
-			onSubmit={submit}
-			noValidate
-			title={m.age_groups_title()}
-			hint={m.age_groups_hint()}
-		>
+		<Section title={m.age_groups_title()} hint={m.age_groups_hint()}>
 			{groups.map((group, index) => {
 				const id = `age-group-${index}`
 				const issue = issues[`${index}.label`]
@@ -527,8 +517,8 @@ function AgeGroupsForm() {
 									error={issue}
 									value={group.label}
 									onChange={(e) =>
-										setGroups((all) =>
-											all.map((g, i) => (i === index ? { ...g, label: e.target.value } : g)),
+										onChange(
+											groups.map((g, i) => (i === index ? { ...g, label: e.target.value } : g)),
 										)
 									}
 								/>
@@ -541,7 +531,7 @@ function AgeGroupsForm() {
 							className="text-muted-foreground hover:bg-tint-danger hover:text-destructive"
 							title={m.remove_age_group()}
 							aria-label={`${m.remove_age_group()}: ${group.label || m.age_group_label({ number: String(index + 1) })}`}
-							onClick={() => setGroups((all) => all.filter((_, i) => i !== index))}
+							onClick={() => onChange(groups.filter((_, i) => i !== index))}
 						>
 							<Trash2 />
 						</Button>
@@ -553,17 +543,12 @@ function AgeGroupsForm() {
 					type="button"
 					variant="ghost"
 					size="sm"
-					onClick={() => setGroups((all) => [...all, { label: '' }])}
+					onClick={() => onChange([...groups, { label: '' }])}
 				>
 					<Plus />
 					{m.add_age_group()}
 				</Button>
 			</div>
-			<SectionSave status={status}>
-				<Button type="submit" variant="outline" size="sm" disabled={pending}>
-					{m.save_age_groups()}
-				</Button>
-			</SectionSave>
 		</Section>
 	)
 }

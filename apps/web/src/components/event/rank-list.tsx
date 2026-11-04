@@ -2,7 +2,7 @@ import { Button } from '@app/ui/components/button'
 import { Marker, type MarkerColor, type MarkerShape } from '@app/ui/components/marker'
 import { cn } from 'cn'
 import { Check, ChevronDown, ChevronUp, Plus, X } from 'lucide-react'
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { FormError } from '#/components/auth-shell'
 import { m } from '#/paraglide/messages'
 
@@ -50,6 +50,7 @@ export function RankList({
 	const [saved, setSaved] = useState<string | null>(null)
 	const [pending, setPending] = useState(false)
 	const unranked = workshops.filter((w) => !ranked.includes(w.id))
+	const missing = Math.max(0, rules.min - ranked.length)
 	const title = (id: string) => byId.get(id)?.title ?? ''
 
 	function update(next: string[], moved: string) {
@@ -151,36 +152,38 @@ export function RankList({
 							</span>
 							<Marker color={workshop.markerColor} shape={workshop.markerShape} />
 							<WorkshopName workshop={workshop} contentLocale={contentLocale} />
-							<Button
-								variant="outline"
-								size="icon-lg"
-								className="max-sm:size-9"
-								aria-label={m.move_up({ workshop: workshop.title })}
-								aria-disabled={index === 0 || undefined}
-								onClick={() => move(index, -1)}
-							>
-								<ChevronUp aria-hidden />
-							</Button>
-							<Button
-								variant="outline"
-								size="icon-lg"
-								className="max-sm:size-9"
-								aria-label={m.move_down({ workshop: workshop.title })}
-								aria-disabled={index === ranked.length - 1 || undefined}
-								onClick={() => move(index, 1)}
-							>
-								<ChevronDown aria-hidden />
-							</Button>
-							<Button
-								variant="ghost"
-								size="icon-lg"
-								className="text-muted-foreground hover:bg-tint-danger hover:text-destructive max-sm:size-9"
-								aria-label={m.remove_from_ranking({ workshop: workshop.title })}
-								data-rank-remove={id}
-								onClick={() => remove(id)}
-							>
-								<X aria-hidden />
-							</Button>
+							<span className="flex shrink-0 gap-1">
+								<Button
+									variant="outline"
+									size="icon-lg"
+									className="max-sm:size-9 aria-disabled:border-line aria-disabled:text-edge aria-disabled:opacity-100"
+									aria-label={m.move_up({ workshop: workshop.title })}
+									aria-disabled={index === 0 || undefined}
+									onClick={() => move(index, -1)}
+								>
+									<ChevronUp aria-hidden />
+								</Button>
+								<Button
+									variant="outline"
+									size="icon-lg"
+									className="max-sm:size-9 aria-disabled:border-line aria-disabled:text-edge aria-disabled:opacity-100"
+									aria-label={m.move_down({ workshop: workshop.title })}
+									aria-disabled={index === ranked.length - 1 || undefined}
+									onClick={() => move(index, 1)}
+								>
+									<ChevronDown aria-hidden />
+								</Button>
+								<Button
+									variant="ghost"
+									size="icon-lg"
+									className="text-muted-foreground hover:bg-tint-danger hover:text-destructive max-sm:size-9"
+									aria-label={m.remove_from_ranking({ workshop: workshop.title })}
+									data-rank-remove={id}
+									onClick={() => remove(id)}
+								>
+									<X aria-hidden />
+								</Button>
+							</span>
 						</li>
 					)
 				})}
@@ -241,7 +244,17 @@ export function RankList({
 					<Check aria-hidden className="size-4 shrink-0 text-success" strokeWidth={3} />
 					{saved}
 				</p>
-				<Button className="w-full" aria-disabled={pending || undefined} onClick={save}>
+				{missing > 0 && !error && (
+					<p className="text-center text-sm font-bold text-muted-foreground">
+						{m.rank_need_more({ count: String(missing) })}
+					</p>
+				)}
+				<Button
+					className="w-full"
+					variant={missing > 0 ? 'outline' : 'default'}
+					aria-disabled={pending || missing > 0 || undefined}
+					onClick={save}
+				>
 					{saveLabel}
 				</Button>
 			</div>
@@ -264,10 +277,10 @@ function WorkshopName({
 			{workshop.times.length > 0 && (
 				<span className="block text-sm text-muted-foreground tabular-nums">
 					{workshop.times.map((time, index) => (
-						<span key={time} className="whitespace-nowrap">
+						<Fragment key={time}>
 							{index > 0 && ' · '}
-							{time}
-						</span>
+							<span className="whitespace-nowrap">{time}</span>
+						</Fragment>
 					))}
 				</span>
 			)}

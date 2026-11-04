@@ -7,6 +7,7 @@ import { EmptyState } from '#/components/page'
 import { StatusLabel } from '#/components/status-label'
 import { formatDateRange } from '#/lib/format'
 import { m } from '#/paraglide/messages'
+import { getLocale } from '#/paraglide/runtime'
 import { getDashboard } from '#/server/events'
 
 export const Route = createFileRoute('/_organizer/home')({
@@ -47,9 +48,7 @@ function Dashboard() {
 								params={{ eventId: event.id }}
 								className="group flex items-center gap-4 px-4 py-4 hover:bg-accent/60 sm:px-5"
 							>
-								<span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-accent text-muted-foreground group-hover:bg-card">
-									<CalendarDays aria-hidden className="size-5" />
-								</span>
+								<DateBlock date={event.startsOn} />
 								<span className="min-w-0 flex-1">
 									<span className="line-clamp-2 font-bold">{event.name}</span>
 									<span className="text-sm text-muted-foreground">
@@ -106,5 +105,25 @@ function PasskeyPrompt() {
 				{m.add_passkey_short()}
 			</Button>
 		</section>
+	)
+}
+
+/** A tear-off calendar leaf for an event's first day: "JUL / 12". Decorative; the range is in the text. */
+function DateBlock({ date }: { date: string }) {
+	const day = new Date(`${date}T12:00:00Z`)
+	const month = new Intl.DateTimeFormat(getLocale() === 'nl' ? 'nl-BE' : 'en-GB', {
+		month: 'short',
+		timeZone: 'UTC',
+	}).format(day)
+	return (
+		<span
+			aria-hidden
+			className="flex w-12 shrink-0 flex-col overflow-hidden rounded-lg border border-border bg-card text-center leading-none"
+		>
+			<span className="bg-ink py-1 text-[0.6875rem] font-bold tracking-wide text-white uppercase">
+				{month.replace('.', '')}
+			</span>
+			<span className="py-1.5 text-lg font-bold tabular-nums">{day.getUTCDate()}</span>
+		</span>
 	)
 }

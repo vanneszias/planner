@@ -257,8 +257,7 @@ function collapse(entries: Entry[]): Row[] {
 		}
 		if (
 			last &&
-			!entry.data &&
-			!last.entry.data &&
+			JSON.stringify(entry.data) === JSON.stringify(last.entry.data) &&
 			last.entry.action === entry.action &&
 			last.entry.actorName === entry.actorName &&
 			last.entry.eventName === entry.eventName

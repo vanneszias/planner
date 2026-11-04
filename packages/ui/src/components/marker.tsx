@@ -72,3 +72,7 @@ export function Marker({
 		</svg>
 	)
 }
+
+/** The fixed marker set, in the default assignment order. */
+export const markerColors = Object.keys(fills) as MarkerColor[]
+export const markerShapes = Object.keys(shapes) as MarkerShape[]

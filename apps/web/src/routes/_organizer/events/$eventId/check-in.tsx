@@ -191,19 +191,26 @@ function CheckIn() {
 						))}
 					</FieldSelect>
 				</Field>
-				<div className="flex min-w-56 flex-col gap-2">
-					<p className="flex items-center gap-2.5">
-						<span className="text-2xl font-bold tabular-nums">
-							{m.checkin_counter({ here: String(here), expected: String(expected) })}
-						</span>
-					</p>
-					<div className="h-2 overflow-hidden rounded-full bg-accent" aria-hidden>
-						<div
-							className="h-full rounded-full bg-success transition-[width]"
-							style={{ width: `${expected ? Math.min(100, (here / expected) * 100) : 0}%` }}
-						/>
+				{expected === 0 ? (
+					<div className="flex min-w-56 flex-col gap-0.5">
+						<p className="font-bold">{m.checkin_nobody()}</p>
+						<p className="text-sm text-muted-foreground">{m.checkin_nobody_hint()}</p>
 					</div>
-				</div>
+				) : (
+					<div className="flex min-w-56 flex-col gap-2">
+						<p className="flex items-center gap-2.5">
+							<span className="text-2xl font-bold tabular-nums">
+								{m.checkin_counter({ here: String(here), expected: String(expected) })}
+							</span>
+						</p>
+						<div className="h-2 overflow-hidden rounded-full bg-accent" aria-hidden>
+							<div
+								className="h-full rounded-full bg-success transition-[width]"
+								style={{ width: `${expected ? Math.min(100, (here / expected) * 100) : 0}%` }}
+							/>
+						</div>
+					</div>
+				)}
 			</div>
 
 			{page.anonymised && <p className="rounded-xl bg-tint-warning p-4">{m.data_deleted()}</p>}

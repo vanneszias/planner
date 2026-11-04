@@ -39,7 +39,10 @@ export function EmptyState({
 	)
 }
 
-/** Edit and delete as quiet icon buttons; the labels name the row for screen readers. */
+/**
+ * Edit and delete as quiet icon buttons; the labels name the row for screen readers.
+ * With a mouse they appear on hover or focus of the surrounding `group`; on touch they always show.
+ */
 export function RowActions({
 	label,
 	onEdit,
@@ -50,7 +53,7 @@ export function RowActions({
 	onDelete?: () => void
 }) {
 	return (
-		<span className="-my-1 flex shrink-0 gap-0.5">
+		<span className="-my-1 flex shrink-0 gap-0.5 transition-opacity [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-focus-within:opacity-100">
 			{onEdit && (
 				<Button
 					variant="ghost"
