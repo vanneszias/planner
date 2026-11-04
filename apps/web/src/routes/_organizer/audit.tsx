@@ -145,7 +145,7 @@ function AuditLog() {
 				<div className="overflow-hidden rounded-xl bg-card shadow-card sm:overflow-x-auto">
 					<table className="w-full text-left text-sm">
 						<caption className="sr-only">{m.audit_title()}</caption>
-						<thead className="border-b border-border bg-accent/50 max-sm:sr-only text-xs tracking-wide text-muted-foreground uppercase">
+						<thead className="border-b border-border bg-accent/50 text-[0.8125rem] font-bold text-muted-foreground max-sm:sr-only">
 							<tr>
 								<th scope="col" className="p-3">
 									{m.audit_column_when()}
@@ -190,7 +190,7 @@ function AuditLog() {
 											<span className="flex flex-wrap items-center gap-2">
 												{actionLabels[row.entry.action]?.() ?? row.entry.action}
 												{row.count > 1 && (
-													<span className="rounded-full bg-accent px-2 py-0.5 text-xs font-bold">
+													<span className="rounded-full bg-accent px-2 py-1 text-xs leading-none font-bold">
 														{m.audit_repeated({ count: String(row.count) })}
 													</span>
 												)}

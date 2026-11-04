@@ -1,6 +1,7 @@
 import type { UpdateEventInput } from '@app/domain'
 import { Button } from '@app/ui/components/button'
 import { createFileRoute, getRouteApi, useRouter } from '@tanstack/react-router'
+import { cn } from 'cn'
 import { Check, ChevronDown, Plus, Trash2 } from 'lucide-react'
 import { type ComponentProps, type FormEvent, type ReactNode, useState } from 'react'
 import { FormError } from '#/components/auth-shell'
@@ -338,8 +339,15 @@ function Settings() {
 					</details>
 				</fieldset>
 
-				{canEdit && (dirty || status || error) && (
-					<div className="sticky bottom-4 z-10 flex flex-wrap items-center justify-end gap-4 rounded-xl bg-card px-4 py-3 shadow-[0_12px_32px_-8px_rgb(28_30_51/0.3)] ring-1 ring-ink/5">
+				{canEdit && (
+					<div
+						className={cn(
+							'flex flex-wrap items-center justify-end gap-4 rounded-xl px-4 py-3',
+							dirty
+								? 'sticky bottom-4 z-10 bg-card shadow-[0_12px_32px_-8px_rgb(28_30_51/0.3)] ring-1 ring-ink/5'
+								: 'bg-transparent',
+						)}
+					>
 						<FormError message={error} />
 						{dirty && (
 							<p className="flex items-center gap-2 text-sm font-bold text-muted-foreground">

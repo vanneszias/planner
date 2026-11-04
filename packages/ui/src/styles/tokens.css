@@ -126,7 +126,7 @@
 			"cv08" 1;
 	}
 	:focus-visible {
-		outline: 3px solid var(--ring);
+		outline: 2px solid var(--ring);
 		outline-offset: 2px;
 	}
 	/* Native date and time fields: same figures and a quieter picker icon as the rest of the form. */

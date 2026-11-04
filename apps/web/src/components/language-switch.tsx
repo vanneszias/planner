@@ -13,7 +13,7 @@ const names = { en: 'English', nl: 'Nederlands' } as const
 export function LanguageSwitch({ compact = false }: { compact?: boolean }) {
 	const current = getLocale()
 	return (
-		<label className="relative flex h-9 shrink-0 items-center gap-1.5 rounded-md px-2.5 text-sm font-bold text-muted-foreground focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-ring hover:bg-accent hover:text-foreground">
+		<label className="relative flex h-9 shrink-0 items-center gap-1.5 rounded-md px-2.5 text-sm font-bold text-muted-foreground focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ring hover:bg-accent hover:text-foreground">
 			<span className="sr-only">{m.language_switch()}</span>
 			<Globe aria-hidden className="size-4" />
 			<span aria-hidden className={cn(compact && 'max-sm:hidden')}>

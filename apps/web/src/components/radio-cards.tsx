@@ -39,7 +39,11 @@ export function RadioCards<T extends string>({
 					/>
 					<span>
 						<span className="block font-bold">{option.title}</span>
-						{option.body && <span className="text-sm text-muted-foreground">{option.body}</span>}
+						{option.body && (
+							<span className="block text-sm leading-normal text-muted-foreground">
+								{option.body}
+							</span>
+						)}
 					</span>
 				</label>
 			))}

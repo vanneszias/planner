@@ -5,7 +5,7 @@ import type { ReactNode } from 'react'
 export function PageToolbar({ summary, children }: { summary?: ReactNode; children?: ReactNode }) {
 	return (
 		<div className="flex flex-wrap items-center justify-between gap-3">
-			<p className="text-muted-foreground">{summary}</p>
+			<p className="text-lg font-bold">{summary}</p>
 			{children && <div className="flex flex-wrap gap-2">{children}</div>}
 		</div>
 	)

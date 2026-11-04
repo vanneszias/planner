@@ -514,8 +514,8 @@
 	"stat_programme": "Programme",
 	"stat_programme_sub": "{workshops} workshops · {places} places",
 	"next_title": "Next step",
-	"next_rank_body": "{ranked} of {total} people have ranked their favourites. When ranking closes, plan the sessions.",
-	"next_rank_action": "Go to allocation",
+	"next_rank_body": "{ranked} of {total} people have ranked their favourites. Run the allocation when you're ready; you can rerun it until you publish.",
+	"next_rank_action": "Plan the sessions",
 	"next_book_body": "{booked} of {places} places are booked. On the day, check people in by QR code or by name.",
 	"next_book_action": "Open check-in",
 	"manage_title": "Manage event",
@@ -568,5 +568,7 @@
 	"allocation_spare": "{count} places to spare",
 	"allocation_short": "{count} places short",
 	"allocation_needed_line": "Total capacity {places} for {needed} needed ({people} people × {per}). Allocation can still leave gaps when favourites overlap.",
-	"places_short": "{count} places"
+	"places_short": "{count} places",
+	"already_booked_at": "You already have this workshop {when}",
+	"bookings_of": "{count} of {total}"
 }

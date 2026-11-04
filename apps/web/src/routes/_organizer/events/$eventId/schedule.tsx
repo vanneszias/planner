@@ -107,14 +107,14 @@ function Schedule() {
 									{m.slot_count({ count: String(slot.items.length) })}
 								</span>
 							</h3>
-							<ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+							<ul className="grid overflow-hidden rounded-xl bg-card shadow-card sm:grid-cols-2 [&>li]:border-b [&>li]:border-border sm:[&>li:nth-child(odd)]:border-r">
 								{slot.items.map((session) => {
 									const clashes = conflictsOf.get(session.id)
 									const label = `${session.workshopTitle} ${formatTime(session.startsAt, event.timezone)}`
 									return (
 										<li
 											key={session.id}
-											className="group relative flex flex-col gap-2 rounded-lg bg-card py-3 pr-3 pl-3 shadow-card has-[button:hover]:ring-1 has-[button:hover]:ring-edge"
+											className="group relative -mb-px flex flex-col gap-2 px-4 py-3 has-[button:hover]:bg-accent/40"
 										>
 											<div className="flex items-start gap-2.5">
 												<Marker
@@ -128,7 +128,7 @@ function Schedule() {
 														<button
 															type="button"
 															aria-label={`${m.edit()}: ${label}`}
-															className="block max-w-full truncate text-left leading-snug font-bold after:absolute after:inset-0 after:rounded-lg focus-visible:outline-none focus-visible:after:outline-3 focus-visible:after:outline-offset-2 focus-visible:after:outline-ring"
+															className="block max-w-full truncate text-left leading-snug font-bold after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:-outline-offset-2 focus-visible:after:outline-ring"
 															onClick={() => setEditing(session)}
 														>
 															{session.workshopTitle}
@@ -164,7 +164,7 @@ function Schedule() {
 												{canEdit && (
 													<Pencil
 														aria-hidden
-														className="mt-0.5 size-4 shrink-0 text-edge transition-colors group-hover:text-foreground"
+														className="mt-0.5 size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground"
 													/>
 												)}
 											</div>

@@ -135,7 +135,7 @@ function Overview() {
 										places: String(places),
 									})}
 						</p>
-						<div className="mt-auto">
+						<div>
 							<Button asChild>
 								<Link
 									to={ranks ? '/events/$eventId/allocation' : '/events/$eventId/check-in'}

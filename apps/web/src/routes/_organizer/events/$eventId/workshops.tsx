@@ -70,7 +70,7 @@ function Workshops() {
 											<button
 												type="button"
 												aria-label={`${m.edit()}: ${workshop.title}`}
-												className="text-left font-bold after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:outline-3 focus-visible:after:-outline-offset-3 focus-visible:after:outline-ring"
+												className="text-left font-bold after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:-outline-offset-2 focus-visible:after:outline-ring"
 												onClick={() => setEditing(workshop)}
 											>
 												{workshop.title}
@@ -79,7 +79,7 @@ function Workshops() {
 											<p className="font-bold">{workshop.title}</p>
 										)}
 										{groups.length > 0 && (
-											<span className="rounded-full bg-accent px-2 py-0.5 text-xs font-bold">
+											<span className="rounded-full bg-accent px-2 py-1 text-xs leading-none font-bold">
 												{m.for_ages({ groups: groups.join(', ') })}
 											</span>
 										)}
@@ -110,7 +110,7 @@ function Workshops() {
 								{canEdit && (
 									<Pencil
 										aria-hidden
-										className="size-4 shrink-0 text-edge transition-colors group-hover:text-foreground"
+										className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground"
 									/>
 								)}
 							</li>

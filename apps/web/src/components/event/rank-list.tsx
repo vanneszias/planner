@@ -2,7 +2,7 @@ import { Button } from '@app/ui/components/button'
 import { Marker, type MarkerColor, type MarkerShape } from '@app/ui/components/marker'
 import { cn } from 'cn'
 import { Check, ChevronDown, ChevronUp, Lock, Plus, X } from 'lucide-react'
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { FormError } from '#/components/auth-shell'
 import { m } from '#/paraglide/messages'
 
@@ -309,17 +309,15 @@ function WorkshopName({
 	)
 }
 
-/** A workshop's session times as small chips that wrap cleanly. */
+/** A workshop's session times as one muted line; breaks only between times. */
 function Times({ times, className }: { times: string[]; className?: string }) {
 	return (
-		<span className={cn('flex flex-wrap gap-1', className)}>
-			{times.map((time) => (
-				<span
-					key={time}
-					className="rounded bg-accent px-1.5 py-0.5 text-[0.8125rem] font-semibold whitespace-nowrap text-muted-foreground tabular-nums"
-				>
-					{time}
-				</span>
+		<span className={cn('block text-sm text-muted-foreground tabular-nums', className)}>
+			{times.map((time, index) => (
+				<Fragment key={time}>
+					{index > 0 && <span aria-hidden> · </span>}
+					<span className="whitespace-nowrap">{time}</span>
+				</Fragment>
 			))}
 		</span>
 	)

@@ -196,6 +196,15 @@ function EventPage() {
 		if (me && workshop?.ageGroups.length && !(myGroup && workshop.ageGroups.includes(myGroup))) {
 			return { text: m.not_for_your_age(), action: null }
 		}
+		const sameWorkshop = mine.find((s) => s.workshopId === session.workshopId)
+		if (sameWorkshop) {
+			return {
+				text: m.already_booked_at({
+					when: formatShortDayTime(sameWorkshop.startsAt, event.timezone),
+				}),
+				action: null,
+			}
+		}
 		const clash = mine.find((s) => s.startsAt < session.endsAt && session.startsAt < s.endsAt)
 		if (clash) {
 			return {
@@ -233,7 +242,6 @@ function EventPage() {
 		<>
 			<section className="flex flex-col gap-3 rounded-xl bg-card p-5 shadow-card">
 				<div>
-					<p className="text-sm font-bold text-muted-foreground">{m.registered_as()}</p>
 					<p className="font-display text-xl font-semibold">{m.hello_name({ name: me.name })}</p>
 				</div>
 				{bookingMode && (
@@ -551,9 +559,9 @@ function EventPage() {
 										</span>
 										<span
 											aria-hidden
-											className="flex flex-1 items-center gap-1 overflow-hidden group-open/slot:hidden"
+											className="flex flex-1 items-center gap-1 group-open/slot:hidden max-sm:hidden"
 										>
-											{slot.items.slice(0, 10).map((s) => {
+											{slot.items.slice(0, 8).map((s) => {
 												const w = workshopById.get(s.workshopId)
 												return w ? (
 													<Marker
@@ -564,6 +572,11 @@ function EventPage() {
 													/>
 												) : null
 											})}
+											{slot.items.length > 8 && (
+												<span className="text-xs font-bold text-muted-foreground">
+													+{slot.items.length - 8}
+												</span>
+											)}
 										</span>
 										<ChevronDown
 											aria-hidden
@@ -601,7 +614,7 @@ function EventPage() {
 																</span>
 																{workshop.ageGroups.length > 0 && (
 																	<span
-																		className="rounded-full bg-accent px-2 py-0.5 text-xs font-bold"
+																		className="rounded-full bg-accent px-2 py-1 text-xs leading-none font-bold"
 																		lang={event.defaultLocale}
 																	>
 																		{m.for_ages({ groups: workshop.ageGroups.join(', ') })}

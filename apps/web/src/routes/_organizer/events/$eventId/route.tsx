@@ -1,6 +1,5 @@
-import { createFileRoute, Link, Outlet, useLocation } from '@tanstack/react-router'
+import { createFileRoute, Link, Outlet } from '@tanstack/react-router'
 import { CalendarDays, ChevronLeft } from 'lucide-react'
-import { useEffect, useRef } from 'react'
 import { StatusLabel } from '#/components/status-label'
 import { formatDateRange } from '#/lib/format'
 import { m } from '#/paraglide/messages'
@@ -26,20 +25,6 @@ type Section = { path: keyof typeof routes; label: string }
 function EventLayout() {
 	const { event } = Route.useLoaderData()
 	const params = { eventId: event.id }
-	const pathname = useLocation({ select: (location) => location.pathname })
-	// Keep the current tab in view on phones.
-	const pills = useRef<HTMLElement>(null)
-	// biome-ignore lint/correctness/useExhaustiveDependencies: the pathname is what moves the active tab
-	useEffect(() => {
-		const nav = pills.current
-		const active = nav?.querySelector<HTMLElement>('[aria-current="page"]')
-		if (!nav || !active) return
-		// After layout (fonts can still shift widths): leave one tab of context on the left.
-		const frame = requestAnimationFrame(() => {
-			nav.scrollLeft += active.getBoundingClientRect().left - nav.getBoundingClientRect().left - 48
-		})
-		return () => cancelAnimationFrame(frame)
-	}, [pathname])
 	const sections: Section[] = [
 		{ path: '', label: m.nav_overview() },
 		{ path: '/workshops', label: m.nav_workshops() },
@@ -53,7 +38,7 @@ function EventLayout() {
 	]
 	// TanStack marks the current tab with data-status="active" (and aria-current="page").
 	const tab =
-		'-mb-px border-b-2 border-transparent pb-3 text-[0.9375rem] font-bold whitespace-nowrap text-muted-foreground hover:text-foreground data-[status=active]:border-primary data-[status=active]:text-foreground'
+		'-mb-px border-b-2 border-transparent pt-1 pb-2.5 text-[0.9375rem] font-bold whitespace-nowrap text-muted-foreground hover:text-foreground data-[status=active]:border-primary data-[status=active]:text-foreground'
 
 	return (
 		<div className="flex flex-col gap-5 sm:gap-6">
@@ -76,11 +61,10 @@ function EventLayout() {
 					</span>
 				</p>
 			</div>
-			{/* One tab strip; on phones it scrolls and keeps the current tab in view. */}
+			{/* One tab strip; on phones it wraps so every section stays visible. */}
 			<nav
 				aria-label={event.name}
-				ref={pills}
-				className="flex gap-6 overflow-x-auto border-b border-border [scrollbar-width:none] max-sm:-mx-4 max-sm:scroll-px-4 max-sm:gap-5 max-sm:px-4 max-sm:[mask-image:linear-gradient(to_right,transparent,black_1.25rem,black_calc(100%-2.5rem),transparent)] print:hidden"
+				className="flex flex-wrap gap-x-6 gap-y-1 border-b border-border max-sm:gap-x-4 print:hidden"
 			>
 				{sections.map((section) => (
 					<Link

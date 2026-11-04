@@ -379,7 +379,7 @@ function Participants() {
 										<div className="mt-1 flex flex-wrap items-center justify-between gap-2">
 											<span
 												className={cn(
-													'inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-bold',
+													'inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-xs leading-none font-bold',
 													p.ranked ? 'bg-tint-success' : 'bg-accent text-muted-foreground',
 												)}
 											>
@@ -407,7 +407,7 @@ function Participants() {
 					</ul>
 					<div className="overflow-x-auto rounded-xl bg-card shadow-card max-sm:hidden">
 						<table className="w-full text-left text-sm">
-							<thead className="border-b border-border bg-accent/50 text-xs tracking-wide text-muted-foreground uppercase">
+							<thead className="border-b border-border bg-accent/50 text-[0.8125rem] font-bold text-muted-foreground">
 								<tr>
 									{canWrite && (
 										<th className="w-12 p-3">
@@ -467,7 +467,14 @@ function Participants() {
 											{p.email ?? p.guardianEmail ?? '—'}
 										</td>
 										{showSessions && (
-											<td className="p-3 tabular-nums max-sm:hidden">{p.bookings}</td>
+											<td className="p-3 tabular-nums max-sm:hidden">
+												{ranks
+													? p.bookings
+													: m.bookings_of({
+															count: String(p.bookings),
+															total: String(event.sessionsPerParticipant),
+														})}
+											</td>
 										)}
 										{showWaitlist && (
 											<td className="p-3 tabular-nums max-sm:hidden">{p.waitlisted || '—'}</td>
@@ -477,7 +484,7 @@ function Participants() {
 												<span className="flex items-center justify-between gap-2">
 													<span
 														className={cn(
-															'inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-bold whitespace-nowrap',
+															'inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-xs leading-none font-bold whitespace-nowrap',
 															p.ranked ? 'bg-tint-success' : 'bg-accent text-muted-foreground',
 														)}
 													>

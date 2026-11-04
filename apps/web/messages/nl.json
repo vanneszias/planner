@@ -514,8 +514,8 @@
 	"stat_programme": "Programma",
 	"stat_programme_sub": "{workshops} workshops · {places} plaatsen",
 	"next_title": "Volgende stap",
-	"next_rank_body": "{ranked} van {total} mensen hebben hun favorieten gerangschikt. Plan de sessies zodra het rangschikken sluit.",
-	"next_rank_action": "Naar de verdeling",
+	"next_rank_body": "{ranked} van {total} mensen hebben hun favorieten gerangschikt. Maak de verdeling wanneer je klaar bent; je kunt ze opnieuw maken tot je publiceert.",
+	"next_rank_action": "De sessies plannen",
 	"next_book_body": "{booked} van {places} plaatsen zijn geboekt. Check op de dag mensen in met een QR-code of op naam.",
 	"next_book_action": "Check-in openen",
 	"manage_title": "Evenement beheren",
@@ -568,5 +568,7 @@
 	"allocation_spare": "{count} plaatsen over",
 	"allocation_short": "{count} plaatsen te weinig",
 	"allocation_needed_line": "Totale capaciteit {places} voor {needed} nodig ({people} mensen × {per}). De verdeling kan nog gaten laten als favorieten overlappen.",
-	"places_short": "{count} plaatsen"
+	"places_short": "{count} plaatsen",
+	"already_booked_at": "Je hebt deze workshop al {when}",
+	"bookings_of": "{count} van {total}"
 }
