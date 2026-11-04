@@ -53,6 +53,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Create or update the environment
         id: up
+        # Explicit bash adds pipefail, so a failed deploy fails the step.
+        shell: bash
         run: |
           scripts/preview.sh up "$PR" | tee preview.log
           echo "url=$(tail -n 1 preview.log)" >> "$GITHUB_OUTPUT"
