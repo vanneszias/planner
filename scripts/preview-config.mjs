@@ -48,6 +48,11 @@ for (const app of apps) {
 	config.name += suffix
 	// One preview version per deploy is enough; the Worker itself is the preview.
 	config.preview_urls = false
+	// Production's custom domains stay with production; previews live on workers.dev.
+	if (config.routes) {
+		delete config.routes
+		config.workers_dev = true
+	}
 
 	for (const db of config.d1_databases ?? []) {
 		db.database_name = `event-db${suffix}`

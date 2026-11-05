@@ -39,6 +39,10 @@ R2 Storage edit). `scripts/cloudflare-env.sh` uses it in place of the build toke
 and `web` in that order (the coordinator defines the Durable Object class the
 others bind to), checks `/health`, then prunes previews of deleted branches.
 
+Production is served on Workers custom domains only: `web` on
+`https://events.zias.be`, `api` on `https://api.events.zias.be`
+(`workers_dev: false`). Previews drop those routes and use `workers.dev`.
+
 ## What a preview is
 
 For a branch, `scripts/preview.sh` derives a name `pv-<slug>`: the branch name

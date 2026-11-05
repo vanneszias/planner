@@ -13,7 +13,7 @@ export type AuthEmail = { to: string; subject: string; text: string }
 
 export type AuthOptions = {
 	db: Db
-	/** Public origin of the web app, e.g. https://event-web.example.workers.dev */
+	/** Public origin of the web app, e.g. https://events.zias.be */
 	baseURL: string
 	secret: string
 	sendEmail: (email: AuthEmail) => Promise<void>
