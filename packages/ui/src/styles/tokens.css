@@ -5,7 +5,7 @@
  * Fonts are self-hosted through Fontsource: no Google Fonts CDN (GDPR).
  */
 @import "@fontsource-variable/unbounded";
-@import "@fontsource-variable/atkinson-hyperlegible-next";
+@import "@fontsource-variable/inter";
 @import "@fontsource-variable/atkinson-hyperlegible-mono";
 
 /*
@@ -62,7 +62,7 @@
 
 @theme inline {
 	--font-display: "Unbounded Variable", ui-sans-serif, sans-serif;
-	--font-sans: "Atkinson Hyperlegible Next Variable", ui-sans-serif, system-ui, sans-serif;
+	--font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
 	--font-mono: "Atkinson Hyperlegible Mono Variable", ui-monospace, monospace;
 
 	--color-ink: var(--ink);
@@ -120,6 +120,10 @@
 		@apply bg-background font-sans text-foreground antialiased;
 		font-size: 1rem;
 		line-height: 1.55;
+		/* Legibility alternates (design-system.md): tailed l and serifed I keep Il1 apart. */
+		font-feature-settings:
+			"cv05" 1,
+			"cv08" 1;
 	}
 	:focus-visible {
 		outline: 2px solid var(--ring);
