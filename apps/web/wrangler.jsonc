@@ -54,10 +54,8 @@
 	},
 	// v1 is not ours: before scripts/cloudflare-env.sh unset WRANGLER_CI_OVERRIDE_NAME, a
 	// Workers Builds deploy uploaded the coordinator config under this name and created
-	// an EventCoordinator class here. v2 deletes it; the real class lives in
-	// event-coordinator, and D1 holds all state, so nothing is lost. Previews drop both.
-	"migrations": [
-		{ "tag": "v1", "new_sqlite_classes": ["EventCoordinator"] },
-		{ "tag": "v2", "deleted_classes": ["EventCoordinator"] }
-	]
+	// an EventCoordinator class here. src/server/stray-coordinator.ts exports a stub for
+	// it until the binding above is live; then a v2 deleted_classes migration removes
+	// it. The real class lives in event-coordinator. Previews drop this.
+	"migrations": [{ "tag": "v1", "new_sqlite_classes": ["EventCoordinator"] }]
 }
