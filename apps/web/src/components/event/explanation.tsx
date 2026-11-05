@@ -30,7 +30,7 @@ export function Explanation({
 	})
 	if (lines.length === 0) return null
 	return (
-		<section aria-labelledby="why" className="rounded-xl bg-card p-4">
+		<section aria-labelledby="why" className="rounded-xl bg-card shadow-card p-4">
 			<h3 id="why" className="mb-2 font-bold">
 				{m.why_title()}
 			</h3>
