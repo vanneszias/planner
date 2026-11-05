@@ -1,11 +1,29 @@
 import { Button } from '@app/ui/components/button'
+import { Dialog } from '@app/ui/components/dialog'
+import { Input } from '@app/ui/components/input'
 import { createFileRoute, getRouteApi, useRouter } from '@tanstack/react-router'
+import { cn } from 'cn'
+import {
+	Check,
+	Circle,
+	Download,
+	Eye,
+	Mail,
+	Pencil,
+	Printer,
+	Search,
+	Upload,
+	UserPlus,
+	Users,
+} from 'lucide-react'
 import { type FormEvent, useMemo, useState } from 'react'
 import { FormError } from '#/components/auth-shell'
 import { ExportsPanel } from '#/components/event/exports-panel'
 import { RankList } from '#/components/event/rank-list'
-import { Field, FieldInput } from '#/components/field'
+import { Field, FieldInput, FieldSelect, FormActions } from '#/components/field'
+import { EmptyState, PageToolbar } from '#/components/page'
 import { actionMessage, fieldMessage } from '#/lib/errors'
+import { sessionCount } from '#/lib/format'
 import { m } from '#/paraglide/messages'
 import {
 	addMinorFn,
@@ -23,6 +41,8 @@ export const Route = createFileRoute('/_organizer/events/$eventId/participants')
 })
 const eventRoute = getRouteApi('/_organizer/events/$eventId')
 
+const PAGE = 50
+
 type Card = { id: string; firstName: string; code: string; qr: string }
 type Panel = 'add' | 'import' | { confirm: 'cards' | 'email' } | null
 type RankingPanel = {
@@ -39,6 +59,7 @@ function Participants() {
 	const { event, workshops } = eventRoute.useLoaderData()
 	const router = useRouter()
 	const [ranking, setRanking] = useState<RankingPanel | null>(null)
+	const [exporting, setExporting] = useState(false)
 	const ranks = event.mode === 'ranking'
 	const [ageFilter, setAgeFilter] = useState('')
 	const [statusFilter, setStatusFilter] = useState<'all' | 'none' | 'waitlisted'>('all')
@@ -48,18 +69,29 @@ function Participants() {
 	const [status, setStatus] = useState<string | null>(null)
 	const [error, setError] = useState<string | null>(null)
 
+	const [query, setQuery] = useState('')
+	const [limit, setLimit] = useState(PAGE)
 	const groupLabel = new Map(ageGroups.map((g) => [g.id, g.label]))
-	const visible = useMemo(
-		() =>
-			participants.filter(
+	const matches = useMemo(() => {
+		const needle = query.trim().toLowerCase()
+		const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' })
+		return participants
+			.filter(
 				(p) =>
 					(!ageFilter || p.ageGroupId === ageFilter) &&
 					(statusFilter === 'all' ||
 						(statusFilter === 'none' && p.bookings === 0) ||
-						(statusFilter === 'waitlisted' && p.waitlisted > 0)),
-			),
-		[participants, ageFilter, statusFilter],
-	)
+						(statusFilter === 'waitlisted' && p.waitlisted > 0)) &&
+					(!needle ||
+						p.displayName.toLowerCase().includes(needle) ||
+						(p.email ?? p.guardianEmail ?? '').toLowerCase().includes(needle)),
+			)
+			.sort((a, b) => collator.compare(a.displayName, b.displayName))
+	}, [participants, ageFilter, statusFilter, query])
+	const visible = matches.slice(0, limit)
+	// Before allocation runs, a ranking event's session counts are all zero: noise.
+	const showSessions = !ranks || participants.some((p) => p.bookings > 0)
+	const showWaitlist = participants.some((p) => p.waitlisted > 0)
 	const allVisibleSelected = visible.length > 0 && visible.every((p) => selected.has(p.id))
 
 	function toggle(id: string, on: boolean) {
@@ -148,53 +180,82 @@ function Participants() {
 
 	return (
 		<div className="flex flex-col gap-4">
-			<div className="flex flex-wrap items-center justify-between gap-3">
-				<p className="font-bold">{m.participants_count({ count: String(participants.length) })}</p>
+			<PageToolbar summary={m.participants_count({ count: String(participants.length) })}>
 				{canWrite && (
-					<div className="flex flex-wrap gap-2">
-						<Button variant="outline" onClick={() => setPanel(panel === 'add' ? null : 'add')}>
-							{m.add_participant()}
-						</Button>
+					<>
 						<Button
 							variant="outline"
-							onClick={() => setPanel(panel === 'import' ? null : 'import')}
+							aria-label={m.import_csv()}
+							title={m.import_csv()}
+							onClick={() => setPanel('import')}
 						>
-							{m.import_csv()}
+							<Upload />
+							<span className="sm:hidden">{m.import_short()}</span>
+							<span className="max-sm:hidden">{m.import_csv()}</span>
 						</Button>
-					</div>
+						{canExport && (
+							<Button variant="outline" onClick={() => setExporting(true)}>
+								<Download />
+								{m.export_short()}
+							</Button>
+						)}
+						<Button onClick={() => setPanel('add')}>
+							<UserPlus />
+							{m.add_participant()}
+						</Button>
+					</>
 				)}
-			</div>
+			</PageToolbar>
 
-			{panel === 'add' && (
-				<AddForm
-					eventId={event.id}
-					ageGroups={ageGroups}
-					onDone={async (name) => {
-						setPanel(null)
-						setStatus(m.participant_added({ name }))
-						await router.invalidate()
-					}}
-				/>
-			)}
-			{panel === 'import' && (
-				<ImportForm
-					eventId={event.id}
-					onDone={async (count) => {
-						setPanel(null)
-						setStatus(m.import_done({ count: String(count) }))
-						await router.invalidate()
-					}}
-				/>
-			)}
+			<Dialog
+				open={panel === 'add' || panel === 'import'}
+				onOpenChange={(open) => !open && setPanel(null)}
+				title={panel === 'import' ? m.import_csv() : m.add_participant()}
+				closeLabel={m.close()}
+			>
+				{panel === 'add' && (
+					<AddForm
+						eventId={event.id}
+						ageGroups={ageGroups}
+						onCancel={() => setPanel(null)}
+						onDone={async (name) => {
+							setPanel(null)
+							setStatus(m.participant_added({ name }))
+							await router.invalidate()
+						}}
+					/>
+				)}
+				{panel === 'import' && (
+					<ImportForm
+						eventId={event.id}
+						onDone={async (count) => {
+							setPanel(null)
+							setStatus(m.import_done({ count: String(count) }))
+							await router.invalidate()
+						}}
+					/>
+				)}
+			</Dialog>
 
-			<p aria-live="polite" role="status" className="font-bold empty:hidden">
+			<p
+				aria-live="polite"
+				role="status"
+				className="rounded-lg bg-tint-success px-4 py-3 font-bold empty:hidden"
+			>
 				{status}
 			</p>
 			<FormError message={error} />
 
-			{ranking && (
-				<div className="flex flex-col gap-3 rounded-xl bg-card p-5">
+			<Dialog
+				open={ranking !== null}
+				onOpenChange={(open) => !open && setRanking(null)}
+				title={ranking ? m.ranking_for({ name: ranking.name }) : ''}
+				closeLabel={m.close()}
+				className="max-w-xl"
+			>
+				{ranking && (
 					<RankList
+						hideTitle
 						key={ranking.id}
 						title={m.ranking_for({ name: ranking.name })}
 						savedMessage={m.ranking_saved_for({ name: ranking.name })}
@@ -213,55 +274,83 @@ function Participants() {
 								times: [],
 							}))}
 					/>
-					<div>
-						<Button variant="ghost" onClick={() => setRanking(null)}>
-							{m.back_to_list()}
-						</Button>
-					</div>
-				</div>
-			)}
+				)}
+			</Dialog>
 
 			{participants.length === 0 ? (
-				<p className="rounded-xl bg-card p-6">{m.participants_empty()}</p>
+				<EmptyState icon={<Users />} title={m.participants_empty()} />
 			) : (
 				<>
-					<div className="flex flex-wrap items-end gap-3">
+					<div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
+						<div className="relative col-span-2 min-w-60 flex-1">
+							<Search
+								aria-hidden
+								className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+							/>
+							<Input
+								type="search"
+								aria-label={m.search_participants()}
+								placeholder={m.search_participants()}
+								className="pl-9"
+								value={query}
+								onChange={(e) => {
+									setQuery(e.target.value)
+									setLimit(PAGE)
+								}}
+							/>
+						</div>
 						{ageGroups.length > 0 && (
-							<label className="flex flex-col gap-1 text-sm font-bold">
-								{m.filter_age_group()}
-								<select
-									className="h-11 rounded-md border border-input bg-card px-3 font-normal"
-									value={ageFilter}
-									onChange={(e) => setAgeFilter(e.target.value)}
-								>
-									<option value="">{m.filter_all()}</option>
-									{ageGroups.map((g) => (
-										<option key={g.id} value={g.id}>
-											{g.label}
-										</option>
-									))}
-								</select>
-							</label>
-						)}
-						<label className="flex flex-col gap-1 text-sm font-bold">
-							{m.filter_status()}
-							<select
-								className="h-11 rounded-md border border-input bg-card px-3 font-normal"
-								value={statusFilter}
-								onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
+							<FieldSelect
+								aria-label={m.filter_age_group()}
+								className="min-w-0 sm:w-44"
+								value={ageFilter}
+								onChange={(e) => setAgeFilter(e.target.value)}
 							>
-								<option value="all">{m.filter_all()}</option>
-								<option value="none">{m.filter_no_bookings()}</option>
-								<option value="waitlisted">{m.filter_waitlisted()}</option>
-							</select>
-						</label>
+								<option value="">
+									{m.filter_age_group()}: {m.filter_all()}
+								</option>
+								{ageGroups.map((g) => (
+									<option key={g.id} value={g.id}>
+										{g.label}
+									</option>
+								))}
+							</FieldSelect>
+						)}
+						<FieldSelect
+							aria-label={m.filter_status()}
+							className="min-w-0 sm:w-48"
+							value={statusFilter}
+							onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
+						>
+							<option value="all">
+								{m.filter_status()}: {m.filter_all()}
+							</option>
+							<option value="none">{m.filter_no_bookings()}</option>
+							<option value="waitlisted">{m.filter_waitlisted()}</option>
+						</FieldSelect>
 					</div>
 
 					{canWrite && selected.size > 0 && (
-						<div className="flex flex-wrap gap-2">
-							<Button onClick={() => setPanel({ confirm: 'cards' })}>{m.print_cards()}</Button>
-							<Button variant="outline" onClick={() => setPanel({ confirm: 'email' })}>
+						<div className="sticky top-16 z-20 flex flex-wrap items-center gap-2 rounded-xl bg-ink px-4 py-2 text-white shadow-lg">
+							<p className="flex-1 text-sm font-bold">
+								{m.selected_count({ count: String(selected.size) })}
+							</p>
+							<Button
+								size="sm"
+								variant="outline"
+								className="border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white"
+								onClick={() => setPanel({ confirm: 'email' })}
+							>
+								<Mail />
 								{m.email_guardians()}
+							</Button>
+							<Button
+								size="sm"
+								className="bg-white text-ink hover:bg-white/90"
+								onClick={() => setPanel({ confirm: 'cards' })}
+							>
+								<Printer />
+								{m.print_cards()}
 							</Button>
 						</div>
 					)}
@@ -277,9 +366,82 @@ function Participants() {
 						</div>
 					)}
 
-					<div className="overflow-x-auto rounded-xl bg-card">
-						<table className="w-full text-left text-sm">
-							<thead className="border-b border-border">
+					{/* Phones: one card per participant instead of a squeezed table. */}
+					<ul className="divide-y divide-border rounded-xl bg-card shadow-card sm:hidden">
+						{visible.map((p) => (
+							<li key={p.id} className="flex items-start gap-3 px-4 py-3">
+								{canWrite && (
+									<input
+										type="checkbox"
+										aria-label={m.select_participant({ name: p.displayName })}
+										className="mt-0.5 size-5 shrink-0 accent-[var(--kelp)]"
+										checked={selected.has(p.id)}
+										onChange={(e) => toggle(p.id, e.target.checked)}
+									/>
+								)}
+								<div className="flex min-w-0 flex-1 flex-col gap-1">
+									<p className="font-bold">{p.displayName || m.anonymous()}</p>
+									{(p.email ?? p.guardianEmail) && (
+										<p className="text-sm break-all text-muted-foreground">
+											{p.email ?? p.guardianEmail}
+										</p>
+									)}
+									<div className="mt-0.5 flex flex-wrap items-center gap-1.5">
+										{[
+											p.ageGroupId ? groupLabel.get(p.ageGroupId) : null,
+											p.isMinor ? m.minor() : null,
+										]
+											.filter(Boolean)
+											.map((tag) => (
+												<span
+													key={tag}
+													className="rounded-full border border-border px-2 py-[3px] text-xs leading-none font-bold text-muted-foreground"
+												>
+													{tag}
+												</span>
+											))}
+										{ranks && (
+											<span
+												className={cn(
+													'inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs leading-none font-bold',
+													p.ranked ? 'bg-tint-success' : 'bg-tint-warning',
+												)}
+											>
+												{p.ranked ? (
+													<Check aria-hidden className="size-3" strokeWidth={3} />
+												) : (
+													<Circle aria-hidden className="size-3" strokeWidth={3} />
+												)}
+												{p.ranked ? m.ranked_yes() : m.ranked_no()}
+											</span>
+										)}
+										{showSessions && (
+											<span className="text-sm text-muted-foreground">
+												{sessionCount(p.bookings)}
+											</span>
+										)}
+										{ranks && canWrite && (
+											<Button
+												variant="outline"
+												size="sm"
+												className="ml-auto"
+												aria-label={m.enter_ranking_for({ name: p.displayName })}
+												onClick={() => openRanking(p.id, p.displayName)}
+											>
+												{p.ranked ? m.view_ranking() : m.enter_ranking()}
+											</Button>
+										)}
+									</div>
+								</div>
+							</li>
+						))}
+						{matches.length === 0 && (
+							<li className="p-6 text-center text-muted-foreground">{m.no_matches()}</li>
+						)}
+					</ul>
+					<div className="overflow-x-auto rounded-xl bg-card shadow-card max-sm:hidden">
+						<table className="w-full text-left text-sm [&_td]:align-middle [&_th]:align-middle">
+							<thead className="border-b border-border bg-accent/50 text-[0.8125rem] font-bold text-muted-foreground">
 								<tr>
 									{canWrite && (
 										<th className="w-12 p-3">
@@ -294,18 +456,23 @@ function Participants() {
 											/>
 										</th>
 									)}
-									<th className="p-3">{m.column_name()}</th>
-									<th className="p-3">{m.column_contact()}</th>
-									<th className="p-3">{m.column_sessions()}</th>
-									<th className="p-3">{m.column_waitlist()}</th>
+									<th className="w-[30%] p-3">{m.column_name()}</th>
+									<th className="w-[38%] p-3 max-md:hidden">{m.column_contact()}</th>
+									{showSessions && (
+										<th className="p-3 text-right max-sm:hidden">{m.column_sessions()}</th>
+									)}
+									{showWaitlist && <th className="p-3 max-sm:hidden">{m.column_waitlist()}</th>}
 									{ranks && <th className="p-3">{m.column_ranked()}</th>}
 								</tr>
 							</thead>
 							<tbody>
 								{visible.map((p) => (
-									<tr key={p.id} className="border-b border-border last:border-0">
+									<tr
+										key={p.id}
+										className="border-b border-border last:border-0 hover:bg-accent/40"
+									>
 										{canWrite && (
-											<td className="p-3">
+											<td className="px-3 py-2">
 												<input
 													type="checkbox"
 													aria-label={m.select_participant({ name: p.displayName })}
@@ -315,44 +482,110 @@ function Participants() {
 												/>
 											</td>
 										)}
-										<td className="p-3">
-											<span className="font-bold">{p.displayName || m.anonymous()}</span>
-											<span className="block text-muted-foreground">
+										<td className="px-3 py-2">
+											<span className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+												<span className="font-bold">{p.displayName || m.anonymous()}</span>
 												{[
 													p.ageGroupId ? groupLabel.get(p.ageGroupId) : null,
 													p.isMinor ? m.minor() : null,
 													p.registeredBy === 'organizer' ? m.added_by_organizer() : null,
 												]
 													.filter(Boolean)
-													.join(' · ')}
+													.map((tag) => (
+														<span
+															key={tag}
+															className="rounded-full border border-border px-2 py-[3px] text-xs leading-none font-bold text-muted-foreground"
+														>
+															{tag}
+														</span>
+													))}
+											</span>
+											<span className="block truncate text-muted-foreground md:hidden">
+												{p.email ?? p.guardianEmail}
 											</span>
 										</td>
-										<td className="p-3 break-all">{p.email ?? p.guardianEmail ?? '—'}</td>
-										<td className="p-3 font-mono">{p.bookings}</td>
-										<td className="p-3 font-mono">{p.waitlisted || '—'}</td>
+										<td className="px-3 py-2 break-all max-md:hidden">
+											{p.email ?? p.guardianEmail ?? '—'}
+										</td>
+										{showSessions && (
+											<td className="px-3 py-2 text-right tabular-nums max-sm:hidden">
+												{ranks
+													? p.bookings
+													: m.bookings_of({
+															count: String(p.bookings),
+															total: String(event.sessionsPerParticipant),
+														})}
+											</td>
+										)}
+										{showWaitlist && (
+											<td className="px-3 py-2 tabular-nums max-sm:hidden">
+												{p.waitlisted || '—'}
+											</td>
+										)}
 										{ranks && (
-											<td className="p-3">
-												<span className="block">{p.ranked ? m.ranked_yes() : m.ranked_no()}</span>
-												{canWrite && (
-													<Button
-														variant="ghost"
-														className="h-9 px-2 text-sm"
-														aria-label={m.enter_ranking_for({ name: p.displayName })}
-														onClick={() => openRanking(p.id, p.displayName)}
+											<td className="px-3 py-2">
+												<span className="flex items-center justify-between gap-2">
+													<span
+														className={cn(
+															'inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-xs leading-none font-bold whitespace-nowrap',
+															p.ranked ? 'bg-tint-success' : 'bg-tint-warning',
+														)}
 													>
-														{m.enter_ranking()}
-													</Button>
-												)}
+														{p.ranked ? (
+															<Check aria-hidden className="size-3" strokeWidth={3} />
+														) : (
+															<Circle aria-hidden className="size-3" strokeWidth={3} />
+														)}
+														{p.ranked ? m.ranked_yes() : m.ranked_no()}
+													</span>
+													{canWrite && (
+														<Button
+															variant="ghost"
+															size="sm"
+															className="text-muted-foreground hover:text-foreground"
+															aria-label={m.enter_ranking_for({ name: p.displayName })}
+															onClick={() => openRanking(p.id, p.displayName)}
+														>
+															{p.ranked ? <Eye /> : <Pencil />}
+															{p.ranked ? m.view_ranking() : m.enter_ranking()}
+														</Button>
+													)}
+												</span>
 											</td>
 										)}
 									</tr>
 								))}
 							</tbody>
 						</table>
+						{matches.length === 0 && (
+							<p className="p-6 text-center text-muted-foreground">{m.no_matches()}</p>
+						)}
 					</div>
+					{matches.length > 0 && (
+						<div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
+							<p>
+								{m.showing_count({ shown: String(visible.length), total: String(matches.length) })}
+							</p>
+							{matches.length > visible.length && (
+								<Button variant="outline" size="sm" onClick={() => setLimit((n) => n + PAGE)}>
+									{m.show_more({ count: String(Math.min(PAGE, matches.length - visible.length)) })}
+								</Button>
+							)}
+						</div>
+					)}
 				</>
 			)}
-			{canExport && <ExportsPanel eventId={event.id} />}
+			{canExport && (
+				<Dialog
+					open={exporting}
+					onOpenChange={setExporting}
+					title={m.exports_title()}
+					description={m.exports_hint()}
+					closeLabel={m.close()}
+				>
+					<ExportsPanel eventId={event.id} bare />
+				</Dialog>
+			)}
 		</div>
 	)
 }
@@ -361,10 +594,12 @@ function AddForm({
 	eventId,
 	ageGroups,
 	onDone,
+	onCancel,
 }: {
 	eventId: string
 	ageGroups: { id: string; label: string }[]
 	onDone: (name: string) => Promise<void>
+	onCancel: () => void
 }) {
 	const [name, setName] = useState('')
 	const [ageGroupId, setAgeGroupId] = useState(ageGroups[0]?.id ?? '')
@@ -385,7 +620,7 @@ function AddForm({
 	}
 
 	return (
-		<form onSubmit={submit} noValidate className="flex flex-col gap-4 rounded-xl bg-card p-5">
+		<form onSubmit={submit} noValidate className="flex flex-col gap-5">
 			<Field id="minor-name" label={m.participant_name_label()} error={issues.name}>
 				<FieldInput
 					id="minor-name"
@@ -397,9 +632,8 @@ function AddForm({
 			</Field>
 			{ageGroups.length > 0 && (
 				<Field id="minor-age" label={m.age_group_select()}>
-					<select
+					<FieldSelect
 						id="minor-age"
-						className="h-11 rounded-md border border-input bg-card px-3"
 						value={ageGroupId}
 						onChange={(e) => setAgeGroupId(e.target.value)}
 					>
@@ -408,7 +642,7 @@ function AddForm({
 								{g.label}
 							</option>
 						))}
-					</select>
+					</FieldSelect>
 				</Field>
 			)}
 			<Field id="minor-guardian" label={m.guardian_email_label()} error={issues.guardianEmail}>
@@ -420,11 +654,14 @@ function AddForm({
 					onChange={(e) => setGuardianEmail(e.target.value)}
 				/>
 			</Field>
-			<div>
+			<FormActions>
+				<Button type="button" variant="outline" onClick={onCancel}>
+					{m.cancel()}
+				</Button>
 				<Button type="submit" disabled={pending}>
 					{m.save_participant()}
 				</Button>
-			</div>
+			</FormActions>
 		</form>
 	)
 }
@@ -454,17 +691,14 @@ function ImportForm({
 	}
 
 	return (
-		<div className="flex flex-col gap-4 rounded-xl bg-card p-5">
-			<div>
-				<h2 className="text-lg font-bold">{m.import_title()}</h2>
-				<p className="text-sm text-muted-foreground">{m.import_hint()}</p>
-			</div>
+		<div className="flex flex-col gap-5">
+			<p className="text-sm text-muted-foreground">{m.import_hint()}</p>
 			<Field id="import-file" label={m.import_file_label()}>
 				<input
 					id="import-file"
 					type="file"
 					accept=".csv,text/csv"
-					className="min-h-11"
+					className="min-h-11 rounded-md border border-dashed border-edge bg-background p-3 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-accent file:px-3 file:py-1.5 file:font-bold"
 					onChange={async (e) => {
 						const file = e.target.files?.[0]
 						setChecked(null)
@@ -491,7 +725,7 @@ function ImportForm({
 			{checked && checked.problems.length === 0 && (
 				<p className="font-bold">{m.import_ready({ count: String(checked.rows) })}</p>
 			)}
-			<div className="flex flex-wrap gap-2">
+			<FormActions>
 				<Button variant="outline" disabled={!csv || pending} onClick={() => check(false)}>
 					{m.import_check()}
 				</Button>
@@ -500,7 +734,7 @@ function ImportForm({
 						{m.import_confirm({ count: String(checked.rows) })}
 					</Button>
 				)}
-			</div>
+			</FormActions>
 		</div>
 	)
 }

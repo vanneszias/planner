@@ -1,6 +1,7 @@
 import { Button } from '@app/ui/components/button'
 import { createFileRoute, getRouteApi, Link, useRouter } from '@tanstack/react-router'
 import { cn } from 'cn'
+import { Check, ChevronRight, Copy, ExternalLink } from 'lucide-react'
 import { useState } from 'react'
 import { FormError } from '#/components/auth-shell'
 import { actionMessage } from '#/lib/errors'
@@ -49,68 +50,232 @@ function Overview() {
 		},
 	] as const
 
+	// Once everything is done the checklist has nothing to say: it steps aside.
+	const ready = published && steps.every((step) => step.done)
+	const participation = Route.useLoaderData()
+	const ranks = event.mode === 'ranking'
+	const places = sessions.reduce((sum, session) => sum + session.capacity, 0)
+	const stats: { label: string; value: number; of?: number; sub?: string }[] = [
+		{
+			label: m.stat_registered(),
+			value: participation.registrations,
+			sub: ranks
+				? m.stat_still_to_rank({
+						count: String(participation.registrations - participation.ranked),
+					})
+				: m.stat_avg_booked({
+						avg: (participation.registrations
+							? participation.booked / participation.registrations
+							: 0
+						).toFixed(1),
+					}),
+		},
+		ranks
+			? { label: m.stat_ranked(), value: participation.ranked, of: participation.registrations }
+			: { label: m.stat_booked(), value: participation.booked, of: places },
+		{
+			label: m.stat_programme(),
+			value: sessions.length,
+			sub: m.stat_programme_sub({ workshops: String(workshops.length), places: String(places) }),
+		},
+	]
+
 	return (
 		<div className="flex flex-col gap-6">
-			<section aria-labelledby="checklist" className="rounded-xl bg-card p-5">
-				<h2 id="checklist" className="mb-4 text-lg font-bold">
-					{m.checklist_title()}
-				</h2>
-				<ol className="flex flex-col gap-2">
-					{steps.map((item) => (
-						<li key={item.label}>
-							<Link
-								to={item.to}
-								params={params}
-								className="flex min-h-11 items-center gap-3 rounded-lg px-2 hover:bg-accent"
-							>
-								<CheckDot done={item.done} />
-								<span className="flex-1 font-bold">{item.label}</span>
-								<span className="text-sm text-muted-foreground">{item.detail}</span>
-							</Link>
-						</li>
-					))}
-					<li className="flex min-h-11 items-center gap-3 px-2">
-						<CheckDot done={published} />
-						<span className="flex-1 font-bold">{m.checklist_publish()}</span>
-					</li>
-				</ol>
-			</section>
-
-			<section className="flex flex-col gap-3 rounded-xl bg-card p-5" aria-live="polite">
-				{published ? (
-					<>
-						<p className="font-bold">{m.published_notice()}</p>
-						<p>
-							{m.public_page_label()}:{' '}
-							<a href={publicPath} className="font-mono text-primary underline underline-offset-4">
-								{publicPath}
-							</a>
-						</p>
-					</>
-				) : (
-					<p>{m.draft_notice()}</p>
-				)}
-				{canPublish && (
-					<div>
-						<Button
-							variant={published ? 'outline' : 'default'}
-							disabled={pending}
-							onClick={() => setStatus(published ? 'draft' : 'published')}
-						>
-							{published ? m.unpublish_button() : m.publish_button()}
-						</Button>
+			<dl className="grid grid-cols-3 gap-2 sm:gap-4">
+				{stats.map((stat) => (
+					<div
+						key={stat.label}
+						className="flex min-w-0 flex-col gap-1 rounded-xl bg-card p-3 shadow-card sm:p-5"
+					>
+						<dt className="text-sm font-bold text-muted-foreground">{stat.label}</dt>
+						<dd className="flex flex-wrap items-baseline gap-x-1.5">
+							<span className="text-2xl font-bold tabular-nums sm:text-3xl">{stat.value}</span>
+							{stat.of !== undefined && (
+								<span className="text-sm text-muted-foreground tabular-nums">
+									{m.stat_of({ total: String(stat.of) })}
+								</span>
+							)}
+							{stat.label === m.stat_programme() && (
+								<span className="text-sm text-muted-foreground">
+									{m.stat_sessions().toLowerCase()}
+								</span>
+							)}
+						</dd>
+						{stat.of !== undefined && (
+							<dd className="mt-1 h-1.5 overflow-hidden rounded-full bg-accent" aria-hidden>
+								<span
+									className="block h-full rounded-full bg-primary"
+									style={{ width: `${stat.of ? Math.min(100, (stat.value / stat.of) * 100) : 0}%` }}
+								/>
+							</dd>
+						)}
+						{stat.sub && (
+							<dd className="text-sm text-muted-foreground max-sm:hidden">{stat.sub}</dd>
+						)}
 					</div>
-				)}
-				<FormError message={error} />
-			</section>
+				))}
+			</dl>
 
-			<Retention eventId={event.id} />
+			<div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
+				{ready && (
+					<section
+						aria-labelledby="next-step"
+						className="flex min-w-0 flex-col gap-3 rounded-xl bg-tint-success p-5 ring-1 ring-primary/20"
+					>
+						<h2 id="next-step" className="font-display text-lg font-semibold">
+							{m.next_title()}
+						</h2>
+						<p className="text-sm text-muted-foreground">
+							{ranks
+								? m.next_rank_body({
+										ranked: String(participation.ranked),
+										total: String(participation.registrations),
+									})
+								: m.next_book_body({
+										booked: String(participation.booked),
+										places: String(places),
+									})}
+						</p>
+						<div>
+							<Button asChild>
+								<Link
+									to={ranks ? '/events/$eventId/allocation' : '/events/$eventId/check-in'}
+									params={params}
+								>
+									{ranks ? m.next_rank_action() : m.next_book_action()}
+									<ChevronRight />
+								</Link>
+							</Button>
+						</div>
+					</section>
+				)}
+				{!ready && (
+					<section
+						aria-labelledby="checklist"
+						className="min-w-0 rounded-xl bg-card p-5 shadow-card"
+					>
+						<h2 id="checklist" className="mb-3 font-display text-lg font-semibold">
+							{m.checklist_title()}
+						</h2>
+						<ol className="-mx-2 flex flex-col">
+							{steps.map((item) => (
+								<li key={item.label}>
+									<Link
+										to={item.to}
+										params={params}
+										className="group flex min-h-12 items-center gap-3 rounded-lg px-2 hover:bg-accent"
+									>
+										<CheckDot done={item.done} />
+										<span className="flex-1 font-bold">{item.label}</span>
+										<span className="text-sm text-muted-foreground">{item.detail}</span>
+										<ChevronRight
+											aria-hidden
+											className="size-4 text-muted-foreground group-hover:text-foreground"
+										/>
+									</Link>
+								</li>
+							))}
+							<li className="flex min-h-12 items-center gap-3 px-2">
+								<CheckDot done={published} />
+								<span className="flex-1 font-bold">{m.checklist_publish()}</span>
+							</li>
+						</ol>
+					</section>
+				)}
+
+				<section
+					className="flex min-w-0 flex-col gap-4 rounded-xl bg-card p-5 shadow-card"
+					aria-labelledby="public-page"
+					aria-live="polite"
+				>
+					<h2
+						id="public-page"
+						className="flex items-center gap-2 font-display text-lg font-semibold"
+					>
+						{m.public_page_label()}
+					</h2>
+					{published ? (
+						<>
+							<p className="flex items-center gap-2 text-sm font-bold">
+								<span className="size-2 rounded-full bg-success" aria-hidden />
+								{m.published_notice()}
+							</p>
+							<div className="flex items-center gap-2 rounded-lg border border-border bg-background py-1 pr-1 pl-3">
+								<span className="min-w-0 flex-1 truncate text-sm">{publicPath}</span>
+								<CopyButton text={() => new URL(publicPath, window.location.origin).href} />
+							</div>
+						</>
+					) : (
+						<p className="text-sm text-muted-foreground">{m.draft_notice()}</p>
+					)}
+					<div className="mt-auto flex flex-wrap gap-2">
+						{published && (
+							<Button asChild variant="outline" size="sm">
+								<a href={publicPath} target="_blank" rel="noreferrer">
+									<ExternalLink />
+									{m.open_page()}
+								</a>
+							</Button>
+						)}
+						{canPublish && !published && (
+							<Button disabled={pending} onClick={() => setStatus('published')}>
+								{m.publish_button()}
+							</Button>
+						)}
+					</div>
+					<FormError message={error} />
+				</section>
+			</div>
+
+			<Manage
+				eventId={event.id}
+				booking={!ranks}
+				published={published}
+				canPublish={canPublish}
+				pending={pending}
+				onUnpublish={() => setStatus('draft')}
+			/>
 		</div>
 	)
 }
 
+/** Copies a link and says so for two seconds. */
+function CopyButton({ text }: { text: () => string }) {
+	const [copied, setCopied] = useState(false)
+	return (
+		<Button
+			variant="ghost"
+			size="sm"
+			className="shrink-0"
+			onClick={async () => {
+				await navigator.clipboard.writeText(text())
+				setCopied(true)
+				setTimeout(() => setCopied(false), 2000)
+			}}
+		>
+			{copied ? <Check /> : <Copy />}
+			<span aria-live="polite">{copied ? m.link_copied() : m.copy_link()}</span>
+		</Button>
+	)
+}
+
 /** When participant data goes (D6, D20), and "Anonymise now" (journeys.md, O9). */
-function Retention({ eventId }: { eventId: string }) {
+function Manage({
+	eventId,
+	booking,
+	published,
+	canPublish,
+	pending: unpublishing,
+	onUnpublish,
+}: {
+	eventId: string
+	booking: boolean
+	published: boolean
+	canPublish: boolean
+	pending: boolean
+	onUnpublish: () => void
+}) {
 	const retention = Route.useLoaderData()
 	const router = useRouter()
 	const [confirming, setConfirming] = useState(false)
@@ -129,40 +294,71 @@ function Retention({ eventId }: { eventId: string }) {
 	}
 
 	return (
-		<section aria-labelledby="retention" className="flex flex-col gap-3 rounded-xl bg-card p-5">
-			<h2 id="retention" className="text-lg font-bold">
-				{m.retention_title()}
+		<section aria-labelledby="manage" className="flex flex-col gap-4">
+			<h2 id="manage" className="font-display text-lg font-semibold">
+				{m.manage_title()}
 			</h2>
-			{retention.doneAt ? (
-				<p>
-					{m.retention_done({ date: day(new Date(retention.doneAt).toISOString().slice(0, 10)) })}
-				</p>
-			) : (
-				<>
-					<p>{m.retention_scheduled({ date: day(retention.date) })}</p>
-					{retention.canAnonymise &&
-						(confirming ? (
-							<div className="flex flex-col gap-3 rounded-lg bg-tint-warning p-4">
-								<p>{m.retention_confirm()}</p>
-								<div className="flex flex-wrap gap-2">
-									<Button variant="destructive" disabled={pending} onClick={anonymise}>
-										{m.retention_anonymise_now()}
-									</Button>
-									<Button variant="ghost" onClick={() => setConfirming(false)}>
-										{m.cancel()}
-									</Button>
-								</div>
-							</div>
-						) : (
-							<div>
-								<Button variant="outline" onClick={() => setConfirming(true)}>
+			<div className="divide-y divide-border rounded-xl bg-card shadow-card">
+				{published && canPublish && (
+					<div className="flex flex-wrap items-center gap-4 p-5">
+						<div className="min-w-56 flex-1">
+							<h3 className="font-bold">{m.unpublish_title()}</h3>
+							<p className="text-sm text-muted-foreground">{m.unpublish_body()}</p>
+						</div>
+						<Button
+							variant="outline"
+							size="sm"
+							className="text-destructive hover:text-destructive"
+							disabled={unpublishing}
+							onClick={onUnpublish}
+						>
+							{m.unpublish_button()}
+						</Button>
+					</div>
+				)}
+				<div className="flex flex-col gap-3 p-5">
+					<div className="flex flex-wrap items-center gap-4">
+						<div className="min-w-56 flex-1">
+							<h3 id="retention" className="font-bold">
+								{m.retention_title()}
+							</h3>
+							<p className="text-sm text-muted-foreground">
+								{retention.doneAt
+									? m.retention_done({
+											date: day(new Date(retention.doneAt).toISOString().slice(0, 10)),
+										})
+									: booking
+										? m.retention_scheduled_booking({ date: day(retention.date) })
+										: m.retention_scheduled({ date: day(retention.date) })}
+							</p>
+						</div>
+						{!retention.doneAt && retention.canAnonymise && !confirming && (
+							<Button
+								variant="outline"
+								size="sm"
+								className="text-destructive hover:text-destructive"
+								onClick={() => setConfirming(true)}
+							>
+								{m.retention_anonymise_now()}
+							</Button>
+						)}
+					</div>
+					{confirming && (
+						<div className="flex flex-col gap-3 rounded-lg bg-tint-warning p-4">
+							<p>{m.retention_confirm()}</p>
+							<div className="flex flex-wrap gap-2">
+								<Button variant="destructive" size="sm" disabled={pending} onClick={anonymise}>
 									{m.retention_anonymise_now()}
 								</Button>
+								<Button variant="ghost" size="sm" onClick={() => setConfirming(false)}>
+									{m.cancel()}
+								</Button>
 							</div>
-						))}
-				</>
-			)}
-			<FormError message={error} />
+						</div>
+					)}
+					<FormError message={error} />
+				</div>
+			</div>
 		</section>
 	)
 }
@@ -176,7 +372,7 @@ function CheckDot({ done }: { done: boolean }) {
 				done ? 'border-primary bg-primary text-primary-foreground' : 'border-input',
 			)}
 		>
-			<span aria-hidden="true">{done ? '✓' : ''}</span>
+			{done && <Check aria-hidden className="size-3.5" strokeWidth={3} />}
 			<span className="sr-only">({done ? m.checklist_done() : m.checklist_todo()})</span>
 		</span>
 	)

@@ -1,7 +1,8 @@
 import { Button } from '@app/ui/components/button'
+import { ChevronDown, KeyRound, Mail } from 'lucide-react'
 import { type FormEvent, useState } from 'react'
 import { FormError } from '#/components/auth-shell'
-import { Field, FieldInput } from '#/components/field'
+import { Field, FieldInput, FieldSelect, FormActions } from '#/components/field'
 import { m } from '#/paraglide/messages'
 import { enterCodeFn, findProgrammeFn, registerFn } from '#/server/participant'
 import { Turnstile } from './turnstile'
@@ -11,6 +12,7 @@ export function RegisterForm({
 	eventId,
 	sessionId,
 	ageGroups,
+	suggestedAgeGroups = [],
 	turnstileSiteKey,
 	onDone,
 	onCancel,
@@ -18,13 +20,17 @@ export function RegisterForm({
 	eventId: string
 	sessionId?: string
 	ageGroups: { id: string; label: string }[]
+	/** Labels of the age groups the clicked session is for: preselect the first match. */
+	suggestedAgeGroups?: string[]
 	turnstileSiteKey: string | null
 	onDone: (message: string, refusal?: string) => Promise<void>
 	onCancel: () => void
 }) {
 	const [name, setName] = useState('')
 	const [email, setEmail] = useState('')
-	const [ageGroupId, setAgeGroupId] = useState(ageGroups[0]?.id ?? '')
+	const [ageGroupId, setAgeGroupId] = useState(
+		(ageGroups.find((g) => suggestedAgeGroups.includes(g.label)) ?? ageGroups[0])?.id ?? '',
+	)
 	const [consent, setConsent] = useState(false)
 	const [token, setToken] = useState<string>()
 	const [attempt, setAttempt] = useState(0)
@@ -70,11 +76,7 @@ export function RegisterForm({
 	}
 
 	return (
-		<form onSubmit={submit} noValidate className="flex flex-col gap-4 rounded-xl bg-card p-5">
-			<div>
-				<h2 className="text-lg font-bold">{m.register_title()}</h2>
-				<p className="text-sm text-muted-foreground">{m.register_intro()}</p>
-			</div>
+		<form onSubmit={submit} noValidate className="flex flex-col gap-5">
 			<Field id="reg-name" label={m.name_label()} error={issues.name}>
 				<FieldInput
 					id="reg-name"
@@ -97,9 +99,8 @@ export function RegisterForm({
 			</Field>
 			{ageGroups.length > 0 && (
 				<Field id="reg-age" label={m.age_group_select()}>
-					<select
+					<FieldSelect
 						id="reg-age"
-						className="h-11 rounded-md border border-input bg-card px-3"
 						value={ageGroupId}
 						onChange={(e) => setAgeGroupId(e.target.value)}
 					>
@@ -108,7 +109,7 @@ export function RegisterForm({
 								{group.label}
 							</option>
 						))}
-					</select>
+					</FieldSelect>
 				</Field>
 			)}
 			<label className="flex cursor-pointer items-start gap-3">
@@ -130,14 +131,14 @@ export function RegisterForm({
 			)}
 			<Turnstile siteKey={turnstileSiteKey} onToken={setToken} resetKey={attempt} />
 			<FormError message={error} />
-			<div className="flex flex-wrap gap-2">
+			<FormActions>
+				<Button type="button" variant="outline" onClick={onCancel}>
+					{m.cancel()}
+				</Button>
 				<Button type="submit" aria-disabled={pending || undefined}>
 					{sessionId ? m.register_and_book() : m.register_only()}
 				</Button>
-				<Button type="button" variant="ghost" onClick={onCancel}>
-					{m.cancel()}
-				</Button>
-			</div>
+			</FormActions>
 		</form>
 	)
 }
@@ -177,9 +178,14 @@ export function ReturningForms({
 
 	return (
 		<div className="flex flex-col gap-3">
-			<details className="rounded-xl bg-card p-4">
-				<summary className="min-h-11 cursor-pointer content-center font-bold">
-					{m.have_code()}
+			<details className="group rounded-xl bg-card px-4 py-1 shadow-card open:pb-4">
+				<summary className="flex min-h-12 cursor-pointer list-none items-center gap-3 font-bold [&::-webkit-details-marker]:hidden">
+					<KeyRound aria-hidden className="size-5 text-muted-foreground" />
+					<span className="flex-1">{m.have_code()}</span>
+					<ChevronDown
+						aria-hidden
+						className="size-4 text-muted-foreground transition-transform group-open:rotate-180"
+					/>
 				</summary>
 				<form onSubmit={submitCode} noValidate className="mt-3 flex flex-col gap-3">
 					<Field id="code" label={m.code_label()}>
@@ -202,9 +208,14 @@ export function ReturningForms({
 					</div>
 				</form>
 			</details>
-			<details className="rounded-xl bg-card p-4">
-				<summary className="min-h-11 cursor-pointer content-center font-bold">
-					{m.find_programme()}
+			<details className="group rounded-xl bg-card px-4 py-1 shadow-card open:pb-4">
+				<summary className="flex min-h-12 cursor-pointer list-none items-center gap-3 font-bold [&::-webkit-details-marker]:hidden">
+					<Mail aria-hidden className="size-5 text-muted-foreground" />
+					<span className="flex-1">{m.find_programme()}</span>
+					<ChevronDown
+						aria-hidden
+						className="size-4 text-muted-foreground transition-transform group-open:rotate-180"
+					/>
 				</summary>
 				<form onSubmit={submitEmail} noValidate className="mt-3 flex flex-col gap-3">
 					<Field id="find-email" label={m.email_label()}>

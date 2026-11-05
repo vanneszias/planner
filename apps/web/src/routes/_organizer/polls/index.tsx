@@ -1,5 +1,7 @@
 import { Button } from '@app/ui/components/button'
 import { createFileRoute, Link } from '@tanstack/react-router'
+import { CalendarSearch, Plus } from 'lucide-react'
+import { EmptyState, PageHeader } from '#/components/page'
 import { PollStatusLabel } from '#/components/poll/status'
 import { formatDateRange, formatDateTime } from '#/lib/format'
 import { m } from '#/paraglide/messages'
@@ -16,22 +18,23 @@ function Polls() {
 
 	return (
 		<div className="flex flex-col gap-6">
-			<div className="flex flex-wrap items-end justify-between gap-4">
-				<div>
-					<h1 className="font-display text-[clamp(1.75rem,6vw,2.25rem)] font-semibold">
-						{m.polls_title()}
-					</h1>
-					<p className="text-muted-foreground">{m.polls_intro()}</p>
-				</div>
-				{canCreate && (
-					<Button asChild>
-						<Link to="/polls/new">{m.poll_new()}</Link>
-					</Button>
-				)}
-			</div>
+			<PageHeader
+				title={m.polls_title()}
+				description={m.polls_intro()}
+				action={
+					canCreate && (
+						<Button asChild>
+							<Link to="/polls/new">
+								<Plus />
+								{m.poll_new()}
+							</Link>
+						</Button>
+					)
+				}
+			/>
 
 			{polls.length === 0 ? (
-				<p className="rounded-xl bg-card p-6">{m.polls_empty()}</p>
+				<EmptyState icon={<CalendarSearch />} title={m.polls_empty()} />
 			) : (
 				<ul className="flex flex-col gap-3">
 					{polls.map((poll) => (
@@ -39,10 +42,10 @@ function Polls() {
 							<Link
 								to="/polls/$pollId"
 								params={{ pollId: poll.id }}
-								className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-card p-4 hover:bg-accent"
+								className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-card p-4 shadow-card hover:bg-accent/60"
 							>
 								<span>
-									<span className="block text-lg font-bold">{poll.title}</span>
+									<span className="block font-bold">{poll.title}</span>
 									<span className="text-sm text-muted-foreground">
 										{poll.confirmedStartsAt
 											? formatDateTime(poll.confirmedStartsAt, poll.timezone)

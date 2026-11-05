@@ -1,10 +1,13 @@
 import type { Workshop } from '@app/domain'
 import { Button } from '@app/ui/components/button'
 import { Marker } from '@app/ui/components/marker'
-import { createFileRoute, getRouteApi, useRouter } from '@tanstack/react-router'
+import { createFileRoute, getRouteApi, Link, useRouter } from '@tanstack/react-router'
+import { Shuffle } from 'lucide-react'
 import { useState } from 'react'
 import { FormError } from '#/components/auth-shell'
 import { Explanation } from '#/components/event/explanation'
+import { FieldSelect } from '#/components/field'
+import { EmptyState } from '#/components/page'
 import { RadioCards } from '#/components/radio-cards'
 import { actionMessage } from '#/lib/errors'
 import { formatShortDayTime } from '#/lib/format'
@@ -36,7 +39,28 @@ const moveErrors: Record<string, () => string> = {
 }
 
 /** Draft, review, adjust and publish (journeys.md, O6). */
+/** Booking events have no allocation: the tab is hidden, and a stale link explains why. */
 function Allocation() {
+	const { event } = eventRoute.useLoaderData()
+	if (event.mode !== 'ranking')
+		return (
+			<EmptyState
+				icon={<Shuffle />}
+				title={m.allocation_booking_title()}
+				body={m.allocation_booking_body()}
+				action={
+					<Button asChild variant="outline" size="sm">
+						<Link to="/events/$eventId" params={{ eventId: event.id }}>
+							{m.back_to_overview()}
+						</Link>
+					</Button>
+				}
+			/>
+		)
+	return <AllocationPage />
+}
+
+function AllocationPage() {
 	const { progress, review, names, anonymised } = Route.useLoaderData()
 	const { event, workshops, sessions, canPublish, canEdit } = eventRoute.useLoaderData()
 	const router = useRouter()
@@ -51,11 +75,13 @@ function Allocation() {
 	const [pending, setPending] = useState(false)
 
 	if (event.mode !== 'ranking') {
-		return <p className="rounded-xl bg-card p-6">{m.allocation_booking_mode()}</p>
+		return <p className="rounded-xl bg-card shadow-card p-6">{m.allocation_booking_mode()}</p>
 	}
 	if (anonymised) return <p className="rounded-xl bg-tint-warning p-6">{m.data_deleted()}</p>
 
 	const workshopById = new Map(workshops.map((w) => [w.id, w]))
+	const places = sessions.reduce((sum, s) => sum + s.capacity, 0)
+	const needed = progress.registrations * event.sessionsPerParticipant
 	const sessionById = new Map(sessions.map((s) => [s.id, s]))
 	const sessionLabel = (id: string) => {
 		const s = sessionById.get(id)
@@ -90,13 +116,47 @@ function Allocation() {
 
 	return (
 		<div className="flex flex-col gap-6">
-			<section className="flex flex-col gap-4 rounded-xl bg-card p-5">
-				<p className="font-bold">
-					{m.allocation_progress({
-						ranked: String(progress.ranked),
-						total: String(progress.registrations),
-					})}
-				</p>
+			<section className="flex flex-col gap-5 rounded-xl bg-card p-5 shadow-card sm:p-6">
+				<h2 className="font-display text-lg font-semibold">{m.allocation_title()}</h2>
+				<dl className="grid gap-3 sm:grid-cols-2">
+					<div className="flex flex-col gap-1.5 rounded-lg bg-background p-4">
+						<dt className="text-sm font-bold text-muted-foreground">
+							{m.allocation_ranked_label()}
+						</dt>
+						<dd className="text-2xl font-bold tabular-nums">
+							{progress.ranked}{' '}
+							<span className="text-sm font-normal text-muted-foreground">
+								{m.stat_of({ total: String(progress.registrations) })}
+							</span>
+						</dd>
+						<dd className="h-1.5 overflow-hidden rounded-full bg-accent" aria-hidden>
+							<span
+								className="block h-full rounded-full bg-primary"
+								style={{
+									width: `${progress.registrations ? (progress.ranked / progress.registrations) * 100 : 0}%`,
+								}}
+							/>
+						</dd>
+					</div>
+					<div className="flex flex-col gap-1.5 rounded-lg bg-background p-4">
+						<dt className="text-sm font-bold text-muted-foreground">{m.allocation_capacity()}</dt>
+						<dd className="text-2xl font-bold tabular-nums">
+							{places}{' '}
+							<span className="text-sm font-normal text-muted-foreground">
+								{m.allocation_places_unit()}
+							</span>
+						</dd>
+						<dd className="text-sm text-muted-foreground">
+							{m.allocation_needed_short({
+								needed: String(needed),
+								spare:
+									places >= needed
+										? m.allocation_spare({ count: String(places - needed) })
+										: m.allocation_short({ count: String(needed - places) }),
+							})}
+						</dd>
+					</div>
+				</dl>
 				{canEdit && (
 					<>
 						<RadioCards
@@ -136,8 +196,11 @@ function Allocation() {
 
 			{review && (
 				<>
-					<section aria-labelledby="metrics" className="flex flex-col gap-2 rounded-xl bg-card p-5">
-						<h2 id="metrics" className="flex items-center gap-3 text-lg font-bold">
+					<section
+						aria-labelledby="metrics"
+						className="flex flex-col gap-2 rounded-xl bg-card shadow-card p-5"
+					>
+						<h2 id="metrics" className="flex items-center gap-3 font-display text-lg font-semibold">
 							{isDraft ? m.run_draft_label() : m.run_published_label()}
 						</h2>
 						<p>
@@ -154,7 +217,7 @@ function Allocation() {
 										people: String(review.metrics.peopleWithEmpty),
 									})}
 						</p>
-						<p className="font-mono text-sm text-muted-foreground">
+						<p className="text-sm text-muted-foreground tabular-nums">
 							{review.metrics.rankCounts
 								.map((count, i) => m.metric_choice({ rank: String(i + 1), count: String(count) }))
 								.join(' · ')}
@@ -223,15 +286,14 @@ function Allocation() {
 
 					<label className="flex max-w-xs flex-col gap-1 text-sm font-bold">
 						{m.filter_status()}
-						<select
-							className="h-11 rounded-md border border-input bg-card px-3 font-normal"
+						<FieldSelect
 							value={filter}
 							onChange={(e) => setFilter(e.target.value as typeof filter)}
 						>
 							<option value="all">{m.filter_all()}</option>
 							<option value="empty">{m.filter_empty()}</option>
 							<option value="notop3">{m.filter_no_top3()}</option>
-						</select>
+						</FieldSelect>
 					</label>
 
 					<ul className="flex flex-col gap-2">
@@ -296,7 +358,7 @@ function PersonRow({
 }) {
 	const [target, setTarget] = useState('')
 	return (
-		<li className="flex flex-col gap-2 rounded-xl bg-card p-4">
+		<li className="flex flex-col gap-2 rounded-xl bg-card shadow-card p-4">
 			<div className="flex flex-wrap items-start justify-between gap-2">
 				<div>
 					<p className="font-bold">{name}</p>
@@ -322,7 +384,9 @@ function PersonRow({
 						<li key={s.sessionId} className="flex items-center gap-2 text-sm">
 							{w && <Marker color={w.markerColor} shape={w.markerShape} className="size-4" />}
 							<span className="flex-1">{sessionLabel(s.sessionId)}</span>
-							<span className="font-mono text-muted-foreground">{s.rank ? `#${s.rank}` : '·'}</span>
+							<span className="font-bold text-muted-foreground tabular-nums">
+								{s.rank ? `#${s.rank}` : '·'}
+							</span>
 							{open && editable && (
 								<Button
 									variant="ghost"
@@ -347,8 +411,8 @@ function PersonRow({
 						<div className="flex flex-wrap items-end gap-2">
 							<label className="flex flex-col gap-1 text-sm font-bold">
 								{m.add_place()}
-								<select
-									className="h-11 max-w-72 rounded-md border border-input bg-card px-3 font-normal"
+								<FieldSelect
+									className="max-w-72 font-normal"
 									value={target}
 									onChange={(e) => setTarget(e.target.value)}
 								>
@@ -358,7 +422,7 @@ function PersonRow({
 											{sessionLabel(id)}
 										</option>
 									))}
-								</select>
+								</FieldSelect>
 							</label>
 							<Button
 								variant="outline"

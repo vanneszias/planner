@@ -18,6 +18,7 @@ import {
 	renameEventSlug,
 	roomConflicts,
 	saveAgeGroups,
+	seatCounts,
 	setEventStatus,
 	type UpdateEventInput,
 	type UpdateSessionInput,
@@ -64,19 +65,23 @@ export const getEventOverview = createServerFn({ method: 'GET' })
 			if (error instanceof DomainError && error.code === 'not_found') throw notFound()
 			throw error
 		})
-		const [workshops, sessions, organization, ageGroups, workshopAgeGroups] = await Promise.all([
-			listWorkshops(db, ctx, eventId),
-			listSessions(db, ctx, eventId),
-			getOrganization(db, ctx.organizationId),
-			listAgeGroups(db, ctx, eventId),
-			workshopAgeGroupIds(db, ctx, eventId),
-		])
+		const [workshops, sessions, organization, ageGroups, workshopAgeGroups, seats] =
+			await Promise.all([
+				listWorkshops(db, ctx, eventId),
+				listSessions(db, ctx, eventId),
+				getOrganization(db, ctx.organizationId),
+				listAgeGroups(db, ctx, eventId),
+				workshopAgeGroupIds(db, ctx, eventId),
+				seatCounts(db, eventId),
+			])
 		return {
 			ageGroups,
 			workshopAgeGroups,
 			event,
 			workshops,
 			sessions,
+			/** Places taken per session (booking mode, or after allocation). Counts only. */
+			seats,
 			conflicts: roomConflicts(sessions),
 			// The window as the organizer entered it, in the event's timezone.
 			window: {

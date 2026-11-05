@@ -1,6 +1,7 @@
 import { brand } from '@app/brand'
 import { type Mark, pollCalendarFile, rankWindows } from '@app/domain/poll-grid'
 import { Button } from '@app/ui/components/button'
+import { ConfirmDialog } from '@app/ui/components/dialog'
 import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
 import { cn } from 'cn'
 import { type FormEvent, useMemo, useState } from 'react'
@@ -66,7 +67,7 @@ function PollPage() {
 			</header>
 			<main className="mx-auto flex max-w-3xl flex-col gap-8 px-4 py-8">
 				<div className="flex flex-col gap-2">
-					<h1 className="font-display text-[clamp(1.75rem,6vw,2.25rem)] leading-tight font-semibold hyphens-auto">
+					<h1 className="font-display text-[clamp(1.75rem,6vw,2.25rem)] leading-tight font-semibold text-balance wrap-break-word">
 						{poll.title}
 					</h1>
 					{poll.location && <p className="font-bold">{poll.location}</p>}
@@ -166,7 +167,7 @@ function StatusBanner({
 	}
 	if (poll.deadlineAt) {
 		return (
-			<p className="rounded-xl bg-card p-4">
+			<p className="rounded-xl bg-card shadow-card p-4">
 				{poll.decisionMode === 'auto'
 					? m.poll_auto_deadline({ when: formatStamp(poll.deadlineAt) })
 					: m.poll_deadline({ when: formatStamp(poll.deadlineAt) })}
@@ -199,6 +200,7 @@ function AnswerForm({ page }: { page: Page }) {
 	const [error, setError] = useState<string | null>(null)
 	const [notice, setNotice] = useState<string | null>(null)
 	const [editLink, setEditLink] = useState<string | null>(null)
+	const [confirmingRemove, setConfirmingRemove] = useState(false)
 	const [pending, setPending] = useState(false)
 
 	async function save(event: FormEvent) {
@@ -228,7 +230,7 @@ function AnswerForm({ page }: { page: Page }) {
 	}
 
 	async function remove() {
-		if (!window.confirm(m.poll_remove_confirm())) return
+		setConfirmingRemove(false)
 		setPending(true)
 		const result = await deleteMyResponseFn({ data: poll.shareCode })
 		setPending(false)
@@ -248,7 +250,7 @@ function AnswerForm({ page }: { page: Page }) {
 			onSubmit={save}
 			noValidate
 			aria-labelledby="yours"
-			className="flex flex-col gap-4 rounded-xl bg-card p-5"
+			className="flex flex-col gap-4 rounded-xl bg-card shadow-card p-5"
 		>
 			<div>
 				<h2 id="yours" className="font-display text-xl font-semibold">
@@ -348,11 +350,24 @@ function AnswerForm({ page }: { page: Page }) {
 					{me ? m.poll_save_changes() : m.poll_save_answer()}
 				</Button>
 				{me && (
-					<Button type="button" variant="ghost" disabled={pending} onClick={remove}>
+					<Button
+						type="button"
+						variant="ghost"
+						disabled={pending}
+						onClick={() => setConfirmingRemove(true)}
+					>
 						{m.poll_remove_answer()}
 					</Button>
 				)}
 			</div>
+			<ConfirmDialog
+				open={confirmingRemove}
+				onOpenChange={setConfirmingRemove}
+				title={m.poll_remove_confirm()}
+				confirmLabel={m.poll_remove_answer()}
+				cancelLabel={m.cancel()}
+				onConfirm={remove}
+			/>
 		</form>
 	)
 }

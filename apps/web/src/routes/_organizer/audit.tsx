@@ -1,7 +1,9 @@
 import { type AuditCategory, type AuditData, auditCategories } from '@app/domain'
 import { Button } from '@app/ui/components/button'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { formatStamp } from '#/lib/format'
+import { FieldSelect } from '#/components/field'
+import { PageHeader } from '#/components/page'
+import { formatClock, formatDayStamp } from '#/lib/format'
 import { m } from '#/paraglide/messages'
 import { getAuditLogFn } from '#/server/audit'
 
@@ -79,8 +81,6 @@ const actionLabels: Record<string, () => string> = {
 	'organization.update': m.audit_organization_update,
 }
 
-const select = 'h-11 rounded-md border border-input bg-card px-3 font-normal'
-
 function AuditLog() {
 	const { entries, next, events, members } = Route.useLoaderData()
 	const search = Route.useSearch()
@@ -90,19 +90,13 @@ function AuditLog() {
 		navigate({ search: (current) => ({ ...current, ...change, before: undefined }) })
 
 	return (
-		<div className="flex flex-col gap-5">
-			<div>
-				<h1 className="font-display text-[clamp(1.5rem,5vw,2.25rem)] leading-tight font-semibold">
-					{m.audit_title()}
-				</h1>
-				<p className="text-muted-foreground">{m.audit_intro()}</p>
-			</div>
+		<div className="flex flex-col gap-6">
+			<PageHeader title={m.audit_title()} description={m.audit_intro()} />
 
-			<div className="flex flex-wrap items-end gap-3">
-				<label className="flex flex-col gap-1 text-sm font-bold">
+			<div className="grid gap-3 sm:grid-cols-3">
+				<label className="flex min-w-0 flex-col gap-1.5 text-sm font-bold">
 					{m.audit_filter_event()}
-					<select
-						className={select}
+					<FieldSelect
 						value={search.event ?? ''}
 						onChange={(e) => filter({ event: e.target.value || undefined })}
 					>
@@ -112,12 +106,11 @@ function AuditLog() {
 								{event.name}
 							</option>
 						))}
-					</select>
+					</FieldSelect>
 				</label>
-				<label className="flex flex-col gap-1 text-sm font-bold">
+				<label className="flex min-w-0 flex-col gap-1.5 text-sm font-bold">
 					{m.audit_filter_category()}
-					<select
-						className={select}
+					<FieldSelect
 						value={search.category ?? ''}
 						onChange={(e) =>
 							filter({ category: (e.target.value || undefined) as AuditCategory | undefined })
@@ -129,12 +122,11 @@ function AuditLog() {
 								{categoryLabels[category]()}
 							</option>
 						))}
-					</select>
+					</FieldSelect>
 				</label>
-				<label className="flex flex-col gap-1 text-sm font-bold">
+				<label className="flex min-w-0 flex-col gap-1.5 text-sm font-bold">
 					{m.audit_filter_person()}
-					<select
-						className={select}
+					<FieldSelect
 						value={search.person ?? ''}
 						onChange={(e) => filter({ person: e.target.value || undefined })}
 					>
@@ -144,17 +136,17 @@ function AuditLog() {
 								{member.name}
 							</option>
 						))}
-					</select>
+					</FieldSelect>
 				</label>
 			</div>
 
 			{entries.length === 0 ? (
-				<p className="rounded-xl bg-card p-6">{m.audit_empty()}</p>
+				<p className="rounded-xl bg-card shadow-card p-6">{m.audit_empty()}</p>
 			) : (
-				<div className="overflow-x-auto rounded-xl bg-card">
+				<div className="overflow-hidden rounded-xl bg-card shadow-card sm:overflow-x-auto">
 					<table className="w-full text-left text-sm">
 						<caption className="sr-only">{m.audit_title()}</caption>
-						<thead className="border-b border-border">
+						<thead className="border-b border-border bg-accent/50 text-[0.8125rem] font-bold text-muted-foreground max-sm:sr-only">
 							<tr>
 								<th scope="col" className="p-3">
 									{m.audit_column_when()}
@@ -171,29 +163,59 @@ function AuditLog() {
 							</tr>
 						</thead>
 						<tbody>
-							{entries.map((entry) => (
-								<tr key={entry.id} className="border-b border-border align-top last:border-0">
-									<td className="p-3 font-mono whitespace-nowrap">
-										{formatStamp(entry.createdAt)}
-									</td>
-									<td className="p-3">
-										{entry.actorKind === 'system'
-											? m.audit_actor_system()
-											: (entry.actorName ?? m.audit_actor_removed())}
-									</td>
-									<td className="p-3">
-										<span className="block">{actionLabels[entry.action]?.() ?? entry.action}</span>
-										<Details data={entry.data} />
-									</td>
-									<td className="p-3">{entry.eventName ?? '—'}</td>
-								</tr>
-							))}
+							{collapse(entries).map((row) =>
+								row.kind === 'day' ? (
+									<tr key={row.key} className="border-b border-border bg-background/60">
+										<th
+											scope="colgroup"
+											colSpan={4}
+											className="px-3 py-2 text-left text-xs font-bold tracking-wide text-muted-foreground uppercase"
+										>
+											{row.label}
+										</th>
+									</tr>
+								) : (
+									<tr
+										key={row.entry.id}
+										className="border-b border-border align-top last:border-0 max-sm:grid max-sm:grid-cols-[6.5rem_minmax(0,1fr)] max-sm:gap-x-3 max-sm:px-3 max-sm:py-2.5 max-sm:[&>td]:p-0"
+									>
+										<td className="w-32 p-3 whitespace-nowrap text-muted-foreground tabular-nums max-sm:row-span-3">
+											{clockRange(row.firstAt, row.entry.createdAt)}
+										</td>
+										<td className="p-3">
+											{row.entry.actorKind === 'system'
+												? m.audit_actor_system()
+												: (row.entry.actorName ?? m.audit_actor_removed())}
+										</td>
+										<td className="p-3">
+											<span className="flex flex-wrap items-center gap-2">
+												{actionLabels[row.entry.action]?.() ?? row.entry.action}
+												{row.count > 1 && (
+													<span className="rounded-full bg-accent px-2 py-1 text-xs leading-none font-bold">
+														{m.audit_repeated({ count: String(row.count) })}
+													</span>
+												)}
+											</span>
+											<Details data={row.entry.data} />
+										</td>
+										<td className="p-3 max-sm:mt-1 max-sm:text-xs max-sm:text-muted-foreground">
+											{row.events.length ? row.events.join(', ') : '—'}
+										</td>
+									</tr>
+								),
+							)}
 						</tbody>
 					</table>
 				</div>
 			)}
 
-			<div className="flex flex-wrap gap-2">
+			<div className="flex flex-wrap items-center gap-2">
+				<p className="mr-auto text-sm text-muted-foreground">
+					{m.audit_showing({
+						events: String(entries.length),
+						rows: String(collapse(entries).filter((r) => r.kind === 'entry').length),
+					})}
+				</p>
 				{search.before && (
 					<Button variant="outline" asChild>
 						<Link from={Route.fullPath} search={(current) => ({ ...current, before: undefined })}>
@@ -211,6 +233,54 @@ function AuditLog() {
 			</div>
 		</div>
 	)
+}
+
+type Entry = Awaited<ReturnType<typeof Route.useLoaderData>>['entries'][number]
+type Row =
+	| { kind: 'day'; key: string; label: string }
+	| { kind: 'entry'; entry: Entry; count: number; firstAt: number; events: string[] }
+
+const dayKey = (at: number) => new Date(at).toDateString()
+
+/** "22:28–22:47" for a folded run; one time when it all happened in the same minute. */
+function clockRange(from: number, to: number) {
+	const [a, b] = [formatClock(from), formatClock(to)]
+	return a === b ? a : `${a}–${b}`
+}
+
+/** Day headings, and runs of the same person doing the same thing folded into one row. */
+function collapse(entries: Entry[]): Row[] {
+	const rows: Row[] = []
+	let last: Extract<Row, { kind: 'entry' }> | null = null
+	for (const entry of entries) {
+		const day = dayKey(entry.createdAt)
+		if (!last || dayKey(last.entry.createdAt) !== day) {
+			rows.push({ kind: 'day', key: day, label: formatDayStamp(entry.createdAt) })
+			last = null
+		}
+		if (
+			last &&
+			JSON.stringify(entry.data) === JSON.stringify(last.entry.data) &&
+			last.entry.action === entry.action &&
+			last.entry.actorName === entry.actorName &&
+			last.firstAt - entry.createdAt < 15 * 60_000
+		) {
+			last.count++
+			last.firstAt = entry.createdAt
+			if (entry.eventName && !last.events.includes(entry.eventName))
+				last.events.push(entry.eventName)
+			continue
+		}
+		last = {
+			kind: 'entry',
+			entry,
+			count: 1,
+			firstAt: entry.createdAt,
+			events: entry.eventName ? [entry.eventName] : [],
+		}
+		rows.push(last)
+	}
+	return rows
 }
 
 /** The few details entries carry: counts, kinds and changed fields. Never personal data. */

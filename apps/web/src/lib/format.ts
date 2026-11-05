@@ -1,3 +1,4 @@
+import { m } from '#/paraglide/messages'
 import { getLocale } from '#/paraglide/runtime'
 
 const locale = () => (getLocale() === 'nl' ? 'nl-BE' : 'en-GB')
@@ -61,4 +62,31 @@ export function formatShortDayTime(instant: Date, timeZone: string): string {
 /** "30 Oct 2026, 13:05" in the viewer's own timezone, for things like exports and the audit log. */
 export function formatStamp(at: number): string {
 	return new Intl.DateTimeFormat(locale(), { dateStyle: 'medium', timeStyle: 'short' }).format(at)
+}
+
+/** Groups one day's items by identical start and end time, keeping order of first appearance. */
+export function groupBySlot<T extends { startsAt: Date; endsAt: Date }>(items: T[]) {
+	const slots = new Map<string, { startsAt: Date; endsAt: Date; items: T[] }>()
+	for (const item of items) {
+		const key = `${item.startsAt.getTime()}-${item.endsAt.getTime()}`
+		const slot = slots.get(key) ?? { startsAt: item.startsAt, endsAt: item.endsAt, items: [] }
+		slot.items.push(item)
+		slots.set(key, slot)
+	}
+	return [...slots.values()].sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime())
+}
+
+/** "13:05" in the viewer's own timezone. */
+export function formatClock(at: number): string {
+	return new Intl.DateTimeFormat(locale(), { timeStyle: 'short' }).format(at)
+}
+
+/** "Wednesday 4 November 2026" in the viewer's own timezone, for day headings in logs. */
+export function formatDayStamp(at: number): string {
+	return new Intl.DateTimeFormat(locale(), { dateStyle: 'full' }).format(at)
+}
+
+/** "1 session" / "3 sessions". */
+export function sessionCount(count: number): string {
+	return count === 1 ? m.one_session() : m.workshop_sessions({ count: String(count) })
 }

@@ -1,10 +1,12 @@
 import { authClient } from '@app/auth/client'
 import type { Role } from '@app/auth/permissions'
 import { Button } from '@app/ui/components/button'
+import { ConfirmDialog } from '@app/ui/components/dialog'
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { type FormEvent, useState } from 'react'
 import { FormError } from '#/components/auth-shell'
-import { Field, FieldInput } from '#/components/field'
+import { Field, FieldInput, PrefixedInput } from '#/components/field'
+import { PageHeader } from '#/components/page'
 import { RadioCards } from '#/components/radio-cards'
 import { actionMessage } from '#/lib/errors'
 import { m } from '#/paraglide/messages'
@@ -27,9 +29,10 @@ function Team() {
 	const { organization, members, invitations, currentUserId, canManage } = Route.useLoaderData()
 	const router = useRouter()
 	const [error, setError] = useState<string | null>(null)
+	const [removing, setRemoving] = useState<{ id: string; name: string } | null>(null)
 
-	async function remove(memberId: string, name: string) {
-		if (!window.confirm(m.remove_member_confirm({ name }))) return
+	async function remove(memberId: string) {
+		setRemoving(null)
 		const result = await authClient.organization.removeMember({
 			memberIdOrEmail: memberId,
 			organizationId: organization?.id,
@@ -46,36 +49,38 @@ function Team() {
 
 	return (
 		<div className="flex flex-col gap-6">
-			<div>
-				<p className="text-sm text-muted-foreground">{organization?.name}</p>
-				<h1 className="font-display text-[clamp(1.75rem,6vw,2.25rem)] font-semibold">
-					{m.team_title()}
-				</h1>
-			</div>
+			<PageHeader title={m.team_title()} />
 
-			<ul className="flex flex-col gap-2">
+			<ul className="divide-y divide-border rounded-xl bg-card shadow-card">
 				{members.map((member) => (
-					<li
-						key={member.memberId}
-						className="flex flex-wrap items-center gap-3 rounded-xl bg-card p-4"
-					>
-						<div className="flex-1">
+					<li key={member.memberId} className="flex flex-wrap items-center gap-3 px-4 py-3 sm:px-5">
+						<span
+							aria-hidden
+							className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent font-bold text-muted-foreground uppercase"
+						>
+							{(member.name || member.email).slice(0, 1)}
+						</span>
+						<div className="min-w-0 flex-1">
 							<p className="font-bold">
 								{member.name || member.email}
 								{member.userId === currentUserId && (
 									<span className="font-normal text-muted-foreground"> ({m.you()})</span>
 								)}
 							</p>
-							<p className="text-sm text-muted-foreground">{member.email}</p>
+							<p className="truncate text-sm text-muted-foreground">{member.email}</p>
 						</div>
-						<span className="rounded-full bg-accent px-3 py-1 text-sm font-bold">
+						<span className="rounded-full bg-accent px-2.5 py-0.5 text-sm font-bold">
 							{roleName(member.role)}
 						</span>
 						{canManage && member.userId !== currentUserId && (
 							<Button
 								variant="ghost"
+								size="sm"
+								className="text-muted-foreground hover:bg-tint-danger hover:text-destructive"
 								aria-label={`${m.remove_member()}: ${member.name || member.email}`}
-								onClick={() => remove(member.memberId, member.name || member.email)}
+								onClick={() =>
+									setRemoving({ id: member.memberId, name: member.name || member.email })
+								}
 							>
 								{m.remove_member()}
 							</Button>
@@ -93,7 +98,7 @@ function Team() {
 						{invitations.map((invitation) => (
 							<li
 								key={invitation.id}
-								className="flex flex-wrap items-center gap-3 rounded-xl bg-card p-4"
+								className="flex flex-wrap items-center gap-3 rounded-xl bg-card shadow-card p-4"
 							>
 								<p className="flex-1">{invitation.email}</p>
 								<span className="rounded-full bg-accent px-3 py-1 text-sm font-bold">
@@ -102,6 +107,7 @@ function Team() {
 								{canManage && (
 									<Button
 										variant="ghost"
+										size="sm"
 										aria-label={`${m.cancel_invitation()}: ${invitation.email}`}
 										onClick={() => cancel(invitation.id)}
 									>
@@ -115,8 +121,20 @@ function Team() {
 			)}
 
 			<FormError message={error} />
-			{canManage && organization && <OrganizationForm organization={organization} />}
-			{canManage && organization && <InviteForm organizationId={organization.id} />}
+			{canManage && organization && (
+				<div className="grid items-start gap-6 lg:grid-cols-2">
+					<InviteForm organizationId={organization.id} />
+					<OrganizationForm organization={organization} />
+				</div>
+			)}
+			<ConfirmDialog
+				open={removing !== null}
+				onOpenChange={(open) => !open && setRemoving(null)}
+				title={removing ? m.remove_member_confirm({ name: removing.name }) : ''}
+				confirmLabel={m.remove_member()}
+				cancelLabel={m.cancel()}
+				onConfirm={() => (removing ? remove(removing.id) : undefined)}
+			/>
 		</div>
 	)
 }
@@ -152,8 +170,12 @@ function InviteForm({ organizationId }: { organizationId: string }) {
 	}
 
 	return (
-		<form onSubmit={submit} noValidate className="flex flex-col gap-4 rounded-xl bg-card p-5">
-			<h2 className="text-lg font-bold">{m.invite_title()}</h2>
+		<form
+			onSubmit={submit}
+			noValidate
+			className="flex flex-col gap-4 rounded-xl bg-card shadow-card p-5"
+		>
+			<h2 className="font-display text-lg font-semibold">{m.invite_title()}</h2>
 			<Field id="invite-email" label={m.invite_email_label()} error={issue}>
 				<FieldInput
 					id="invite-email"
@@ -220,8 +242,12 @@ function OrganizationForm({ organization }: { organization: { name: string; slug
 	}
 
 	return (
-		<form onSubmit={submit} noValidate className="flex flex-col gap-4 rounded-xl bg-card p-5">
-			<h2 className="text-lg font-bold">{m.organization_section()}</h2>
+		<form
+			onSubmit={submit}
+			noValidate
+			className="flex flex-col gap-4 rounded-xl bg-card shadow-card p-5"
+		>
+			<h2 className="font-display text-lg font-semibold">{m.organization_section()}</h2>
 			<Field id="org-name" label={m.organization_name_label()} error={issues.name}>
 				<FieldInput
 					id="org-name"
@@ -236,21 +262,18 @@ function OrganizationForm({ organization }: { organization: { name: string; slug
 				hint={m.web_address_hint()}
 				error={issues.slug}
 			>
-				<div className="flex items-center gap-1">
-					<span className="font-mono text-muted-foreground">/</span>
-					<FieldInput
-						id="org-slug"
-						hint
-						error={issues.slug}
-						className="font-mono"
-						value={slug}
-						onChange={(e) => setSlug(e.target.value)}
-					/>
-				</div>
+				<PrefixedInput
+					prefix="/"
+					id="org-slug"
+					hint
+					error={issues.slug}
+					value={slug}
+					onChange={(e) => setSlug(e.target.value)}
+				/>
 			</Field>
 			<FormError message={error} />
 			<div className="flex flex-wrap items-center gap-4">
-				<Button type="submit" variant="outline" disabled={pending}>
+				<Button type="submit" disabled={pending}>
 					{m.save_organization()}
 				</Button>
 				<p aria-live="polite" className="font-bold empty:hidden">

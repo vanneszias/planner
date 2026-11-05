@@ -50,7 +50,7 @@ function Groups() {
 					) : (
 						<li
 							key={group.id}
-							className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-card p-4"
+							className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-card shadow-card p-4"
 						>
 							<span>
 								<span className="block font-bold">{group.name}</span>
@@ -127,7 +127,11 @@ function GroupForm({
 	}
 
 	return (
-		<form onSubmit={submit} noValidate className="flex flex-col gap-4 rounded-xl bg-card p-5">
+		<form
+			onSubmit={submit}
+			noValidate
+			className="flex flex-col gap-4 rounded-xl bg-card shadow-card p-5"
+		>
 			<Field id="group-name" label={m.poll_group_name()} error={issues.name}>
 				<FieldInput
 					id="group-name"
