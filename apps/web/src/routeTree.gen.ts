@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as OrganizerRouteImport } from './routes/_organizer'
+import { Route as AccountRouteImport } from './routes/account'
 import { Route as HealthRouteImport } from './routes/health'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as SignUpRouteImport } from './routes/sign-up'
@@ -46,6 +47,11 @@ const IndexRoute = IndexRouteImport.update({
 } as any)
 const OrganizerRoute = OrganizerRouteImport.update({
   id: '/_organizer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountRoute = AccountRouteImport.update({
+  id: '/account',
+  path: '/account',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HealthRoute = HealthRouteImport.update({
@@ -194,6 +200,7 @@ const ApiLivePollCodeRoute = ApiLivePollCodeRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
   '/health': typeof HealthRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
@@ -224,6 +231,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
   '/health': typeof HealthRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
@@ -255,6 +263,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_organizer': typeof OrganizerRouteWithChildren
+  '/account': typeof AccountRoute
   '/health': typeof HealthRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
@@ -287,6 +296,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/account'
     | '/health'
     | '/sign-in'
     | '/sign-up'
@@ -317,6 +327,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/account'
     | '/health'
     | '/sign-in'
     | '/sign-up'
@@ -347,6 +358,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_organizer'
+    | '/account'
     | '/health'
     | '/sign-in'
     | '/sign-up'
@@ -379,6 +391,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   OrganizerRoute: typeof OrganizerRouteWithChildren
+  AccountRoute: typeof AccountRoute
   HealthRoute: typeof HealthRoute
   SignInRoute: typeof SignInRoute
   SignUpRoute: typeof SignUpRoute
@@ -406,6 +419,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof OrganizerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/account': {
+      id: '/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AccountRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/health': {
@@ -660,6 +680,7 @@ const OrganizerRouteWithChildren = OrganizerRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   OrganizerRoute: OrganizerRouteWithChildren,
+  AccountRoute: AccountRoute,
   HealthRoute: HealthRoute,
   SignInRoute: SignInRoute,
   SignUpRoute: SignUpRoute,

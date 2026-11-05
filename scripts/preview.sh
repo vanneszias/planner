@@ -6,7 +6,7 @@
 #   scripts/preview.sh prune           delete those whose branch is gone
 #
 # The branch defaults to WORKERS_CI_BRANCH (set by Workers Builds), then the
-# checked-out one. `up` needs PREVIEW_AUTH_SECRET and PREVIEW_EXPORT_KEY in the
+# checked-out one. `up` needs PREVIEW_AUTH_SECRET, PREVIEW_EXPORT_KEY and PREVIEW_TOKEN_KEY in the
 # environment. All commands are safe to run again.
 set -euo pipefail
 
@@ -88,6 +88,7 @@ fi
 
 : "${PREVIEW_AUTH_SECRET:?set PREVIEW_AUTH_SECRET}"
 : "${PREVIEW_EXPORT_KEY:?set PREVIEW_EXPORT_KEY}"
+: "${PREVIEW_TOKEN_KEY:?set PREVIEW_TOKEN_KEY}"
 
 echo "Preview for $branch: $name"
 id=$(database_id "$db")
@@ -104,10 +105,11 @@ node "$root/scripts/preview-config.mjs" "$name" "$id"
 secrets=$(mktemp)
 trap 'rm -f "$secrets"' EXIT
 node -e '
-	const { PREVIEW_AUTH_SECRET, PREVIEW_EXPORT_KEY } = process.env
+	const { PREVIEW_AUTH_SECRET, PREVIEW_EXPORT_KEY, PREVIEW_TOKEN_KEY } = process.env
 	require("fs").writeFileSync(process.argv[1], JSON.stringify({
 		BETTER_AUTH_SECRET: PREVIEW_AUTH_SECRET,
 		EXPORT_SIGNING_KEY: PREVIEW_EXPORT_KEY,
+		PARTICIPANT_TOKEN_KEY: PREVIEW_TOKEN_KEY,
 		TURNSTILE_SECRET: "1x0000000000000000000000000000000AA",
 	}))
 ' "$secrets"

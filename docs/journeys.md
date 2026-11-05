@@ -91,6 +91,20 @@ Security: tokens are long and random behind the short code; codes are
 rate-limited per IP and per event; organizers can regenerate a lost or leaked code
 (old one stops working immediately).
 
+### P3b. Pass and account (D29)
+
+- **Signed in, verified email:** a "My pass" card with the QR sits above the
+  programme, and the same QR is the check-in pass on the day. A guardian sees
+  one card per child.
+- **Link only, no account:** the card offers "Create an account" and returns
+  the participant to this event after sign-in.
+- **Account page** (`/account`): every pass linked to the account, with the
+  event name and a way back to the programme.
+- Passes attach when the account looks, from the verified email only. A child
+  registered under a guardian's email attaches to the guardian's account.
+- An organizer's codes issued before passes existed have no QR to show; the
+  organizer issues new codes to give one.
+
 ### P4. Returning: "where's my programme?"
 
 Ways back, in order of how often they'll be used:

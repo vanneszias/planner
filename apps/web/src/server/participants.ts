@@ -13,10 +13,10 @@ import {
 	setPreferencesFor,
 } from '@app/domain'
 import { createServerFn } from '@tanstack/react-start'
-import { renderSVG } from 'uqr'
 import { sendEmails } from './email'
 import { action, limitBulk, requireOrganizer } from './organizer'
 import { guardianLinkEmail } from './participant-emails'
+import { passSvg, sealToken } from './pass'
 
 /* The organizer's participant screens (journeys.md, O4). */
 
@@ -65,13 +65,13 @@ export const issueCardsFn = createServerFn({ method: 'POST' })
 		const { db, ctx } = await requireOrganizer()
 		return action(async () => {
 			await limitBulk(ctx)
-			const issued = await issueCredentials(db, ctx, data.eventId, data.registrationIds)
+			const issued = await issueCredentials(db, ctx, data.eventId, data.registrationIds, sealToken)
 			return issued.map((person) => ({
 				id: person.id,
 				// First name only on the card: it may be pinned up or lost.
 				firstName: person.displayName.split(' ')[0] ?? person.displayName,
 				code: person.code,
-				qr: renderSVG(linkFor(person.token), { pixelSize: 4, border: 1 }),
+				qr: passSvg(person.token),
 			}))
 		})
 	})
@@ -93,6 +93,7 @@ export const emailGuardiansFn = createServerFn({ method: 'POST' })
 				ctx,
 				data.eventId,
 				withGuardian.map((p) => p.id),
+				sealToken,
 			)
 			await sendEmails(
 				issued.flatMap((person) =>
