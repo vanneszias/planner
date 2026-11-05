@@ -112,10 +112,10 @@ function NewEvent() {
 	return (
 		<form onSubmit={submit} noValidate className="mx-auto flex max-w-xl flex-col gap-6">
 			<div>
-				<p className="sr-only">
+				<p className="mb-1 text-sm font-bold text-muted-foreground">
 					{m.step_of({ step: String(step + 1), total: String(totalSteps) })}
 				</p>
-				<ol aria-hidden className="mb-4 grid grid-cols-4 gap-2">
+				<ol aria-hidden className="mb-8 grid grid-cols-4 gap-2">
 					{[m.step_name(), m.step_dates(), m.step_mode(), m.step_sessions()].map((label, index) => (
 						<li key={label} className="flex flex-col gap-1.5">
 							<span

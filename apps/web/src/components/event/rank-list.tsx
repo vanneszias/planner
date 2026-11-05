@@ -13,6 +13,8 @@ export type RankableWorkshop = {
 	markerShape: MarkerShape
 	/** Session times, shown only when the event allows it (D7). */
 	times: string[]
+	/** What the workshop is about: helps people choose between unfamiliar titles. */
+	description?: string
 }
 
 /**
@@ -304,6 +306,11 @@ function WorkshopName({
 			<span className="block leading-snug font-bold" lang={contentLocale}>
 				{workshop.title}
 			</span>
+			{workshop.description && (
+				<span className="line-clamp-2 text-sm text-muted-foreground" lang={contentLocale}>
+					{workshop.description}
+				</span>
+			)}
 			{!hideTimes && workshop.times.length > 0 && <Times times={workshop.times} className="mt-1" />}
 		</span>
 	)

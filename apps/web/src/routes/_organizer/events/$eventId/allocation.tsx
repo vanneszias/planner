@@ -117,7 +117,7 @@ function AllocationPage() {
 	return (
 		<div className="flex flex-col gap-6">
 			<section className="flex flex-col gap-5 rounded-xl bg-card p-5 shadow-card sm:p-6">
-				<h2 className="text-lg font-bold">{m.allocation_title()}</h2>
+				<h2 className="font-display text-lg font-semibold">{m.allocation_title()}</h2>
 				<dl className="grid gap-3 sm:grid-cols-2">
 					<div className="flex flex-col gap-1.5 rounded-lg bg-background p-4">
 						<dt className="text-sm font-bold text-muted-foreground">
@@ -141,16 +141,18 @@ function AllocationPage() {
 					<div className="flex flex-col gap-1.5 rounded-lg bg-background p-4">
 						<dt className="text-sm font-bold text-muted-foreground">{m.allocation_capacity()}</dt>
 						<dd className="text-2xl font-bold tabular-nums">
-							{places >= needed
-								? m.allocation_spare({ count: String(places - needed) })
-								: m.allocation_short({ count: String(needed - places) })}
+							{places}{' '}
+							<span className="text-sm font-normal text-muted-foreground">
+								{m.allocation_places_unit()}
+							</span>
 						</dd>
 						<dd className="text-sm text-muted-foreground">
-							{m.allocation_needed_line({
-								places: String(places),
-								needed: String(progress.registrations * event.sessionsPerParticipant),
-								people: String(progress.registrations),
-								per: String(event.sessionsPerParticipant),
+							{m.allocation_needed_short({
+								needed: String(needed),
+								spare:
+									places >= needed
+										? m.allocation_spare({ count: String(places - needed) })
+										: m.allocation_short({ count: String(needed - places) }),
 							})}
 						</dd>
 					</div>
@@ -198,7 +200,7 @@ function AllocationPage() {
 						aria-labelledby="metrics"
 						className="flex flex-col gap-2 rounded-xl bg-card shadow-card p-5"
 					>
-						<h2 id="metrics" className="flex items-center gap-3 text-lg font-bold">
+						<h2 id="metrics" className="flex items-center gap-3 font-display text-lg font-semibold">
 							{isDraft ? m.run_draft_label() : m.run_published_label()}
 						</h2>
 						<p>

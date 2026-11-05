@@ -16,7 +16,7 @@ import { Scanner } from '#/components/check-in/scanner'
 import { useLiveCheckIns } from '#/components/check-in/use-live-check-ins'
 import { Field, FieldInput, FieldSelect } from '#/components/field'
 import { actionMessage } from '#/lib/errors'
-import { formatShortDayTime, formatTime } from '#/lib/format'
+import { formatShortDayTime, formatTime, groupByDay } from '#/lib/format'
 import { m } from '#/paraglide/messages'
 import { checkInFn, getCheckInFn, getRosterFn, undoCheckInFn } from '#/server/event-day'
 
@@ -170,7 +170,12 @@ function CheckIn() {
 
 	return (
 		<div className="flex flex-col gap-6">
-			<div className="grid gap-4 rounded-xl bg-card p-5 shadow-card sm:grid-cols-[1fr_auto] sm:items-end print:hidden">
+			<div
+				className={cn(
+					'grid gap-4 rounded-xl bg-card p-5 shadow-card sm:grid-cols-[1fr_auto] sm:items-end print:hidden',
+					page.canCheckIn && !page.anonymised && '-mb-6 rounded-b-none',
+				)}
+			>
 				<Field id="checkin-session" label={m.checkin_session_label()}>
 					<FieldSelect
 						id="checkin-session"
@@ -183,10 +188,18 @@ function CheckIn() {
 						}}
 					>
 						<option value={wholeEvent}>{m.checkin_whole_event()}</option>
-						{page.sessions.map((s) => (
-							<option key={s.id} value={s.id}>
-								{formatShortDayTime(new Date(s.startsAt), page.timezone)} · {s.workshopTitle}
-							</option>
+						{groupByDay(
+							page.sessions.map((s) => ({ ...s, startsAt: new Date(s.startsAt) })),
+							page.timezone,
+						).map((day) => (
+							<optgroup key={day.label} label={day.label}>
+								{day.items.map((s) => (
+									<option key={s.id} value={s.id}>
+										{formatTime(s.startsAt, page.timezone)} · {s.workshopTitle}
+										{s.room ? ` · ${s.room}` : ''}
+									</option>
+								))}
+							</optgroup>
 						))}
 					</FieldSelect>
 				</Field>
@@ -211,34 +224,8 @@ function CheckIn() {
 					</div>
 				)}
 			</div>
-
-			{page.anonymised && <p className="rounded-xl bg-tint-warning p-4">{m.data_deleted()}</p>}
-			{!page.canCheckIn && (
-				<p className="rounded-xl bg-tint-warning p-4 print:hidden">{m.checkin_read_only()}</p>
-			)}
-
-			<div aria-live="polite" role="status" className="empty:hidden print:hidden">
-				{shown && (
-					<ScanResult
-						shown={shown}
-						session={session}
-						time={time}
-						pending={pending}
-						onForce={(request) => send(request, true)}
-						onUndo={(id) =>
-							undo(id, shown.kind === 'result' && shown.result.ok ? shown.result.person.name : '')
-						}
-					/>
-				)}
-			</div>
-			{queued.length > 0 && (
-				<p className="rounded-xl bg-tint-warning p-4 font-bold print:hidden">
-					{m.checkin_queued({ count: String(queued.length) })}
-				</p>
-			)}
-
 			{page.canCheckIn && !page.anonymised && (
-				<div className="flex flex-col gap-4 rounded-xl bg-card p-5 shadow-card print:hidden">
+				<div className="flex flex-col gap-4 rounded-xl rounded-t-none border-t border-border bg-card p-5 shadow-card print:hidden">
 					<div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:gap-x-4">
 						<Button
 							variant={scanning ? 'outline' : 'default'}
@@ -274,9 +261,34 @@ function CheckIn() {
 				</div>
 			)}
 
+			{page.anonymised && <p className="rounded-xl bg-tint-warning p-4">{m.data_deleted()}</p>}
+			{!page.canCheckIn && (
+				<p className="rounded-xl bg-tint-warning p-4 print:hidden">{m.checkin_read_only()}</p>
+			)}
+
+			<div aria-live="polite" role="status" className="empty:hidden print:hidden">
+				{shown && (
+					<ScanResult
+						shown={shown}
+						session={session}
+						time={time}
+						pending={pending}
+						onForce={(request) => send(request, true)}
+						onUndo={(id) =>
+							undo(id, shown.kind === 'result' && shown.result.ok ? shown.result.person.name : '')
+						}
+					/>
+				)}
+			</div>
+			{queued.length > 0 && (
+				<p className="rounded-xl bg-tint-warning p-4 font-bold print:hidden">
+					{m.checkin_queued({ count: String(queued.length) })}
+				</p>
+			)}
+
 			<section aria-labelledby="checkin-names" className="flex flex-col gap-3 print:hidden">
 				<div className="flex flex-wrap items-center justify-between gap-2">
-					<h2 id="checkin-names" className="text-lg font-bold">
+					<h2 id="checkin-names" className="font-display text-lg font-semibold">
 						{m.checkin_by_name()}
 					</h2>
 					<Button
@@ -353,7 +365,7 @@ function CheckIn() {
 						</ul>
 					</>
 				) : (
-					<div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-edge/60 p-4">
+					<div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-card p-4 shadow-card">
 						<p className="text-sm text-muted-foreground">{m.checkin_names_hint()}</p>
 						<Button
 							variant="outline"

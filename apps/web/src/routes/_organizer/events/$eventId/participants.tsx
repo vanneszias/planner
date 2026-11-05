@@ -3,7 +3,19 @@ import { Dialog } from '@app/ui/components/dialog'
 import { Input } from '@app/ui/components/input'
 import { createFileRoute, getRouteApi, useRouter } from '@tanstack/react-router'
 import { cn } from 'cn'
-import { Check, Eye, Mail, Pencil, Printer, Search, Upload, UserPlus, Users } from 'lucide-react'
+import {
+	Check,
+	Circle,
+	Download,
+	Eye,
+	Mail,
+	Pencil,
+	Printer,
+	Search,
+	Upload,
+	UserPlus,
+	Users,
+} from 'lucide-react'
 import { type FormEvent, useMemo, useState } from 'react'
 import { FormError } from '#/components/auth-shell'
 import { ExportsPanel } from '#/components/event/exports-panel'
@@ -180,6 +192,14 @@ function Participants() {
 							<span className="sm:hidden">{m.import_short()}</span>
 							<span className="max-sm:hidden">{m.import_csv()}</span>
 						</Button>
+						{canExport && (
+							<Button asChild variant="outline">
+								<a href="#exports">
+									<Download />
+									<span className="max-sm:sr-only">{m.export_short()}</span>
+								</a>
+							</Button>
+						)}
 						<Button onClick={() => setPanel('add')}>
 							<UserPlus />
 							{m.add_participant()}
@@ -376,7 +396,7 @@ function Participants() {
 											.map((tag) => (
 												<span
 													key={tag}
-													className="rounded-full bg-accent px-2 py-1 text-xs leading-none font-bold text-muted-foreground"
+													className="rounded-full border border-border px-2 py-[3px] text-xs leading-none font-bold text-muted-foreground"
 												>
 													{tag}
 												</span>
@@ -385,10 +405,14 @@ function Participants() {
 											<span
 												className={cn(
 													'inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs leading-none font-bold',
-													p.ranked ? 'bg-tint-success' : 'bg-accent text-muted-foreground',
+													p.ranked ? 'bg-tint-success' : 'bg-tint-warning',
 												)}
 											>
-												{p.ranked && <Check aria-hidden className="size-3" strokeWidth={3} />}
+												{p.ranked ? (
+													<Check aria-hidden className="size-3" strokeWidth={3} />
+												) : (
+													<Circle aria-hidden className="size-3" strokeWidth={3} />
+												)}
 												{p.ranked ? m.ranked_yes() : m.ranked_no()}
 											</span>
 										)}
@@ -471,7 +495,7 @@ function Participants() {
 													.map((tag) => (
 														<span
 															key={tag}
-															className="rounded-full bg-accent px-2 py-1 text-xs leading-none font-bold text-muted-foreground"
+															className="rounded-full border border-border px-2 py-[3px] text-xs leading-none font-bold text-muted-foreground"
 														>
 															{tag}
 														</span>
@@ -505,10 +529,14 @@ function Participants() {
 													<span
 														className={cn(
 															'inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-xs leading-none font-bold whitespace-nowrap',
-															p.ranked ? 'bg-tint-success' : 'bg-accent text-muted-foreground',
+															p.ranked ? 'bg-tint-success' : 'bg-tint-warning',
 														)}
 													>
-														{p.ranked && <Check aria-hidden className="size-3" strokeWidth={3} />}
+														{p.ranked ? (
+															<Check aria-hidden className="size-3" strokeWidth={3} />
+														) : (
+															<Circle aria-hidden className="size-3" strokeWidth={3} />
+														)}
 														{p.ranked ? m.ranked_yes() : m.ranked_no()}
 													</span>
 													{canWrite && (

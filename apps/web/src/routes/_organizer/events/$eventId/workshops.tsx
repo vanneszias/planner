@@ -105,7 +105,7 @@ function Workshops() {
 								<span className="w-24 shrink-0 text-right text-sm tabular-nums max-sm:hidden">
 									{stat ? sessionCount(stat.sessions) : '—'}
 								</span>
-								<span className="w-24 shrink-0 text-right text-sm text-muted-foreground tabular-nums max-sm:hidden">
+								<span className="w-24 shrink-0 text-right text-sm tabular-nums max-sm:hidden">
 									{stat ? m.places_short({ count: String(stat.places) }) : ''}
 								</span>
 								{canEdit && (

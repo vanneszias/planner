@@ -574,5 +574,11 @@
 	"workshop_capacity_line": "{sessions} sessies · {places} plaatsen. Tijden en plaatsen stel je in bij Programma.",
 	"one_session": "1 sessie",
 	"rank_intro_anonymous": "Rangschik {min} tot {max} workshops die je graag doet; we proberen je in {sessions} sessies te plaatsen. Schrijf je eerst in: je krijgt een link per e-mail, zonder wachtwoord.",
-	"slot_preview_more": "+{count} meer"
+	"slot_preview_more": "+{count} meer",
+	"browse_programme": "Bekijk het programma",
+	"open_slot_choose": "Kies een sessie",
+	"allocation_places_unit": "plaatsen",
+	"allocation_needed_short": "{needed} nodig · {spare}",
+	"export_short": "Exporteren",
+	"audit_showing": "{count} items getoond"
 }

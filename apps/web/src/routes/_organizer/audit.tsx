@@ -197,7 +197,7 @@ function AuditLog() {
 											</span>
 											<Details data={row.entry.data} />
 										</td>
-										<td className="p-3 max-sm:text-muted-foreground">
+										<td className="p-3 max-sm:mt-1 max-sm:text-xs max-sm:text-muted-foreground">
 											{row.events.length ? row.events.join(', ') : '—'}
 										</td>
 									</tr>
@@ -208,7 +208,10 @@ function AuditLog() {
 				</div>
 			)}
 
-			<div className="flex flex-wrap gap-2">
+			<div className="flex flex-wrap items-center gap-2">
+				<p className="mr-auto text-sm text-muted-foreground">
+					{m.audit_showing({ count: String(entries.length) })}
+				</p>
 				{search.before && (
 					<Button variant="outline" asChild>
 						<Link from={Route.fullPath} search={(current) => ({ ...current, before: undefined })}>

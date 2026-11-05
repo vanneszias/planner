@@ -82,15 +82,15 @@ function Overview() {
 
 	return (
 		<div className="flex flex-col gap-6">
-			<dl className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
+			<dl className="grid grid-cols-3 gap-2 sm:gap-4">
 				{stats.map((stat) => (
 					<div
 						key={stat.label}
-						className="flex flex-col gap-1 rounded-xl bg-card p-4 shadow-card last:max-sm:col-span-2 sm:p-5"
+						className="flex min-w-0 flex-col gap-1 rounded-xl bg-card p-3 shadow-card sm:p-5"
 					>
 						<dt className="text-sm font-bold text-muted-foreground">{stat.label}</dt>
-						<dd className="flex items-baseline gap-1.5">
-							<span className="text-3xl font-bold tabular-nums">{stat.value}</span>
+						<dd className="flex flex-wrap items-baseline gap-x-1.5">
+							<span className="text-2xl font-bold tabular-nums sm:text-3xl">{stat.value}</span>
 							{stat.of !== undefined && (
 								<span className="text-sm text-muted-foreground tabular-nums">
 									{m.stat_of({ total: String(stat.of) })}
@@ -110,18 +110,20 @@ function Overview() {
 								/>
 							</dd>
 						)}
-						{stat.sub && <dd className="text-sm text-muted-foreground">{stat.sub}</dd>}
+						{stat.sub && (
+							<dd className="text-sm text-muted-foreground max-sm:hidden">{stat.sub}</dd>
+						)}
 					</div>
 				))}
 			</dl>
 
-			<div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+			<div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
 				{ready && (
 					<section
 						aria-labelledby="next-step"
 						className="flex min-w-0 flex-col gap-3 rounded-xl bg-tint-success p-5 ring-1 ring-primary/20"
 					>
-						<h2 id="next-step" className="text-lg font-bold">
+						<h2 id="next-step" className="font-display text-lg font-semibold">
 							{m.next_title()}
 						</h2>
 						<p className="text-sm text-muted-foreground">
@@ -153,7 +155,7 @@ function Overview() {
 						aria-labelledby="checklist"
 						className="min-w-0 rounded-xl bg-card p-5 shadow-card"
 					>
-						<h2 id="checklist" className="mb-3 text-lg font-bold">
+						<h2 id="checklist" className="mb-3 font-display text-lg font-semibold">
 							{m.checklist_title()}
 						</h2>
 						<ol className="-mx-2 flex flex-col">
@@ -187,7 +189,10 @@ function Overview() {
 					aria-labelledby="public-page"
 					aria-live="polite"
 				>
-					<h2 id="public-page" className="flex items-center gap-2 text-lg font-bold">
+					<h2
+						id="public-page"
+						className="flex items-center gap-2 font-display text-lg font-semibold"
+					>
 						{m.public_page_label()}
 					</h2>
 					{published ? (
@@ -290,7 +295,7 @@ function Manage({
 
 	return (
 		<section aria-labelledby="manage" className="flex flex-col gap-4">
-			<h2 id="manage" className="text-lg font-bold">
+			<h2 id="manage" className="font-display text-lg font-semibold">
 				{m.manage_title()}
 			</h2>
 			<div className="divide-y divide-border rounded-xl bg-card shadow-card">

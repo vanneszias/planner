@@ -574,5 +574,11 @@
 	"workshop_capacity_line": "{sessions} sessions · {places} places. Times and places are set in Schedule.",
 	"one_session": "1 session",
 	"rank_intro_anonymous": "Rank {min} to {max} workshops you'd like to do; we aim to place you in {sessions} sessions. Register first: we'll email you a link, no password needed.",
-	"slot_preview_more": "+{count} more"
+	"slot_preview_more": "+{count} more",
+	"browse_programme": "Browse the programme",
+	"open_slot_choose": "Choose a session",
+	"allocation_places_unit": "places",
+	"allocation_needed_short": "{needed} needed · {spare}",
+	"export_short": "Export",
+	"audit_showing": "Showing {count} entries"
 }

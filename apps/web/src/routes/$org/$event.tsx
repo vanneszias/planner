@@ -328,6 +328,12 @@ function EventPage() {
 					<Button className="w-full" onClick={() => setRegisteringFor('none')}>
 						{m.register_only()}
 					</Button>
+					<a
+						href="#programme-list"
+						className="self-center text-sm font-bold text-primary underline-offset-4 hover:underline lg:hidden"
+					>
+						{m.browse_programme()} ↓
+					</a>
 				</section>
 			)}
 			<ReturningForms
@@ -455,6 +461,7 @@ function EventPage() {
 									title: w.title,
 									markerColor: w.markerColor,
 									markerShape: w.markerShape,
+									description: w.description,
 									times: event.showTimesWhileRanking
 										? sessions
 												.filter((s) => s.workshopId === w.id)
@@ -507,7 +514,11 @@ function EventPage() {
 				<Explanation trace={me.explanation} titleOf={(id) => workshopById.get(id)?.title ?? ''} />
 			)}
 			{tab === 'myday' && me ? null : (
-				<section aria-labelledby="programme" className="flex flex-col gap-4">
+				<section
+					id="programme-list"
+					aria-labelledby="programme"
+					className="flex scroll-mt-4 flex-col gap-4"
+				>
 					<div className="flex flex-wrap items-center justify-between gap-3">
 						<h2 id="programme" className="font-display text-xl font-semibold">
 							{m.programme_title()}
@@ -537,7 +548,7 @@ function EventPage() {
 					{groupByDay(sessions, event.timezone).length > 1 && (
 						<nav
 							aria-label={m.jump_to_day()}
-							className="sticky top-0 z-10 flex gap-2 overflow-x-auto border-b border-border bg-background py-2 [scrollbar-width:none]"
+							className="sticky top-0 z-10 flex h-[3.25rem] items-center gap-2 overflow-x-auto border-b border-border bg-background [scrollbar-width:none]"
 						>
 							{groupByDay(sessions, event.timezone).map((day, index) => (
 								<a
@@ -568,7 +579,7 @@ function EventPage() {
 									}
 									className="group/slot flex flex-col"
 								>
-									<summary className="flex min-h-10 cursor-pointer list-none items-center gap-3 rounded-lg [&::-webkit-details-marker]:hidden">
+									<summary className="sticky top-[3.25rem] z-[5] flex min-h-10 cursor-pointer list-none items-center gap-3 bg-background [&::-webkit-details-marker]:hidden">
 										<span className="font-bold tabular-nums">
 											{formatTime(slot.startsAt, event.timezone)}–
 											{formatTime(slot.endsAt, event.timezone)}
@@ -608,7 +619,7 @@ function EventPage() {
 														me &&
 															state &&
 															state.action === null &&
-															'[&_.session-title>svg]:[fill-opacity:0.3]',
+															'[&_.session-name]:font-medium [&_.session-title>svg]:[fill-opacity:0.3]',
 													)}
 												>
 													<div className="session-title flex flex-1 items-start gap-3">
@@ -622,14 +633,6 @@ function EventPage() {
 																<span className="session-name font-bold" lang={event.defaultLocale}>
 																	{workshop.title}
 																</span>
-																{workshop.ageGroups.length > 0 && (
-																	<span
-																		className="rounded-full bg-accent px-2 py-1 text-xs leading-none font-bold"
-																		lang={event.defaultLocale}
-																	>
-																		{m.for_ages({ groups: workshop.ageGroups.join(', ') })}
-																	</span>
-																)}
 															</p>
 															<p className="flex items-center gap-1.5 text-sm text-muted-foreground">
 																{me && state && state.action === null && (
@@ -644,6 +647,14 @@ function EventPage() {
 																)}
 																<span>
 																	{session.room ? `${session.room} · ` : ''}
+																	{workshop.ageGroups.length > 0 && (
+																		<span
+																			className="font-bold text-foreground"
+																			lang={event.defaultLocale}
+																		>
+																			{m.for_ages({ groups: workshop.ageGroups.join(', ') })} ·{' '}
+																		</span>
+																	)}
 																	{state ? (
 																		<span
 																			className={cn(state.scarce && 'font-bold text-destructive')}
@@ -808,7 +819,7 @@ function Shell({
 					</span>
 					<LanguageSwitch />
 				</div>
-				<header className="flex max-w-3xl flex-col gap-3 pt-2">
+				<header className="flex flex-col gap-3 pt-2">
 					<h1
 						lang={event.defaultLocale}
 						className="font-display text-[clamp(1.875rem,6vw,2.75rem)] leading-[1.1] font-semibold text-balance wrap-break-word"

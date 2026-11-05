@@ -60,10 +60,10 @@ export function ExportsPanel({ eventId }: { eventId: string }) {
 	return (
 		<section
 			aria-labelledby="exports"
-			className="flex flex-col gap-3 rounded-xl bg-card shadow-card p-5"
+			className="scroll-mt-20 flex flex-col gap-3 rounded-xl bg-card shadow-card p-5"
 		>
 			<div>
-				<h2 id="exports" className="text-lg font-bold">
+				<h2 id="exports" className="font-display text-lg font-semibold">
 					{m.exports_title()}
 				</h2>
 				<p className="text-sm text-muted-foreground">{m.exports_hint()}</p>

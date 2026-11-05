@@ -175,7 +175,7 @@ function InviteForm({ organizationId }: { organizationId: string }) {
 			noValidate
 			className="flex flex-col gap-4 rounded-xl bg-card shadow-card p-5"
 		>
-			<h2 className="text-lg font-bold">{m.invite_title()}</h2>
+			<h2 className="font-display text-lg font-semibold">{m.invite_title()}</h2>
 			<Field id="invite-email" label={m.invite_email_label()} error={issue}>
 				<FieldInput
 					id="invite-email"
@@ -247,7 +247,7 @@ function OrganizationForm({ organization }: { organization: { name: string; slug
 			noValidate
 			className="flex flex-col gap-4 rounded-xl bg-card shadow-card p-5"
 		>
-			<h2 className="text-lg font-bold">{m.organization_section()}</h2>
+			<h2 className="font-display text-lg font-semibold">{m.organization_section()}</h2>
 			<Field id="org-name" label={m.organization_name_label()} error={issues.name}>
 				<FieldInput
 					id="org-name"
@@ -273,7 +273,7 @@ function OrganizationForm({ organization }: { organization: { name: string; slug
 			</Field>
 			<FormError message={error} />
 			<div className="flex flex-wrap items-center gap-4">
-				<Button type="submit" variant="outline" disabled={pending}>
+				<Button type="submit" disabled={pending}>
 					{m.save_organization()}
 				</Button>
 				<p aria-live="polite" className="font-bold empty:hidden">
