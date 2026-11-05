@@ -30,10 +30,20 @@ export default {
 		const files = r2Files(env.FILES)
 		for (const message of batch.messages) {
 			const body = message.body
-			if (body.kind === 'email') {
-				// Sending lands with the Email Service setup (needs a sending domain).
-				// Never log the body: it contains sign-in links.
-				console.warn('Email not sent: no sending domain configured yet', { id: message.id })
+			if (body.kind === 'email' && 'to' in body) {
+				try {
+					await deliverEmail(env, body)
+				} catch (error) {
+					// Suppressed recipients never succeed, so drop them instead of retrying.
+					const code = (error as { code?: string }).code
+					if (code !== 'E_RECIPIENT_SUPPRESSED') {
+						// Never log the body or recipient: it contains sign-in links and addresses.
+						console.error('Email failed', { id: message.id, attempts: message.attempts, code })
+						message.retry({ delaySeconds: 10 * message.attempts })
+						continue
+					}
+					console.warn('Email dropped: recipient suppressed', { id: message.id })
+				}
 			} else if (body.kind === 'export' && 'exportId' in body) {
 				try {
 					await runExport(db, files, body.exportId)
@@ -71,6 +81,21 @@ export default {
 		if (retention.failed.length > 0) throw new Error('Some events could not be anonymised')
 	},
 } satisfies ExportedHandler<Env, JobMessage>
+
+/** Sends one queued email through Email Service, or logs it in preview (docs/previews.md). */
+async function deliverEmail(env: Env, email: EmailMessage) {
+	if (env.EMAIL_DELIVERY === 'console') {
+		// Previews only: the body holds sign-in links, so production must never log it.
+		console.log(`\n✉️  To: ${email.to}\nSubject: ${email.subject}\n\n${email.text}\n`)
+		return
+	}
+	await env.EMAIL.send({
+		to: email.to,
+		from: { email: env.EMAIL_FROM, name: brand.email.fromName },
+		subject: email.subject,
+		text: email.text,
+	})
+}
 
 /** Confirms or flags due auto polls, then queues the outcome emails (claimed, so sent once). */
 async function decidePolls(db: Db, env: Env) {
