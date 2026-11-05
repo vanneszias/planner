@@ -5,8 +5,10 @@
 	"compatibility_date": "2026-10-23",
 	"compatibility_flags": ["nodejs_compat"],
 	"observability": { "enabled": true },
-	"workers_dev": true,
+	// Production is served only on its custom domain; preview configs turn workers.dev back on.
+	"workers_dev": false,
 	"preview_urls": true,
+	"routes": [{ "pattern": "api.events.zias.be", "custom_domain": true }],
 	// Always "eu" when deployed. Local dev clears it (see apps/web/vite.config.ts).
 	"vars": { "COORDINATOR_JURISDICTION": "eu" },
 	"d1_databases": [

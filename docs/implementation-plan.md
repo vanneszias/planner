@@ -88,8 +88,10 @@ production; sign-in works with all four methods; UI renders in English and Dutch
 
 - [x] Production resources in the `eu` jurisdiction: D1 `event-db`, R2
   `event-files`, Queues `event-jobs` and `event-jobs-dlq` (all verified).
-- [x] Production deploy: `https://event-web.zias.workers.dev`,
-  `https://event-api.zias.workers.dev`; `coordinator` and `jobs` have no public URL.
+- [x] Production deploy: `https://events.zias.be` (`web`) and
+  `https://api.events.zias.be` (`api`), both Workers custom domains with
+  `workers.dev` turned off (2026-11-05; before that `event-web.zias.workers.dev`
+  and `event-api.zias.workers.dev`). `coordinator` and `jobs` have no public URL.
 - [x] ~~Previews use per-version preview URLs~~ (2026-10-30), superseded
   2026-11-04: **each pull request gets its own environment** (own D1 database,
   queue and Workers). Since 2026-11-05 per branch, deleted with the branch.
@@ -357,7 +359,7 @@ through the Cloudflare API.
 - [x] Security headers on every Worker; CSP with a per-request nonce on `web`
   (`strict-dynamic`, Turnstile allowed), `Permissions-Policy: camera=(self)`.
 - [x] Production Turnstile widget `event-web` (invisible, hostnames
-  `event-web.zias.workers.dev` and `zias.workers.dev` for previews) and
+  `events.zias.be` and `zias.workers.dev` for previews) and
   `TURNSTILE_SECRET`; Turnstile on organizer sign-up and magic link requests
   (Better Auth captcha plugin) as tabled. Widgets reset after each submit:
   tokens work once.
@@ -456,7 +458,9 @@ NVDA.
 - **Code and CI:** GitHub, with Cloudflare Workers Builds for checks,
   migrations and `wrangler deploy` of all four Workers (GitHub Actions until
   2026-11-05). Repo creation confirmed separately.
-- **Domain:** none yet; `*.workers.dev` for previews and the pilot setup.
-  Passkeys registered there won't carry over to a later domain.
+- **Domain:** ~~none yet; `*.workers.dev` for the pilot setup~~. Since
+  2026-11-05 production is `events.zias.be` (api on `api.events.zias.be`);
+  previews stay on `*.workers.dev`. Passkeys registered on the old
+  `event-web.zias.workers.dev` don't carry over.
 - **Google sign-in:** wired behind environment variables; the button shows only
   when credentials exist.

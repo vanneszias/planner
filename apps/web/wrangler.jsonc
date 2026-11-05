@@ -5,19 +5,21 @@
 	"compatibility_date": "2026-10-23",
 	"compatibility_flags": ["nodejs_compat"],
 	"observability": { "enabled": true },
-	"workers_dev": true,
+	// Production is served only on its custom domain; preview configs turn workers.dev back on.
+	"workers_dev": false,
 	"preview_urls": true,
+	"routes": [{ "pattern": "events.zias.be", "custom_domain": true }],
 	// Always "eu" when deployed. Local dev clears it (see apps/web/vite.config.ts).
 	"vars": {
 		"COORDINATOR_JURISDICTION": "eu",
 		// Set to the deployed origin per environment.
-		"BETTER_AUTH_URL": "https://event-web.zias.workers.dev",
+		"BETTER_AUTH_URL": "https://events.zias.be",
 		// "queue" when deployed; "console" only in local dev (sign-in links are printed).
 		"EMAIL_DELIVERY": "queue",
 		// Public Turnstile site key (invisible widget "event-web"); TURNSTILE_SECRET is a Worker secret.
 		"TURNSTILE_SITE_KEY": "0x4AAAAAAFsmjTgiklByDVV2",
 		// The api Worker's origin, for export download links.
-		"API_URL": "https://event-api.zias.workers.dev"
+		"API_URL": "https://api.events.zias.be"
 	},
 	"upload_source_maps": true,
 	"d1_databases": [
