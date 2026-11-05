@@ -14,7 +14,9 @@ import {
 	getEvent,
 	listExports,
 	listSessions,
+	rankingProgress,
 	requestExport,
+	seatCounts,
 	signExportLink,
 } from '@app/domain'
 import { coordinatorFor, r2Files } from '@app/platform'
@@ -143,13 +145,20 @@ export const exportLinkFn = createServerFn({ method: 'POST' })
 		})
 	})
 
-/** When the event's participant data goes, for the overview (D6, D20). */
+/** Participation counts and when the event's participant data goes, for the overview (D6, D20). */
 export const getRetentionFn = createServerFn({ method: 'GET' })
 	.validator((eventId: string) => eventId)
 	.handler(async ({ data: eventId }) => {
 		const { db, ctx } = await requireOrganizer()
 		const event = await getEvent(db, ctx, eventId)
+		const [progress, seats] = await Promise.all([
+			rankingProgress(db, ctx, eventId),
+			seatCounts(db, eventId),
+		])
 		return {
+			registrations: progress.registrations,
+			ranked: progress.ranked,
+			booked: Object.values(seats).reduce((sum, taken) => sum + taken, 0),
 			date: anonymisationDate(event),
 			doneAt: event.dataDeletedAt?.getTime() ?? null,
 			canAnonymise: can(ctx, { event: ['delete'] }),
