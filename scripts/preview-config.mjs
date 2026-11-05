@@ -68,6 +68,8 @@ for (const app of apps) {
 	for (const binding of config.durable_objects?.bindings ?? []) {
 		if (binding.script_name) binding.script_name += suffix
 	}
+	// Production event-web's migrations only clean up a stray class; a fresh preview never had it.
+	if (app === 'web') delete config.migrations
 	// No crons: the account's cron trigger limit is shared with production.
 	if (config.triggers) config.triggers = { crons: [] }
 
