@@ -40,7 +40,7 @@ const shapes: Record<MarkerShape, React.ReactNode> = {
 	),
 	hexagon: <polygon points="10,1.5 17.4,5.75 17.4,14.25 10,18.5 2.6,14.25 2.6,5.75" />,
 	plus: <path d="M7.5 2.5h5v5h5v5h-5v5h-5v-5h-5v-5h5z" />,
-	moon: <path d="M2 9a8 8 0 0 0 16 0z" />,
+	moon: <path d="M1.5 5h17a8.5 11.5 0 0 1-17 0z" />,
 }
 
 /**
@@ -72,3 +72,7 @@ export function Marker({
 		</svg>
 	)
 }
+
+/** The fixed marker set, in the default assignment order. */
+export const markerColors = Object.keys(fills) as MarkerColor[]
+export const markerShapes = Object.keys(shapes) as MarkerShape[]

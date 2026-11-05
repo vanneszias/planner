@@ -14,10 +14,14 @@ export function StatusLabel({ status }: { status: Event['status'] }) {
 	return (
 		<span
 			className={cn(
-				'rounded-full px-3 py-1 text-sm font-bold',
+				'inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-0.5 text-sm font-bold whitespace-nowrap',
 				status === 'published' ? 'bg-tint-success' : 'bg-accent',
 			)}
 		>
+			<span
+				aria-hidden
+				className={cn('size-1.5 rounded-full', status === 'published' ? 'bg-success' : 'bg-edge')}
+			/>
 			{labels[status]()}
 		</span>
 	)

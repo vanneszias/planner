@@ -37,7 +37,7 @@
 	--marker-sea: #1f7fb8;
 	--marker-grape: #7a4fc9;
 	--marker-bubblegum: #cf3f86;
-	--marker-sky: #2a95c2;
+	--marker-sky: #14a3a0; /* teal, kept well apart from sea */
 	--marker-moss: #6b7a2e;
 
 	/* shadcn/ui semantic variables */
@@ -122,8 +122,23 @@
 		line-height: 1.55;
 	}
 	:focus-visible {
-		outline: 3px solid var(--ring);
+		outline: 2px solid var(--ring);
 		outline-offset: 2px;
+	}
+	/* Native date and time fields: same figures and a quieter picker icon as the rest of the form. */
+	input[type="date"],
+	input[type="time"] {
+		font-variant-numeric: tabular-nums;
+		color-scheme: light;
+	}
+	input[type="date"]::-webkit-calendar-picker-indicator,
+	input[type="time"]::-webkit-calendar-picker-indicator {
+		opacity: 0.55;
+		cursor: pointer;
+	}
+	/* An invalid field keeps one colour story: danger border, danger ring. */
+	[aria-invalid="true"]:focus-visible {
+		outline-color: var(--danger);
 	}
 	@media (prefers-reduced-motion: reduce) {
 		*,
@@ -135,4 +150,11 @@
 			transition-duration: 0.01ms !important;
 		}
 	}
+}
+
+/* Cards lift off the paper by a hairline and a soft shadow, never a heavy border. */
+@utility shadow-card {
+	box-shadow:
+		0 0 0 1px rgb(28 30 51 / 0.05),
+		0 1px 2px rgb(28 30 51 / 0.06);
 }
