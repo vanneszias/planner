@@ -1,10 +1,12 @@
 import type { UpdateEventInput } from '@app/domain'
 import { Button } from '@app/ui/components/button'
 import { createFileRoute, getRouteApi, useRouter } from '@tanstack/react-router'
-import { type FormEvent, type ReactNode, useState } from 'react'
+import { cn } from 'cn'
+import { Check, ChevronDown, Plus, Trash2 } from 'lucide-react'
+import { type ComponentProps, type FormEvent, type ReactNode, useState } from 'react'
 import { FormError } from '#/components/auth-shell'
 import { Checkbox } from '#/components/checkbox'
-import { Field, FieldInput } from '#/components/field'
+import { Field, FieldInput, FieldSelect, PrefixedInput } from '#/components/field'
 import { RadioCards } from '#/components/radio-cards'
 import { actionMessage, fieldMessage } from '#/lib/errors'
 import { timeZones } from '#/lib/time-zones'
@@ -23,7 +25,7 @@ type Moment = { date: string; time: string }
  * (progressive disclosure, journeys.md O2 step 4).
  */
 function Settings() {
-	const { event, window, canEdit } = eventRoute.useLoaderData()
+	const { event, window, canEdit, ageGroups } = eventRoute.useLoaderData()
 	const router = useRouter()
 	const [values, setValues] = useState({
 		name: event.name,
@@ -48,9 +50,23 @@ function Settings() {
 	const [status, setStatus] = useState<string | null>(null)
 	const [error, setError] = useState<string | null>(null)
 	const [pending, setPending] = useState(false)
+	const [slug, setSlug] = useState(event.slug)
+	const [slugIssue, setSlugIssue] = useState<string | undefined>()
+	const [groups, setGroups] = useState<{ id?: string; label: string }[]>(ageGroups)
+	const [groupIssues, setGroupIssues] = useState<Record<string, string>>({})
+	const [dirty, setDirty] = useState(false)
+	/** Any edit: mark the form dirty and clear the last "saved". */
+	const touched =
+		<T,>(apply: (value: T) => void) =>
+		(value: T) => {
+			apply(value)
+			setDirty(true)
+			setStatus(null)
+		}
 
 	const set = <K extends keyof typeof values>(key: K, value: (typeof values)[K]) => {
 		setValues((v) => ({ ...v, [key]: value }))
+		setDirty(true)
 		setStatus(null)
 	}
 	// A half-filled moment means "no window": date and time are both needed.
@@ -61,7 +77,27 @@ function Settings() {
 		formEvent.preventDefault()
 		setError(null)
 		setIssues({})
+		setSlugIssue(undefined)
+		setGroupIssues({})
 		setPending(true)
+		// One save button for the page: address, age groups, then everything else.
+		if (slug !== event.slug) {
+			const renamed = await renameEventSlugFn({ data: { eventId: event.id, slug } })
+			if (!renamed.ok) {
+				setPending(false)
+				return setSlugIssue(renamed.issues?.slug ?? 'required')
+			}
+			setSlug(renamed.data)
+		}
+		const kept = groups.filter((group) => group.label.trim())
+		if (JSON.stringify(kept) !== JSON.stringify(ageGroups)) {
+			const saved = await saveAgeGroupsFn({ data: { eventId: event.id, groups: kept } })
+			if (!saved.ok) {
+				setPending(false)
+				return setGroupIssues(saved.issues ?? {})
+			}
+			setGroups(saved.data)
+		}
 		const payload: UpdateEventInput = { ...values, opens: moment(opens), closes: moment(closes) }
 		const result = await updateEventFn({ data: { eventId: event.id, values: payload } })
 		setPending(false)
@@ -71,13 +107,12 @@ function Settings() {
 			return
 		}
 		setStatus(m.settings_saved())
+		setDirty(false)
 		await router.invalidate()
 	}
 
 	return (
 		<div className="flex flex-col gap-6">
-			{canEdit && <WebAddressForm />}
-			{canEdit && <AgeGroupsForm />}
 			<form onSubmit={submit} noValidate className="flex flex-col gap-6">
 				<fieldset disabled={!canEdit} className="contents">
 					<Section title={m.settings_basics()}>
@@ -93,7 +128,7 @@ function Settings() {
 							<textarea
 								id="description"
 								rows={4}
-								className="rounded-md border border-input bg-card px-3 py-2"
+								className="rounded-md border border-input bg-card px-3 py-2 shadow-xs"
 								value={values.description}
 								onChange={(e) => set('description', e.target.value)}
 							/>
@@ -120,9 +155,8 @@ function Settings() {
 						</div>
 						<div className="grid gap-4 sm:grid-cols-2">
 							<Field id="timezone" label={m.timezone_label()} error={issues.timezone}>
-								<select
+								<FieldSelect
 									id="timezone"
-									className="h-11 rounded-md border border-input bg-card px-3"
 									value={values.timezone}
 									onChange={(e) => set('timezone', e.target.value)}
 								>
@@ -131,23 +165,22 @@ function Settings() {
 											{zone.replace('_', ' ')}
 										</option>
 									))}
-								</select>
+								</FieldSelect>
 							</Field>
 							<Field
 								id="defaultLocale"
 								label={m.content_language_label()}
 								hint={m.content_language_hint()}
 							>
-								<select
+								<FieldSelect
 									id="defaultLocale"
 									aria-describedby="defaultLocale-hint"
-									className="h-11 rounded-md border border-input bg-card px-3"
 									value={values.defaultLocale}
 									onChange={(e) => set('defaultLocale', e.target.value as 'en' | 'nl')}
 								>
 									<option value="en">{m.language_en()}</option>
 									<option value="nl">{m.language_nl()}</option>
-								</select>
+								</FieldSelect>
 							</Field>
 						</div>
 					</Section>
@@ -188,21 +221,28 @@ function Settings() {
 							id="opens"
 							label={m.opens_label()}
 							value={opens}
-							onChange={setOpens}
+							onChange={touched(setOpens)}
 							error={issues.opens}
 						/>
 						<MomentFields
 							id="closes"
 							label={m.closes_label()}
 							value={closes}
-							onChange={setCloses}
+							onChange={touched(setCloses)}
 							error={issues.closes}
 						/>
 					</Section>
 
-					<details className="rounded-xl bg-card p-5 [&_summary]:cursor-pointer">
-						<summary className="min-h-11 content-center text-lg font-bold">
-							{m.more_options()}
+					<WebAddressSection slug={slug} onChange={touched(setSlug)} issue={slugIssue} />
+					<AgeGroupsSection groups={groups} onChange={touched(setGroups)} issues={groupIssues} />
+
+					<details className="group rounded-xl bg-card px-5 py-2 shadow-card open:pb-5">
+						<summary className="flex min-h-12 cursor-pointer list-none items-center gap-2 font-bold [&::-webkit-details-marker]:hidden">
+							<span className="flex-1">{m.more_options()}</span>
+							<ChevronDown
+								aria-hidden
+								className="size-5 text-muted-foreground transition-transform group-open:rotate-180"
+							/>
 						</summary>
 						<div className="mt-4 flex flex-col gap-6">
 							{values.mode === 'ranking' ? (
@@ -301,30 +341,62 @@ function Settings() {
 				</fieldset>
 
 				{canEdit && (
-					<div className="flex flex-wrap items-center gap-4">
+					<div
+						className={cn(
+							'flex flex-wrap items-center justify-end gap-4 rounded-xl px-4 py-3',
+							dirty
+								? 'sticky bottom-4 z-10 bg-card shadow-[0_12px_32px_-8px_rgb(28_30_51/0.3)] ring-1 ring-ink/5'
+								: 'bg-transparent px-0',
+						)}
+					>
+						<FormError message={error} />
+						{dirty && (
+							<p className="flex items-center gap-2 text-sm font-bold text-muted-foreground">
+								<span className="size-2 rounded-full bg-[var(--marker-sun)]" aria-hidden />
+								{m.unsaved_changes()}
+							</p>
+						)}
+						<p
+							aria-live="polite"
+							className="flex items-center gap-2 text-sm font-bold empty:hidden"
+						>
+							{status && <Check aria-hidden className="size-4 text-success" strokeWidth={3} />}
+							{status}
+						</p>
 						<Button type="submit" disabled={pending}>
 							{m.save_settings()}
 						</Button>
-						<p aria-live="polite" className="font-bold empty:hidden">
-							{status}
-						</p>
 					</div>
 				)}
-				<FormError message={error} />
 			</form>
 		</div>
 	)
 }
 
-function Section({ title, hint, children }: { title: string; hint?: string; children: ReactNode }) {
+/** A titled settings block: label column on the left on wide screens, fields on the right. */
+function Section({
+	title,
+	hint,
+	children,
+	as: Tag = 'section',
+	...props
+}: {
+	title: string
+	hint?: string
+	children: ReactNode
+	as?: 'section' | 'form'
+} & Omit<ComponentProps<'form'>, 'title' | 'children'>) {
 	return (
-		<section className="flex flex-col gap-4 rounded-xl bg-card p-5">
+		<Tag
+			className="grid gap-x-8 gap-y-4 rounded-xl bg-card p-5 shadow-card md:grid-cols-[minmax(0,14rem)_minmax(0,1fr)]"
+			{...props}
+		>
 			<div>
-				<h2 className="text-lg font-bold">{title}</h2>
-				{hint && <p className="text-sm text-muted-foreground">{hint}</p>}
+				<h2 className="font-bold">{title}</h2>
+				{hint && <p className="mt-1 text-sm text-muted-foreground">{hint}</p>}
 			</div>
-			{children}
-		</section>
+			<div className="flex min-w-0 flex-col gap-4">{children}</div>
+		</Tag>
 	)
 }
 
@@ -373,83 +445,45 @@ function MomentFields({
 }
 
 /** The event's public address. Renaming keeps old links and QR codes working (D19). */
-function WebAddressForm() {
-	const { event, organizationSlug } = eventRoute.useLoaderData()
-	const router = useRouter()
-	const [slug, setSlug] = useState(event.slug)
-	const [issue, setIssue] = useState<string | undefined>()
-	const [status, setStatus] = useState<string | null>(null)
-	const [pending, setPending] = useState(false)
-
-	async function submit(formEvent: FormEvent) {
-		formEvent.preventDefault()
-		setIssue(undefined)
-		setStatus(null)
-		setPending(true)
-		const result = await renameEventSlugFn({ data: { eventId: event.id, slug } })
-		setPending(false)
-		if (!result.ok) return setIssue(result.issues?.slug ?? 'required')
-		setSlug(result.data)
-		setStatus(m.address_saved())
-		await router.invalidate()
-	}
-
+function WebAddressSection({
+	slug,
+	onChange,
+	issue,
+}: {
+	slug: string
+	onChange: (slug: string) => void
+	issue?: string
+}) {
+	const { organizationSlug } = eventRoute.useLoaderData()
 	return (
-		<form onSubmit={submit} noValidate className="flex flex-col gap-4 rounded-xl bg-card p-5">
-			<Field id="slug" label={m.web_address_label()} hint={m.web_address_hint()} error={issue}>
-				<div className="flex items-center gap-1">
-					<span className="font-mono text-muted-foreground">/{organizationSlug}/</span>
-					<FieldInput
-						id="slug"
-						hint
-						error={issue}
-						className="font-mono"
-						value={slug}
-						onChange={(e) => setSlug(e.target.value)}
-					/>
-				</div>
+		<Section title={m.web_address_label()} hint={m.web_address_hint()}>
+			<Field id="slug" label={m.web_address_label()} error={issue}>
+				<PrefixedInput
+					prefix={`/${organizationSlug}/`}
+					id="slug"
+					error={issue}
+					value={slug}
+					onChange={(e) => onChange(e.target.value)}
+				/>
 			</Field>
-			<div className="flex flex-wrap items-center gap-4">
-				<Button type="submit" variant="outline" disabled={pending || slug === event.slug}>
-					{m.save_address()}
-				</Button>
-				<p aria-live="polite" className="font-bold empty:hidden">
-					{status}
-				</p>
-			</div>
-		</form>
+		</Section>
 	)
 }
 
+type Group = { id?: string; label: string }
+
 /** Optional age groups (D2). Removing one also removes it from workshops. */
-function AgeGroupsForm() {
-	const { event, ageGroups } = eventRoute.useLoaderData()
-	const router = useRouter()
-	const [groups, setGroups] = useState<{ id?: string; label: string }[]>(ageGroups)
-	const [issues, setIssues] = useState<Record<string, string>>({})
-	const [status, setStatus] = useState<string | null>(null)
-	const [pending, setPending] = useState(false)
-
-	async function submit(formEvent: FormEvent) {
-		formEvent.preventDefault()
-		setIssues({})
-		setStatus(null)
-		setPending(true)
-		const kept = groups.filter((group) => group.label.trim())
-		const result = await saveAgeGroupsFn({ data: { eventId: event.id, groups: kept } })
-		setPending(false)
-		if (!result.ok) return setIssues(result.issues ?? {})
-		setGroups(result.data)
-		setStatus(m.age_groups_saved())
-		await router.invalidate()
-	}
-
+function AgeGroupsSection({
+	groups,
+	onChange,
+	issues,
+}: {
+	groups: Group[]
+	onChange: (groups: Group[]) => void
+	issues: Record<string, string>
+}) {
 	return (
-		<form onSubmit={submit} noValidate className="flex flex-col gap-4 rounded-xl bg-card p-5">
-			<div>
-				<h2 className="text-lg font-bold">{m.age_groups_title()}</h2>
-				<p className="text-sm text-muted-foreground">{m.age_groups_hint()}</p>
-			</div>
+		<Section title={m.age_groups_title()} hint={m.age_groups_hint()}>
 			{groups.map((group, index) => {
 				const id = `age-group-${index}`
 				const issue = issues[`${index}.label`]
@@ -462,8 +496,8 @@ function AgeGroupsForm() {
 									error={issue}
 									value={group.label}
 									onChange={(e) =>
-										setGroups((all) =>
-											all.map((g, i) => (i === index ? { ...g, label: e.target.value } : g)),
+										onChange(
+											groups.map((g, i) => (i === index ? { ...g, label: e.target.value } : g)),
 										)
 									}
 								/>
@@ -472,29 +506,28 @@ function AgeGroupsForm() {
 						<Button
 							type="button"
 							variant="ghost"
+							size="icon"
+							className="text-muted-foreground hover:bg-tint-danger hover:text-destructive"
+							title={m.remove_age_group()}
 							aria-label={`${m.remove_age_group()}: ${group.label || m.age_group_label({ number: String(index + 1) })}`}
-							onClick={() => setGroups((all) => all.filter((_, i) => i !== index))}
+							onClick={() => onChange(groups.filter((_, i) => i !== index))}
 						>
-							{m.remove_age_group()}
+							<Trash2 />
 						</Button>
 					</div>
 				)
 			})}
-			<div className="flex flex-wrap items-center gap-3">
+			<div>
 				<Button
 					type="button"
-					variant="outline"
-					onClick={() => setGroups((all) => [...all, { label: '' }])}
+					variant="ghost"
+					size="sm"
+					onClick={() => onChange([...groups, { label: '' }])}
 				>
+					<Plus />
 					{m.add_age_group()}
 				</Button>
-				<Button type="submit" disabled={pending}>
-					{m.save_age_groups()}
-				</Button>
-				<p aria-live="polite" className="font-bold empty:hidden">
-					{status}
-				</p>
 			</div>
-		</form>
+		</Section>
 	)
 }
