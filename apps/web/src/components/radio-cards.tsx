@@ -38,7 +38,7 @@ export function RadioCards<T extends string>({
 						className="mt-1 size-5 shrink-0 accent-[var(--kelp)]"
 					/>
 					<span>
-						<span className="block font-bold">{option.title}</span>
+						<span className="block font-bold text-balance">{option.title}</span>
 						{option.body && (
 							<span className="block text-sm leading-normal text-muted-foreground">
 								{option.body}

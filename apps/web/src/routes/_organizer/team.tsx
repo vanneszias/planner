@@ -202,7 +202,7 @@ function InviteForm({ organizationId }: { organizationId: string }) {
 			/>
 			<FormError message={error} />
 			<div className="flex flex-wrap items-center gap-4">
-				<Button type="submit" size="sm" disabled={pending}>
+				<Button type="submit" disabled={pending}>
 					{m.invite_submit()}
 				</Button>
 				<p aria-live="polite" className="font-bold empty:hidden">
@@ -273,7 +273,7 @@ function OrganizationForm({ organization }: { organization: { name: string; slug
 			</Field>
 			<FormError message={error} />
 			<div className="flex flex-wrap items-center gap-4">
-				<Button type="submit" variant="outline" size="sm" disabled={pending}>
+				<Button type="submit" variant="outline" disabled={pending}>
 					{m.save_organization()}
 				</Button>
 				<p aria-live="polite" className="font-bold empty:hidden">

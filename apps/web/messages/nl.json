@@ -561,7 +561,7 @@
 	"allocation_capacity_body": "{places} plaatsen voor {needed} nodig ({people} mensen × {per})",
 	"allocation_ranked_label": "Favorieten gerangschikt",
 	"available_only": "Alleen sessies die ik kan boeken",
-	"rank_intro_sessions": "Je krijgt {sessions} sessies. Rangschik {min} tot {max} workshops, zodat er alternatieven zijn als een favoriet volzet is.",
+	"rank_intro_sessions": "Rangschik {min} tot {max} workshops. We proberen je in {sessions} sessies te plaatsen; je andere keuzes zijn alternatieven als een favoriet volzet is.",
 	"retention_scheduled_booking": "De deelnemersgegevens worden geanonimiseerd op {date}. Namen, e-mailadressen en boekingen verdwijnen; aanwezigheidscijfers blijven.",
 	"stat_still_to_rank": "{count} moeten nog rangschikken",
 	"stat_avg_booked": "{avg} sessies geboekt per persoon",
@@ -571,5 +571,8 @@
 	"places_short": "{count} plaatsen",
 	"already_booked_at": "Je hebt deze workshop al {when}",
 	"bookings_of": "{count} van {total}",
-	"workshop_capacity_line": "{sessions} sessies · {places} plaatsen. Tijden en plaatsen stel je in bij Programma."
+	"workshop_capacity_line": "{sessions} sessies · {places} plaatsen. Tijden en plaatsen stel je in bij Programma.",
+	"one_session": "1 sessie",
+	"rank_intro_anonymous": "Rangschik {min} tot {max} workshops die je graag doet; we proberen je in {sessions} sessies te plaatsen. Schrijf je eerst in: je krijgt een link per e-mail, zonder wachtwoord.",
+	"slot_preview_more": "+{count} meer"
 }

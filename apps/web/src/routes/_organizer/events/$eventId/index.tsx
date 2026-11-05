@@ -124,7 +124,7 @@ function Overview() {
 						<h2 id="next-step" className="text-lg font-bold">
 							{m.next_title()}
 						</h2>
-						<p className="text-muted-foreground">
+						<p className="text-sm text-muted-foreground">
 							{ranks
 								? m.next_rank_body({
 										ranked: String(participation.ranked),

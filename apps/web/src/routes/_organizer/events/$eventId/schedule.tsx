@@ -10,7 +10,7 @@ import { FormError } from '#/components/auth-shell'
 import { Field, FieldInput, FieldSelect, FormActions } from '#/components/field'
 import { EmptyState, PageToolbar } from '#/components/page'
 import { actionMessage, fieldMessage } from '#/lib/errors'
-import { formatTime, groupByDay, groupBySlot } from '#/lib/format'
+import { formatTime, groupByDay, groupBySlot, sessionCount } from '#/lib/format'
 import { m } from '#/paraglide/messages'
 import { createSessionsFn, deleteSessionFn, updateSessionFn } from '#/server/events'
 
@@ -104,7 +104,7 @@ function Schedule() {
 									{formatTime(slot.endsAt, event.timezone)}
 								</span>
 								<span className="text-sm text-muted-foreground">
-									{m.slot_count({ count: String(slot.items.length) })}
+									{sessionCount(slot.items.length)}
 								</span>
 							</h3>
 							<ul className="grid overflow-hidden rounded-xl bg-card shadow-card sm:grid-cols-2 [&>li]:border-b [&>li]:border-border sm:[&>li:nth-child(odd)]:border-r">
@@ -164,7 +164,7 @@ function Schedule() {
 												{canEdit && (
 													<Pencil
 														aria-hidden
-														className="mt-0.5 size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground"
+														className="mt-0.5 size-4 shrink-0 text-muted-foreground transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:hover)]:opacity-0"
 													/>
 												)}
 											</div>

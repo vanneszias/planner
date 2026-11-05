@@ -31,6 +31,7 @@ import {
 	formatTime,
 	groupByDay,
 	groupBySlot,
+	sessionCount,
 } from '#/lib/format'
 import { m } from '#/paraglide/messages'
 import {
@@ -216,7 +217,12 @@ function EventPage() {
 		if (me && mine.length >= event.sessionsPerParticipant) {
 			return { text: m.places_left({ count: String(left) }), action: null }
 		}
-		return { text: m.places_left({ count: String(left) }), action: 'book' as const }
+		return {
+			text: m.places_left({ count: String(left) }),
+			action: 'book' as const,
+			// Last fifth of the places (at least two): say so at a glance.
+			scarce: left <= Math.max(2, Math.floor(session.capacity / 5)),
+		}
 	}
 
 	if (cancelled) {
@@ -231,7 +237,20 @@ function EventPage() {
 
 	const intro =
 		rankingMode && !page.published && rankingOpen
-			? { title: m.rank_title(), body: m.register_intro() }
+			? {
+					title: m.rank_title(),
+					body: m.rank_intro_anonymous({
+						min: String(
+							Math.min(
+								event.rankMinimum ?? event.sessionsPerParticipant + 1,
+								event.rankLimit,
+								workshops.length,
+							),
+						),
+						max: String(Math.min(event.rankLimit, workshops.length)),
+						sessions: String(event.sessionsPerParticipant),
+					}),
+				}
 			: bookingMode && open
 				? {
 						title: m.book_title(),
@@ -243,19 +262,6 @@ function EventPage() {
 			<section className="flex flex-col gap-3 rounded-xl bg-card p-5 shadow-card">
 				<div>
 					<p className="font-display text-xl font-semibold">{m.hello_name({ name: me.name })}</p>
-					{rankingMode && !page.published && (
-						<p className="text-sm text-muted-foreground tabular-nums">
-							{me.ranking.length < me.rules.min
-								? m.rank_progress_needed({
-										count: String(me.ranking.length),
-										min: String(me.rules.min),
-									})
-								: m.rank_progress_enough({
-										count: String(me.ranking.length),
-										max: String(me.rules.max),
-									})}
-						</p>
-					)}
 				</div>
 				{bookingMode && (
 					<div className="flex flex-col gap-1.5">
@@ -307,7 +313,7 @@ function EventPage() {
 			<Button
 				variant="ghost"
 				size="sm"
-				className="self-start text-muted-foreground hover:bg-tint-danger hover:text-destructive max-lg:hidden"
+				className="h-auto self-start px-0 text-muted-foreground hover:bg-transparent hover:text-destructive max-lg:hidden"
 				onClick={() => router.navigate({ to: '.', search: { cancel: true } })}
 			>
 				{m.cancel_registration()}
@@ -531,7 +537,7 @@ function EventPage() {
 					{groupByDay(sessions, event.timezone).length > 1 && (
 						<nav
 							aria-label={m.jump_to_day()}
-							className="sticky top-0 z-10 -mx-4 flex gap-2 overflow-x-auto border-b border-border bg-background px-4 py-2 [scrollbar-width:none] lg:mx-0 lg:px-0"
+							className="sticky top-0 z-10 flex gap-2 overflow-x-auto border-b border-border bg-background py-2 [scrollbar-width:none]"
 						>
 							{groupByDay(sessions, event.timezone).map((day, index) => (
 								<a
@@ -568,28 +574,19 @@ function EventPage() {
 											{formatTime(slot.endsAt, event.timezone)}
 										</span>
 										<span className="text-sm text-muted-foreground">
-											{m.slot_count({ count: String(slot.items.length) })}
+											{sessionCount(slot.items.length)}
 										</span>
 										<span
 											aria-hidden
-											className="flex flex-1 items-center gap-1 group-open/slot:hidden max-sm:hidden"
+											className="min-w-0 flex-1 truncate text-sm text-muted-foreground group-open/slot:hidden"
 										>
-											{slot.items.slice(0, 8).map((s) => {
-												const w = workshopById.get(s.workshopId)
-												return w ? (
-													<Marker
-														key={s.id}
-														color={w.markerColor}
-														shape={w.markerShape}
-														className="size-3.5"
-													/>
-												) : null
-											})}
-											{slot.items.length > 8 && (
-												<span className="text-xs font-bold text-muted-foreground">
-													+{slot.items.length - 8}
-												</span>
-											)}
+											{slot.items
+												.slice(0, 3)
+												.map((s) => workshopById.get(s.workshopId)?.title)
+												.filter(Boolean)
+												.join(', ')}
+											{slot.items.length > 3 &&
+												` ${m.slot_preview_more({ count: String(slot.items.length - 3) })}`}
 										</span>
 										<ChevronDown
 											aria-hidden
@@ -611,7 +608,7 @@ function EventPage() {
 														me &&
 															state &&
 															state.action === null &&
-															'[&_.session-title>svg]:opacity-50',
+															'[&_.session-title>svg]:[fill-opacity:0.3]',
 													)}
 												>
 													<div className="session-title flex flex-1 items-start gap-3">
@@ -647,9 +644,15 @@ function EventPage() {
 																)}
 																<span>
 																	{session.room ? `${session.room} · ` : ''}
-																	{state
-																		? state.text
-																		: m.places({ count: String(session.capacity) })}
+																	{state ? (
+																		<span
+																			className={cn(state.scarce && 'font-bold text-destructive')}
+																		>
+																			{state.text}
+																		</span>
+																	) : (
+																		m.places({ count: String(session.capacity) })
+																	)}
 																</span>
 															</p>
 															{!bookingMode && workshop.description && (
@@ -662,7 +665,7 @@ function EventPage() {
 													{open && state?.action === 'book' && (
 														<Button
 															size="sm"
-															className="shrink-0 border-primary/30 text-primary hover:bg-tint-success hover:text-primary"
+															className="shrink-0 border-primary/70 text-primary hover:bg-tint-success hover:text-primary"
 															variant="outline"
 															aria-label={`${m.book_session()}: ${label}`}
 															data-session-action={session.id}
@@ -764,7 +767,7 @@ function EventPage() {
 				<Button
 					variant="ghost"
 					size="sm"
-					className="self-start text-muted-foreground hover:bg-tint-danger hover:text-destructive lg:hidden"
+					className="h-auto self-start px-0 text-muted-foreground hover:bg-transparent hover:text-destructive lg:hidden"
 					onClick={() => router.navigate({ to: '.', search: { cancel: true } })}
 				>
 					{m.cancel_registration()}

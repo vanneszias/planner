@@ -10,6 +10,7 @@ import { Field, FieldInput, FormActions } from '#/components/field'
 import { MarkerPicker } from '#/components/marker-picker'
 import { EmptyState, PageToolbar } from '#/components/page'
 import { actionMessage } from '#/lib/errors'
+import { sessionCount } from '#/lib/format'
 import { m } from '#/paraglide/messages'
 import { deleteWorkshopFn, saveWorkshopFn } from '#/server/events'
 
@@ -90,7 +91,7 @@ function Workshops() {
 											// Phones: the counts sit in the line; wider screens give them columns.
 											<span key="stats" className="sm:hidden">
 												{stat
-													? `${m.workshop_sessions({ count: String(stat.sessions) })} · ${m.workshop_places_total({ count: String(stat.places) })}`
+													? `${sessionCount(stat.sessions)} · ${m.workshop_places_total({ count: String(stat.places) })}`
 													: m.no_sessions_yet()}
 											</span>,
 										]
@@ -102,7 +103,7 @@ function Workshops() {
 									)}
 								</div>
 								<span className="w-24 shrink-0 text-right text-sm tabular-nums max-sm:hidden">
-									{stat ? m.workshop_sessions({ count: String(stat.sessions) }) : '—'}
+									{stat ? sessionCount(stat.sessions) : '—'}
 								</span>
 								<span className="w-24 shrink-0 text-right text-sm text-muted-foreground tabular-nums max-sm:hidden">
 									{stat ? m.places_short({ count: String(stat.places) }) : ''}
@@ -110,7 +111,7 @@ function Workshops() {
 								{canEdit && (
 									<Pencil
 										aria-hidden
-										className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground"
+										className="size-4 shrink-0 text-muted-foreground transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:hover)]:opacity-0"
 									/>
 								)}
 							</li>

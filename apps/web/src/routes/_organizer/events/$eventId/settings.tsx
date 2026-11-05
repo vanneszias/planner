@@ -236,7 +236,7 @@ function Settings() {
 					<AgeGroupsSection groups={groups} onChange={touched(setGroups)} issues={groupIssues} />
 
 					<details className="group rounded-xl bg-card px-5 py-2 shadow-card open:pb-5">
-						<summary className="flex min-h-12 cursor-pointer list-none items-center gap-2 text-lg font-bold [&::-webkit-details-marker]:hidden">
+						<summary className="flex min-h-12 cursor-pointer list-none items-center gap-2 font-bold [&::-webkit-details-marker]:hidden">
 							<span className="flex-1">{m.more_options()}</span>
 							<ChevronDown
 								aria-hidden
@@ -345,7 +345,7 @@ function Settings() {
 							'flex flex-wrap items-center justify-end gap-4 rounded-xl px-4 py-3',
 							dirty
 								? 'sticky bottom-4 z-10 bg-card shadow-[0_12px_32px_-8px_rgb(28_30_51/0.3)] ring-1 ring-ink/5'
-								: 'bg-transparent',
+								: 'bg-transparent px-0',
 						)}
 					>
 						<FormError message={error} />

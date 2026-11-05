@@ -561,7 +561,7 @@
 	"allocation_capacity_body": "{places} places for {needed} needed ({people} people × {per})",
 	"allocation_ranked_label": "Ranked their favourites",
 	"available_only": "Only sessions I can book",
-	"rank_intro_sessions": "You'll get {sessions} sessions. Rank {min} to {max} workshops, so there are alternatives if a favourite fills up.",
+	"rank_intro_sessions": "Rank {min} to {max} workshops. We aim to place you in {sessions} sessions, and your other picks are the alternatives if a favourite fills up.",
 	"retention_scheduled_booking": "Participant data will be anonymised on {date}. Names, emails and bookings go; attendance counts stay.",
 	"stat_still_to_rank": "{count} still to rank",
 	"stat_avg_booked": "{avg} sessions booked per person",
@@ -571,5 +571,8 @@
 	"places_short": "{count} places",
 	"already_booked_at": "You already have this workshop {when}",
 	"bookings_of": "{count} of {total}",
-	"workshop_capacity_line": "{sessions} sessions · {places} places. Times and places are set in Schedule."
+	"workshop_capacity_line": "{sessions} sessions · {places} places. Times and places are set in Schedule.",
+	"one_session": "1 session",
+	"rank_intro_anonymous": "Rank {min} to {max} workshops you'd like to do; we aim to place you in {sessions} sessions. Register first: we'll email you a link, no password needed.",
+	"slot_preview_more": "+{count} more"
 }

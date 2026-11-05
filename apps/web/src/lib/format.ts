@@ -1,3 +1,4 @@
+import { m } from '#/paraglide/messages'
 import { getLocale } from '#/paraglide/runtime'
 
 const locale = () => (getLocale() === 'nl' ? 'nl-BE' : 'en-GB')
@@ -83,4 +84,9 @@ export function formatClock(at: number): string {
 /** "Wednesday 4 November 2026" in the viewer's own timezone, for day headings in logs. */
 export function formatDayStamp(at: number): string {
 	return new Intl.DateTimeFormat(locale(), { dateStyle: 'full' }).format(at)
+}
+
+/** "1 session" / "3 sessions". */
+export function sessionCount(count: number): string {
+	return count === 1 ? m.one_session() : m.workshop_sessions({ count: String(count) })
 }

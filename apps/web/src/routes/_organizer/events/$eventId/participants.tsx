@@ -11,6 +11,7 @@ import { RankList } from '#/components/event/rank-list'
 import { Field, FieldInput, FieldSelect, FormActions } from '#/components/field'
 import { EmptyState, PageToolbar } from '#/components/page'
 import { actionMessage, fieldMessage } from '#/lib/errors'
+import { sessionCount } from '#/lib/format'
 import { m } from '#/paraglide/messages'
 import {
 	addMinorFn,
@@ -349,7 +350,7 @@ function Participants() {
 					{/* Phones: one card per participant instead of a squeezed table. */}
 					<ul className="divide-y divide-border rounded-xl bg-card shadow-card sm:hidden">
 						{visible.map((p) => (
-							<li key={p.id} className="flex items-start gap-3 p-4">
+							<li key={p.id} className="flex items-start gap-3 px-4 py-3">
 								{canWrite && (
 									<input
 										type="checkbox"
@@ -366,38 +367,48 @@ function Participants() {
 											{p.email ?? p.guardianEmail}
 										</p>
 									)}
-									<p className="text-sm text-muted-foreground">
+									<div className="mt-0.5 flex flex-wrap items-center gap-1.5">
 										{[
 											p.ageGroupId ? groupLabel.get(p.ageGroupId) : null,
 											p.isMinor ? m.minor() : null,
-											showSessions ? m.workshop_sessions({ count: String(p.bookings) }) : null,
 										]
 											.filter(Boolean)
-											.join(' · ')}
-									</p>
-									{ranks && (
-										<div className="mt-1 flex flex-wrap items-center justify-between gap-2">
+											.map((tag) => (
+												<span
+													key={tag}
+													className="rounded-full bg-accent px-2 py-1 text-xs leading-none font-bold text-muted-foreground"
+												>
+													{tag}
+												</span>
+											))}
+										{ranks && (
 											<span
 												className={cn(
-													'inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-xs leading-none font-bold',
+													'inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs leading-none font-bold',
 													p.ranked ? 'bg-tint-success' : 'bg-accent text-muted-foreground',
 												)}
 											>
 												{p.ranked && <Check aria-hidden className="size-3" strokeWidth={3} />}
 												{p.ranked ? m.ranked_yes() : m.ranked_no()}
 											</span>
-											{canWrite && (
-												<Button
-													variant="outline"
-													size="sm"
-													aria-label={m.enter_ranking_for({ name: p.displayName })}
-													onClick={() => openRanking(p.id, p.displayName)}
-												>
-													{p.ranked ? m.view_ranking() : m.enter_ranking()}
-												</Button>
-											)}
-										</div>
-									)}
+										)}
+										{showSessions && (
+											<span className="text-sm text-muted-foreground">
+												{sessionCount(p.bookings)}
+											</span>
+										)}
+										{ranks && canWrite && (
+											<Button
+												variant="outline"
+												size="sm"
+												className="ml-auto"
+												aria-label={m.enter_ranking_for({ name: p.displayName })}
+												onClick={() => openRanking(p.id, p.displayName)}
+											>
+												{p.ranked ? m.view_ranking() : m.enter_ranking()}
+											</Button>
+										)}
+									</div>
 								</div>
 							</li>
 						))}
@@ -406,7 +417,7 @@ function Participants() {
 						)}
 					</ul>
 					<div className="overflow-x-auto rounded-xl bg-card shadow-card max-sm:hidden">
-						<table className="w-full text-left text-sm">
+						<table className="w-full text-left text-sm [&_td]:align-middle [&_th]:align-middle">
 							<thead className="border-b border-border bg-accent/50 text-[0.8125rem] font-bold text-muted-foreground">
 								<tr>
 									{canWrite && (
