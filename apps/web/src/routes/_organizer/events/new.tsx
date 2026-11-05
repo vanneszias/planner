@@ -1,9 +1,10 @@
 import type { CreateEventInput } from '@app/domain'
 import { Button } from '@app/ui/components/button'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { cn } from 'cn'
 import { type FormEvent, useEffect, useRef, useState } from 'react'
 import { FormError } from '#/components/auth-shell'
-import { Field, FieldInput } from '#/components/field'
+import { Field, FieldInput, FieldSelect } from '#/components/field'
 import { RadioCards } from '#/components/radio-cards'
 import { actionMessage } from '#/lib/errors'
 import { timeZones } from '#/lib/time-zones'
@@ -109,21 +110,38 @@ function NewEvent() {
 	]
 
 	return (
-		<form onSubmit={submit} noValidate className="mx-auto flex max-w-lg flex-col gap-6">
+		<form onSubmit={submit} noValidate className="mx-auto flex max-w-xl flex-col gap-6">
 			<div>
-				<p className="text-sm text-muted-foreground">
+				<p className="mb-1 text-sm font-bold text-muted-foreground">
 					{m.step_of({ step: String(step + 1), total: String(totalSteps) })}
 				</p>
+				<ol aria-hidden className="mb-8 grid grid-cols-4 gap-2">
+					{[m.step_name(), m.step_dates(), m.step_mode(), m.step_sessions()].map((label, index) => (
+						<li key={label} className="flex flex-col gap-1.5">
+							<span
+								className={cn('h-1.5 rounded-full', index <= step ? 'bg-primary' : 'bg-accent')}
+							/>
+							<span
+								className={cn(
+									'text-xs font-bold',
+									index === step ? 'text-foreground' : 'text-muted-foreground',
+								)}
+							>
+								{label}
+							</span>
+						</li>
+					))}
+				</ol>
 				<h1
 					ref={heading}
 					tabIndex={-1}
-					className="font-display text-[clamp(1.5rem,5vw,2rem)] font-semibold outline-none"
+					className="font-display text-[clamp(1.5rem,5vw,2rem)] leading-tight font-semibold text-balance outline-none"
 				>
 					{questions[step]}
 				</h1>
 			</div>
 
-			<div className="flex flex-col gap-4 rounded-xl bg-card p-5">
+			<div className="flex flex-col gap-4 rounded-xl bg-card shadow-card p-5">
 				{step === 0 && (
 					<Field id="name" label={m.event_name_label()} error={issues.name}>
 						<FieldInput
@@ -163,9 +181,8 @@ function NewEvent() {
 							</Field>
 						</div>
 						<Field id="timezone" label={m.timezone_label()} error={issues.timezone}>
-							<select
+							<FieldSelect
 								id="timezone"
-								className="h-11 rounded-md border border-input bg-card px-3"
 								value={values.timezone}
 								onChange={(e) => set('timezone', e.target.value)}
 							>
@@ -174,7 +191,7 @@ function NewEvent() {
 										{zone.replace('_', ' ')}
 									</option>
 								))}
-							</select>
+							</FieldSelect>
 						</Field>
 					</>
 				)}

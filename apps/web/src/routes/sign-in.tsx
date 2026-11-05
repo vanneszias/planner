@@ -124,7 +124,7 @@ function SignIn() {
 				<Button
 					type="button"
 					variant="link"
-					className="self-start px-0"
+					className="self-center px-0"
 					onClick={() => setMode(mode === 'link' ? 'password' : 'link')}
 				>
 					{mode === 'link' ? m.use_password() : m.use_link()}
