@@ -3,13 +3,21 @@
 	"private": true,
 	"type": "module",
 	"exports": {
-		".": "./src/index.ts"
+		".": "./src/index.ts",
+		"./email": "./src/email.ts"
 	},
 	"scripts": {
-		"typecheck": "tsc --noEmit"
+		"typecheck": "tsc --noEmit",
+		"test": "vitest run",
+		"assets": "node scripts/assets.ts"
 	},
 	"devDependencies": {
 		"@app/config": "workspace:*",
-		"typescript": "^6.0.2"
+		"@fontsource/inter": "^5.3.0",
+		"@fontsource/unbounded": "^5.3.0",
+		"@resvg/resvg-js": "^2.6.2",
+		"@types/node": "^22.20.5",
+		"typescript": "^6.0.2",
+		"vitest": "^5.0.5"
 	}
 }

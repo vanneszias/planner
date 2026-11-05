@@ -145,7 +145,7 @@ describe('jobs', () => {
 			EMAIL: { send: vi.fn(send) } as unknown as SendEmail,
 		})
 
-		it('sends from the configured sender and acks', async () => {
+		it('sends from the configured sender with branded HTML, and acks', async () => {
 			const testEnv = sending(async () => ({ messageId: '1' }))
 			const { message, batch } = batchOf(email)
 			await worker.queue(batch, testEnv)
@@ -154,6 +154,7 @@ describe('jobs', () => {
 				from: { email: 'noreply@events.zias.be', name: 'Planner' },
 				subject: 'Hi',
 				text: 'Hello',
+				html: expect.stringContaining('>Hello</p>'),
 			})
 			expect(message.ack).toHaveBeenCalled()
 			expect(message.retry).not.toHaveBeenCalled()

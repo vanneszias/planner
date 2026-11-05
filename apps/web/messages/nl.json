@@ -698,5 +698,7 @@
 	"place_left_one": "nog 1 plaats",
 	"ranking_draft": "Nog niet opgeslagen. Je keuzes blijven op dit toestel tot je opslaat.",
 	"nearly_full": "bijna vol",
-	"session_full_short": "vol"
+	"session_full_short": "vol",
+	"share_event_description": "Schrijf je in en kies je workshops. Georganiseerd door {organization}.",
+	"share_poll_description": "Duid aan wanneer je kunt. Geen account nodig."
 }

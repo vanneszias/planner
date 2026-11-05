@@ -698,5 +698,7 @@
 	"place_left_one": "1 place left",
 	"ranking_draft": "Not saved yet. Your picks are kept on this device until you save.",
 	"nearly_full": "nearly full",
-	"session_full_short": "full"
+	"session_full_short": "full",
+	"share_event_description": "Sign up and pick your workshops. Organized by {organization}.",
+	"share_poll_description": "Mark when you're free. No account needed."
 }
