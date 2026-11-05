@@ -3,6 +3,7 @@ import { Button } from '@app/ui/components/button'
 import { Marker } from '@app/ui/components/marker'
 import { createFileRoute, getRouteApi } from '@tanstack/react-router'
 import { cn } from 'cn'
+import { Check, Printer, ScanLine, TriangleAlert, X } from 'lucide-react'
 import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { FormError } from '#/components/auth-shell'
 import {
@@ -13,9 +14,9 @@ import {
 } from '#/components/check-in/offline-queue'
 import { Scanner } from '#/components/check-in/scanner'
 import { useLiveCheckIns } from '#/components/check-in/use-live-check-ins'
-import { Field, FieldInput } from '#/components/field'
+import { Field, FieldInput, FieldSelect } from '#/components/field'
 import { actionMessage } from '#/lib/errors'
-import { formatShortDayTime, formatTime } from '#/lib/format'
+import { formatShortDayTime, formatTime, groupByDay } from '#/lib/format'
 import { m } from '#/paraglide/messages'
 import { checkInFn, getCheckInFn, getRosterFn, undoCheckInFn } from '#/server/event-day'
 
@@ -168,12 +169,17 @@ function CheckIn() {
 	}, [roster, query])
 
 	return (
-		<div className="flex flex-col gap-4">
-			<div className="flex flex-col gap-3 print:hidden">
+		<div className="flex flex-col gap-6">
+			<div
+				className={cn(
+					'grid gap-4 rounded-xl bg-card p-5 shadow-card print:hidden',
+					expected > 0 && 'sm:grid-cols-[1fr_auto] sm:items-end',
+					page.canCheckIn && !page.anonymised && '-mb-6 rounded-b-none',
+				)}
+			>
 				<Field id="checkin-session" label={m.checkin_session_label()}>
-					<select
+					<FieldSelect
 						id="checkin-session"
-						className="h-11 rounded-md border border-input bg-card px-3"
 						value={selected}
 						onChange={(e) => {
 							setSelected(e.target.value)
@@ -183,30 +189,85 @@ function CheckIn() {
 						}}
 					>
 						<option value={wholeEvent}>{m.checkin_whole_event()}</option>
-						{page.sessions.map((s) => (
-							<option key={s.id} value={s.id}>
-								{formatShortDayTime(new Date(s.startsAt), page.timezone)} · {s.workshopTitle}
-								{s.room ? ` · ${s.room}` : ''}
-							</option>
+						{groupByDay(
+							page.sessions.map((s) => ({ ...s, startsAt: new Date(s.startsAt) })),
+							page.timezone,
+						).map((day) => (
+							<optgroup key={day.label} label={day.label}>
+								{day.items.map((s) => (
+									<option key={s.id} value={s.id}>
+										{formatShortDayTime(s.startsAt, page.timezone)} · {s.workshopTitle}
+										{s.room ? ` · ${s.room}` : ''}
+									</option>
+								))}
+							</optgroup>
 						))}
-					</select>
+					</FieldSelect>
 				</Field>
-				<p className="flex items-center gap-3 rounded-xl bg-card p-4">
-					{session && (
-						<Marker color={session.markerColor} shape={session.markerShape} className="size-8" />
-					)}
-					<span className="font-display text-3xl font-semibold">
-						{m.checkin_counter({ here: String(here), expected: String(expected) })}
-					</span>
-				</p>
+				{expected === 0 ? (
+					<div className="flex min-w-56 flex-col gap-0.5">
+						<p className="font-bold">{m.checkin_nobody()}</p>
+						<p className="text-sm text-muted-foreground">{m.checkin_nobody_hint()}</p>
+					</div>
+				) : (
+					<div className="flex min-w-56 flex-col gap-2">
+						<p className="flex items-center gap-2.5">
+							<span className="text-2xl font-bold tabular-nums">
+								{m.checkin_counter({ here: String(here), expected: String(expected) })}
+							</span>
+						</p>
+						<div className="h-2 overflow-hidden rounded-full bg-accent" aria-hidden>
+							<div
+								className="h-full rounded-full bg-success transition-[width]"
+								style={{ width: `${expected ? Math.min(100, (here / expected) * 100) : 0}%` }}
+							/>
+						</div>
+					</div>
+				)}
 			</div>
+			{page.canCheckIn && !page.anonymised && (
+				<div className="flex flex-col gap-4 rounded-xl rounded-t-none border-t border-border bg-card p-5 shadow-card print:hidden">
+					<div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:gap-x-4">
+						<Button
+							variant={scanning ? 'outline' : 'default'}
+							onClick={() => setScanning(!scanning)}
+						>
+							{scanning ? <X /> : <ScanLine />}
+							{scanning ? m.scanner_stop() : m.scanner_start()}
+						</Button>
+						<span className="flex items-center gap-3 text-sm font-bold text-muted-foreground before:h-px before:flex-1 before:bg-border after:h-px after:flex-1 after:bg-border sm:h-10 sm:before:hidden sm:after:hidden">
+							{m.or_divider()}
+						</span>
+						<form onSubmit={submitCode} noValidate className="flex flex-wrap items-end gap-2">
+							<Field id="checkin-code" label={m.checkin_code_label()}>
+								<FieldInput
+									id="checkin-code"
+									autoComplete="off"
+									autoCapitalize="characters"
+									spellCheck={false}
+									placeholder="K7Q2-XA"
+									className="font-mono uppercase sm:w-56"
+									value={code}
+									onChange={(e) => setCode(e.target.value)}
+								/>
+							</Field>
+							<Button type="submit" variant="outline" aria-disabled={pending || undefined}>
+								{m.checkin_submit()}
+							</Button>
+						</form>
+					</div>
+					{scanning && (
+						<Scanner onScan={(text) => (pending ? undefined : send({ sessionId, scan: text }))} />
+					)}
+				</div>
+			)}
 
 			{page.anonymised && <p className="rounded-xl bg-tint-warning p-4">{m.data_deleted()}</p>}
 			{!page.canCheckIn && (
 				<p className="rounded-xl bg-tint-warning p-4 print:hidden">{m.checkin_read_only()}</p>
 			)}
 
-			<div aria-live="polite" role="status" className="print:hidden">
+			<div aria-live="polite" role="status" className="empty:hidden print:hidden">
 				{shown && (
 					<ScanResult
 						shown={shown}
@@ -226,46 +287,24 @@ function CheckIn() {
 				</p>
 			)}
 
-			{page.canCheckIn && !page.anonymised && (
-				<div className="flex flex-col gap-4 print:hidden">
-					<div className="flex flex-col gap-3">
-						<div>
-							<Button
-								variant={scanning ? 'outline' : 'default'}
-								onClick={() => setScanning(!scanning)}
-							>
-								{scanning ? m.scanner_stop() : m.scanner_start()}
-							</Button>
-						</div>
-						{scanning && (
-							<Scanner onScan={(text) => (pending ? undefined : send({ sessionId, scan: text }))} />
-						)}
-					</div>
-
-					<form onSubmit={submitCode} noValidate className="flex flex-wrap items-end gap-2">
-						<Field id="checkin-code" label={m.checkin_code_label()}>
-							<FieldInput
-								id="checkin-code"
-								autoComplete="off"
-								autoCapitalize="characters"
-								spellCheck={false}
-								placeholder="K7Q2-XA"
-								className="max-w-48 font-mono uppercase"
-								value={code}
-								onChange={(e) => setCode(e.target.value)}
-							/>
-						</Field>
-						<Button type="submit" variant="outline" aria-disabled={pending || undefined}>
-							{m.checkin_submit()}
-						</Button>
-					</form>
-				</div>
-			)}
-
 			<section aria-labelledby="checkin-names" className="flex flex-col gap-3 print:hidden">
-				<h2 id="checkin-names" className="text-lg font-bold">
-					{m.checkin_by_name()}
-				</h2>
+				<div className="flex flex-wrap items-center justify-between gap-2">
+					<h2 id="checkin-names" className="font-display text-lg font-semibold">
+						{m.checkin_by_name()}
+					</h2>
+					<Button
+						variant="outline"
+						size="sm"
+						onClick={async () => {
+							if (!roster) await loadRoster()
+							// Let React render the list before the print dialog opens.
+							setTimeout(() => window.print(), 50)
+						}}
+					>
+						<Printer />
+						{m.checkin_print()}
+					</Button>
+				</div>
 				{roster ? (
 					<>
 						<Field id="checkin-search" label={m.checkin_search_label()}>
@@ -280,7 +319,7 @@ function CheckIn() {
 						<p className="text-sm text-muted-foreground" aria-live="polite">
 							{m.checkin_matches({ count: String(matches.length) })}
 						</p>
-						<ul className="flex flex-col divide-y divide-border rounded-xl bg-card">
+						<ul className="flex flex-col divide-y divide-border rounded-xl bg-card shadow-card">
 							{matches.slice(0, 50).map((person) => (
 								<li key={person.registrationId} className="flex items-center gap-3 p-3">
 									<span className="flex-1">
@@ -327,9 +366,11 @@ function CheckIn() {
 						</ul>
 					</>
 				) : (
-					<div>
+					<div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-card p-4 shadow-card">
+						<p className="text-sm text-muted-foreground">{m.checkin_names_hint()}</p>
 						<Button
 							variant="outline"
+							size="sm"
 							onClick={() => {
 								focusLater('#checkin-search')
 								loadRoster()
@@ -339,18 +380,6 @@ function CheckIn() {
 						</Button>
 					</div>
 				)}
-				<div>
-					<Button
-						variant="ghost"
-						onClick={async () => {
-							if (!roster) await loadRoster()
-							// Let React render the list before the print dialog opens.
-							setTimeout(() => window.print(), 50)
-						}}
-					>
-						{m.checkin_print()}
-					</Button>
-				</div>
 			</section>
 
 			{roster && (
@@ -390,7 +419,7 @@ function ScanResult({
 	if (shown.kind === 'error') return <FormError message={shown.message} />
 	if (shown.kind === 'undone') {
 		return (
-			<p className="rounded-xl bg-card p-5 text-lg font-bold">
+			<p className="rounded-xl bg-card shadow-card p-5 text-lg font-bold">
 				{m.checkin_undone({ name: shown.name })}
 			</p>
 		)
@@ -416,7 +445,11 @@ function ScanResult({
 			{result.ok ? (
 				<>
 					<p className="text-lg font-bold">
-						<span aria-hidden="true">{result.status === 'checked_in' ? '✓ ' : '! '}</span>
+						{result.status === 'checked_in' ? (
+							<Check aria-hidden className="mr-1 inline size-5 align-[-3px]" strokeWidth={3} />
+						) : (
+							<TriangleAlert aria-hidden className="mr-1 inline size-5 align-[-3px]" />
+						)}
 						{result.status === 'checked_in'
 							? m.checkin_done()
 							: m.checkin_already({ time: time(result.at) })}

@@ -19,7 +19,8 @@ const kinds: { kind: ExportKind; label: () => string }[] = [
  * CSV exports (journeys.md, O9). Files are built in the background and kept
  * for 7 days; downloads go through a link that works for 15 minutes.
  */
-export function ExportsPanel({ eventId }: { eventId: string }) {
+/** `bare`: inside a dialog that already carries the title. */
+export function ExportsPanel({ eventId, bare = false }: { eventId: string; bare?: boolean }) {
 	const [exports, setExports] = useState<Export[]>([])
 	const [error, setError] = useState<string | null>(null)
 	const [busy, setBusy] = useState(false)
@@ -58,16 +59,27 @@ export function ExportsPanel({ eventId }: { eventId: string }) {
 	const label = (kind: ExportKind) => kinds.find((k) => k.kind === kind)?.label() ?? kind
 
 	return (
-		<section aria-labelledby="exports" className="flex flex-col gap-3 rounded-xl bg-card p-5">
-			<div>
-				<h2 id="exports" className="text-lg font-bold">
+		<section
+			aria-labelledby="exports"
+			className={
+				bare ? 'flex flex-col gap-3' : 'flex flex-col gap-3 rounded-xl bg-card p-5 shadow-card'
+			}
+		>
+			<div className={bare ? 'sr-only' : undefined}>
+				<h2 id="exports" className="font-display text-lg font-semibold">
 					{m.exports_title()}
 				</h2>
 				<p className="text-sm text-muted-foreground">{m.exports_hint()}</p>
 			</div>
 			<div className="flex flex-wrap gap-2">
 				{kinds.map(({ kind, label }) => (
-					<Button key={kind} variant="outline" disabled={busy} onClick={() => request(kind)}>
+					<Button
+						key={kind}
+						variant="outline"
+						size="sm"
+						disabled={busy}
+						onClick={() => request(kind)}
+					>
 						{label()}
 					</Button>
 				))}
@@ -87,6 +99,7 @@ export function ExportsPanel({ eventId }: { eventId: string }) {
 							{e.status === 'ready' ? (
 								<Button
 									variant="outline"
+									size="sm"
 									aria-label={m.export_download_for({ name: label(e.kind) })}
 									onClick={() => download(e.id)}
 								>
