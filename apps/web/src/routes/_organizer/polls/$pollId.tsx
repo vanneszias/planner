@@ -98,7 +98,7 @@ function PollAdmin() {
 				</p>
 			</div>
 
-			<section className="flex flex-col gap-3 rounded-xl bg-card p-5">
+			<section className="flex flex-col gap-3 rounded-xl bg-card shadow-card p-5">
 				<h2 className="font-bold">{m.poll_share_title()}</h2>
 				<p className="text-sm text-muted-foreground">{m.poll_share_body()}</p>
 				<code className="break-all rounded-md bg-accent p-3 text-sm">{link}</code>
@@ -196,7 +196,7 @@ function PollAdmin() {
 			{respondents.length > 0 && (
 				<section className="flex flex-col gap-2">
 					<h2 className="font-display text-xl font-semibold">{m.poll_respondents_title()}</h2>
-					<ul className="flex flex-col divide-y divide-border rounded-xl bg-card">
+					<ul className="flex flex-col divide-y divide-border rounded-xl bg-card shadow-card">
 						{respondents.map((r) => (
 							<li key={r.id} className="flex flex-wrap justify-between gap-2 p-3">
 								<span className="font-bold">{r.name}</span>
@@ -286,7 +286,7 @@ function SettingsForm({ page, onSaved }: { page: Page; onSaved: () => void }) {
 	const deadline = values.deadline ?? { date: '', time: '20:00' }
 
 	return (
-		<details className="rounded-xl bg-card p-5">
+		<details className="rounded-xl bg-card shadow-card p-5">
 			<summary className="cursor-pointer font-bold">{m.poll_settings_title()}</summary>
 			<form onSubmit={submit} noValidate className="mt-4 flex flex-col gap-4">
 				<Field id="title" label={m.poll_title_label()} error={issues.title}>

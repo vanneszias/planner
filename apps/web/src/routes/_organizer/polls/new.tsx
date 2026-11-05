@@ -5,7 +5,7 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { type FormEvent, useEffect, useState } from 'react'
 import { FormError } from '#/components/auth-shell'
 import { Checkbox } from '#/components/checkbox'
-import { Field, FieldInput } from '#/components/field'
+import { Field, FieldInput, FieldSelect } from '#/components/field'
 import { RadioCards } from '#/components/radio-cards'
 import { actionMessage } from '#/lib/errors'
 import { timeZones } from '#/lib/time-zones'
@@ -17,9 +17,6 @@ export const Route = createFileRoute('/_organizer/polls/new')({
 	loader: () => getPollsDashboard(),
 	component: NewPoll,
 })
-
-const select =
-	'min-h-11 w-full rounded-md border border-input bg-card px-3 text-foreground aria-invalid:border-destructive'
 
 /** Every half hour from 00:00 to 24:00. */
 const halfHours = Array.from({ length: 49 }, (_, i) => minutesToTime(i * 30))
@@ -96,7 +93,7 @@ function NewPoll() {
 				<h1 className="font-display text-[clamp(1.5rem,5vw,2rem)] font-semibold">{m.poll_new()}</h1>
 			</div>
 
-			<section className="flex flex-col gap-4 rounded-xl bg-card p-5">
+			<section className="flex flex-col gap-4 rounded-xl bg-card shadow-card p-5">
 				<Field id="title" label={m.poll_title_label()} error={issues.title}>
 					<FieldInput
 						id="title"
@@ -126,7 +123,7 @@ function NewPoll() {
 				</Field>
 			</section>
 
-			<section className="flex flex-col gap-4 rounded-xl bg-card p-5">
+			<section className="flex flex-col gap-4 rounded-xl bg-card shadow-card p-5">
 				<h2 className="font-bold">{m.poll_when_section()}</h2>
 				<div className="grid grid-cols-2 gap-4">
 					<Field id="startsOn" label={m.poll_from_label()} error={issues.startsOn}>
@@ -148,21 +145,19 @@ function NewPoll() {
 						/>
 					</Field>
 					<Field id="dayStart" label={m.poll_day_start_label()} error={issues.dayStart}>
-						<select
+						<FieldSelect
 							id="dayStart"
-							className={select}
 							value={values.dayStart}
 							onChange={(e) => set('dayStart', e.target.value)}
 						>
 							{halfHours.slice(0, -1).map((t) => (
 								<option key={t}>{t}</option>
 							))}
-						</select>
+						</FieldSelect>
 					</Field>
 					<Field id="dayEnd" label={m.poll_day_end_label()} error={issues.dayEnd}>
-						<select
+						<FieldSelect
 							id="dayEnd"
-							className={select}
 							aria-invalid={issues.dayEnd ? true : undefined}
 							value={values.dayEnd}
 							onChange={(e) => set('dayEnd', e.target.value)}
@@ -170,7 +165,7 @@ function NewPoll() {
 							{halfHours.slice(1).map((t) => (
 								<option key={t}>{t}</option>
 							))}
-						</select>
+						</FieldSelect>
 					</Field>
 				</div>
 				<Field
@@ -179,9 +174,8 @@ function NewPoll() {
 					hint={m.poll_duration_hint()}
 					error={issues.durationMinutes}
 				>
-					<select
+					<FieldSelect
 						id="durationMinutes"
-						className={select}
 						aria-invalid={issues.durationMinutes ? true : undefined}
 						value={values.durationMinutes}
 						onChange={(e) => set('durationMinutes', Number(e.target.value))}
@@ -191,23 +185,22 @@ function NewPoll() {
 								{m.poll_duration_option({ hours: String(d / 60) })}
 							</option>
 						))}
-					</select>
+					</FieldSelect>
 				</Field>
 				<Field id="timezone" label={m.timezone_label()} error={issues.timezone}>
-					<select
+					<FieldSelect
 						id="timezone"
-						className={select}
 						value={values.timezone}
 						onChange={(e) => set('timezone', e.target.value)}
 					>
 						{timeZones.map((zone) => (
 							<option key={zone}>{zone}</option>
 						))}
-					</select>
+					</FieldSelect>
 				</Field>
 			</section>
 
-			<section className="flex flex-col gap-4 rounded-xl bg-card p-5">
+			<section className="flex flex-col gap-4 rounded-xl bg-card shadow-card p-5">
 				<RadioCards
 					name="decisionMode"
 					legend={m.poll_decision_legend()}
@@ -241,9 +234,8 @@ function NewPoll() {
 						/>
 					</Field>
 					<Field id="deadlineTime" label={m.poll_deadline_time()}>
-						<select
+						<FieldSelect
 							id="deadlineTime"
-							className={select}
 							disabled={!values.deadline}
 							value={deadline.time}
 							onChange={(e) => set('deadline', { ...deadline, time: e.target.value })}
@@ -251,7 +243,7 @@ function NewPoll() {
 							{halfHours.slice(0, -1).map((t) => (
 								<option key={t}>{t}</option>
 							))}
-						</select>
+						</FieldSelect>
 					</Field>
 				</div>
 				{values.decisionMode === 'auto' && (
@@ -282,16 +274,15 @@ function NewPoll() {
 			</section>
 
 			{groups.length > 0 && (
-				<section className="flex flex-col gap-4 rounded-xl bg-card p-5">
+				<section className="flex flex-col gap-4 rounded-xl bg-card shadow-card p-5">
 					<Field
 						id="groupId"
 						label={m.poll_group_label()}
 						hint={m.poll_group_hint()}
 						error={issues.groupId}
 					>
-						<select
+						<FieldSelect
 							id="groupId"
-							className={select}
 							value={values.groupId ?? ''}
 							onChange={(e) => set('groupId', e.target.value || null)}
 						>
@@ -301,7 +292,7 @@ function NewPoll() {
 									{m.poll_group_option({ name: group.name, count: String(group.userIds.length) })}
 								</option>
 							))}
-						</select>
+						</FieldSelect>
 					</Field>
 				</section>
 			)}
