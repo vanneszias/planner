@@ -26,7 +26,7 @@ export default defineConfig(({ command }) => {
 				}
 			: {}
 
-	// scripts/preview.sh builds against one pull request's own resources.
+	// scripts/preview.sh builds against one branch's own resources.
 	const configFile = process.env.PREVIEW_CONFIG ? 'wrangler.preview.json' : 'wrangler.jsonc'
 
 	return {

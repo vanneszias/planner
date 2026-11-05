@@ -1,20 +1,22 @@
 #!/usr/bin/env node
 /*
  * Writes wrangler.preview.json next to each app's wrangler.jsonc, pointing the
- * Worker at one pull request's own resources (docs/previews.md).
+ * Worker at one branch's own resources (docs/previews.md).
  *
- *   node scripts/preview-config.mjs <pr-number> <d1-database-id>
+ *   node scripts/preview-config.mjs <preview-name> <d1-database-id>
+ *
+ * The name comes from scripts/preview.sh, e.g. pv-feat-polls.
  */
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-const [pr, databaseId] = process.argv.slice(2)
-if (!/^\d+$/.test(pr ?? '') || !databaseId) {
-	console.error('usage: node scripts/preview-config.mjs <pr-number> <d1-database-id>')
+const [name, databaseId] = process.argv.slice(2)
+if (!/^pv-[a-z0-9-]+$/.test(name ?? '') || !databaseId) {
+	console.error('usage: node scripts/preview-config.mjs <preview-name> <d1-database-id>')
 	process.exit(1)
 }
 
-const suffix = `-pr-${pr}`
+const suffix = `-${name}`
 const subdomain = process.env.WORKERS_SUBDOMAIN ?? 'zias'
 const origin = (worker) => `https://${worker}${suffix}.${subdomain}.workers.dev`
 

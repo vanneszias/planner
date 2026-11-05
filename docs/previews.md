@@ -1,51 +1,88 @@
-# Pull request previews
+# Deploys and branch previews
 
-Every pull request from this repository gets its own dev environment, so
-changes, including schema changes, can be tried without touching production
-data. This replaces the earlier per-version preview URLs, which shared the
-production database (decision 2026-10-30, superseded 2026-11-04).
+Cloudflare Workers Builds (Cloudflare's GitHub integration) deploys
+production from `master` and gives every other branch its own dev environment,
+so changes, including schema changes, can be tried without touching production
+data. This replaces GitHub Actions (2026-11-05: Actions stopped running jobs
+after a GitHub billing lock) and, before that, per-version preview URLs that
+shared the production database (2026-10-30, superseded 2026-11-04).
+
+Cloudflare's built-in Workers Previews don't fit here: a preview can't consume
+a queue, run crons or bind a Durable Object in another Worker, and it calls the
+other Workers' production deployments. So a preview here is a separate set of
+Workers and resources, deployed by `scripts/preview.sh`.
+
+## Workers Builds setup
+
+Only the `event-web` Worker is connected to the repository; its build deploys
+all four Workers, in order. Settings > Build on `event-web`:
+
+| Setting                          | Value                                                           |
+| -------------------------------- | --------------------------------------------------------------- |
+| Git repository / branch          | `vanneszias/planner`, production branch `master`                |
+| Root directory                   | empty (repository root)                                         |
+| Build command                    | `pnpm check` (lint, typecheck, tests)                           |
+| Deploy command                   | `scripts/deploy.sh`                                             |
+| Preview command (other branches) | `scripts/preview.sh up`                                         |
+| Enable Preview Builds            | on                                                              |
+| Build secrets                    | `PREVIEW_AUTH_SECRET`, `PREVIEW_EXPORT_KEY`, `DEPLOY_API_TOKEN` |
+
+The other three Workers stay disconnected, so a push builds once.
+
+The default build token can't manage D1 or Queues, so `DEPLOY_API_TOKEN` holds
+a user API token ("Edit Cloudflare Workers" template plus D1, Queues and Workers
+R2 Storage edit). `scripts/cloudflare-env.sh` uses it in place of the build token.
+
+## Production (`master`)
+
+`scripts/deploy.sh` applies D1 migrations, deploys `coordinator`, `jobs`, `api`
+and `web` in that order (the coordinator defines the Durable Object class the
+others bind to), checks `/health`, then prunes previews of deleted branches.
 
 ## What a preview is
 
-For pull request `N`:
+For a branch, `scripts/preview.sh` derives a name `pv-<slug>`: the branch name
+lowercased, with runs of other characters turned into `-`, cut to 40 characters
+(with a checksum when cut). `zias/new-polls` becomes `pv-zias-new-polls`.
 
-| Resource           | Name                                      | Notes                                       |
-| ------------------ | ----------------------------------------- | ------------------------------------------- |
-| D1 database (`eu`) | `event-db-pr-N`                           | Empty; all migrations applied on each push  |
-| Queue (`eu`)       | `event-jobs-pr-N`                         | No dead-letter queue                        |
-| Workers            | `event-{coordinator,jobs,api,web}-pr-N`   | Own Durable Object namespace                |
-| R2 bucket (`eu`)   | `event-files-preview`                     | Shared by all previews; keys are random ids |
-| URL                | `https://event-web-pr-N.zias.workers.dev` | Posted as a comment on the pull request     |
+| Resource           | Name                                           | Notes                                       |
+| ------------------ | ---------------------------------------------- | ------------------------------------------- |
+| D1 database (`eu`) | `event-db-pv-<slug>`                           | Empty; all migrations applied on each push  |
+| Queue (`eu`)       | `event-jobs-pv-<slug>`                         | No dead-letter queue                        |
+| Workers            | `event-{coordinator,jobs,api,web}-pv-<slug>`   | Own Durable Object namespace                |
+| R2 bucket (`eu`)   | `event-files-preview`                          | Shared by all previews; keys are random ids |
+| URL                | `https://event-web-pv-<slug>.zias.workers.dev` | Last line of the build log                  |
+
+Every pushed branch gets one, with or without a pull request. Workers Builds
+comments the build status on the pull request; the URL is in the build log.
 
 Differences from production:
 
 - **Emails are logged, not sent** (`EMAIL_DELIVERY=console`). Sign-in links
-  appear in the `event-web-pr-N` Worker's logs (dashboard, or
-  `wrangler tail event-web-pr-N`).
+  appear in the `event-web-pv-<slug>` Worker's logs (dashboard, or
+  `wrangler tail event-web-pv-<slug>`).
 - **Turnstile uses Cloudflare's always-pass test keys.**
 - **No cron triggers**, since the account's cron limit is shared with
   production. Scheduled work (retention, automatic decisions) doesn't run.
 - Rate limit counters are shared with production (same namespaces).
-- `BETTER_AUTH_SECRET` and `EXPORT_SIGNING_KEY` come from the GitHub secrets
+- `BETTER_AUTH_SECRET` and `EXPORT_SIGNING_KEY` come from the build secrets
   `PREVIEW_AUTH_SECRET` and `PREVIEW_EXPORT_KEY`, the same for every preview
   and never the production values.
-
-Pull requests from forks get no preview: they can't read the secrets.
 
 ## How it works
 
 - `scripts/preview-config.mjs` writes `wrangler.preview.json` next to each
   app's `wrangler.jsonc` (git-ignored), renaming the Worker and pointing its
-  bindings and URLs at the pull request's resources.
-- `scripts/preview.sh up N` creates the database and queue if missing, applies
-  migrations, deploys the four Workers in production order and checks
-  `/health`. The web build reads the preview configs when `PREVIEW_CONFIG` is set
+  bindings and URLs at the branch's resources.
+- `scripts/preview.sh up [branch]` creates the database and queue if missing,
+  applies migrations, deploys the four Workers in production order and checks
+  `/health`. The branch defaults to `WORKERS_CI_BRANCH`, then the checked-out
+  one. The web build reads the preview configs when `PREVIEW_CONFIG` is set
   (`apps/web/vite.config.ts`).
-- `scripts/preview.sh down N` deletes the Workers, queue and database.
-- CI (`.github/workflows/ci.yml`, job `preview`) runs `up` after the checks pass
-  on every push to a pull request. `.github/workflows/preview-cleanup.yml` runs
-  `down` when it closes; run that workflow by hand with a number to remove one
-  left behind.
+- `scripts/preview.sh down [branch]` deletes the Workers, queue and database.
+- `scripts/preview.sh prune` deletes every preview whose branch no longer exists
+  on GitHub. Workers Builds has no "pull request closed" event, so a preview
+  lives until its branch is deleted and the next production deploy runs.
 
-Both commands can run locally with a logged-in Wrangler (`up` also needs the two
-secrets in the environment).
+All commands can run locally with a logged-in Wrangler (`up` also needs the two
+preview secrets in the environment).
