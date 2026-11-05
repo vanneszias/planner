@@ -186,7 +186,6 @@ function CheckIn() {
 						{page.sessions.map((s) => (
 							<option key={s.id} value={s.id}>
 								{formatShortDayTime(new Date(s.startsAt), page.timezone)} · {s.workshopTitle}
-								{s.room ? ` · ${s.room}` : ''}
 							</option>
 						))}
 					</FieldSelect>

@@ -243,6 +243,19 @@ function EventPage() {
 			<section className="flex flex-col gap-3 rounded-xl bg-card p-5 shadow-card">
 				<div>
 					<p className="font-display text-xl font-semibold">{m.hello_name({ name: me.name })}</p>
+					{rankingMode && !page.published && (
+						<p className="text-sm text-muted-foreground tabular-nums">
+							{me.ranking.length < me.rules.min
+								? m.rank_progress_needed({
+										count: String(me.ranking.length),
+										min: String(me.rules.min),
+									})
+								: m.rank_progress_enough({
+										count: String(me.ranking.length),
+										max: String(me.rules.max),
+									})}
+						</p>
+					)}
 				</div>
 				{bookingMode && (
 					<div className="flex flex-col gap-1.5">

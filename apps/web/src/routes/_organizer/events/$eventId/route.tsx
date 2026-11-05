@@ -50,7 +50,7 @@ function EventLayout() {
 					<ChevronLeft aria-hidden className="size-4" />
 					{m.back_to_events()}
 				</Link>
-				<h1 className="font-display text-[clamp(1.5rem,5vw,2.25rem)] leading-tight font-semibold text-balance wrap-break-word">
+				<h1 className="font-display text-[clamp(1.5rem,5vw,2rem)] leading-tight font-semibold text-balance wrap-break-word">
 					{event.name}
 				</h1>
 				<p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-muted-foreground">

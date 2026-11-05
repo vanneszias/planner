@@ -61,7 +61,11 @@ export function DayStrip({
 							const segments = []
 							if (previous && gap >= freeTimeMinutes) {
 								segments.push(
-									<Segment key={`free-${session.id}`} time={formatTime(previous.endsAt, timeZone)}>
+									<Segment
+										key={`free-${session.id}`}
+										time={formatTime(previous.endsAt, timeZone)}
+										muted
+									>
 										<p className="text-muted-foreground">{m.free_time()}</p>
 									</Segment>,
 								)
@@ -132,10 +136,14 @@ function Segment({
 		<li
 			className={cn(
 				'relative flex gap-4 p-4 [&+&]:border-t-[1.5px] [&+&]:border-dashed [&+&]:border-line [&+&]:before:absolute [&+&]:before:-top-2 [&+&]:before:-left-2 [&+&]:before:size-4 [&+&]:before:rounded-full [&+&]:before:bg-background [&+&]:after:absolute [&+&]:after:-top-2 [&+&]:after:-right-2 [&+&]:after:size-4 [&+&]:after:rounded-full [&+&]:after:bg-background',
-				muted && 'py-2.5 text-muted-foreground [&>span:first-child]:font-normal',
+				muted && 'py-2.5',
 			)}
 		>
-			<span className="w-12 shrink-0 font-bold tabular-nums">{time}</span>
+			<span
+				className={cn('w-12 shrink-0 tabular-nums', muted ? 'text-muted-foreground' : 'font-bold')}
+			>
+				{time}
+			</span>
 			<div className="flex-1">{children}</div>
 		</li>
 	)

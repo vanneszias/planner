@@ -178,7 +178,8 @@ function WorkshopForm({
 	onDone: () => Promise<void>
 	onDelete?: () => void
 }) {
-	const { ageGroups, workshopAgeGroups } = eventRoute.useLoaderData()
+	const { ageGroups, workshopAgeGroups, sessions } = eventRoute.useLoaderData()
+	const own = workshop ? sessions.filter((s) => s.workshopId === workshop.id) : []
 	const [values, setValues] = useState<WorkshopInput>({
 		title: workshop?.title ?? '',
 		description: workshop?.description ?? '',
@@ -213,6 +214,14 @@ function WorkshopForm({
 	const prefix = workshop?.id ?? 'new'
 	return (
 		<form onSubmit={submit} noValidate className="flex flex-col gap-5">
+			{workshop && (
+				<p className="-mt-2 rounded-lg bg-background px-3 py-2 text-sm text-muted-foreground">
+					{m.workshop_capacity_line({
+						sessions: String(own.length),
+						places: String(own.reduce((sum, s) => sum + s.capacity, 0)),
+					})}
+				</p>
+			)}
 			<Field id={`${prefix}-title`} label={m.workshop_title_label()} error={issues.title}>
 				<FieldInput
 					id={`${prefix}-title`}
@@ -265,7 +274,7 @@ function WorkshopForm({
 					<legend className="font-bold">{m.who_can_join()}</legend>
 					<p className="mb-1 text-sm text-muted-foreground">{m.everyone_hint()}</p>
 					{ageGroups.map((group) => (
-						<label key={group.id} className="flex min-h-11 cursor-pointer items-center gap-3">
+						<label key={group.id} className="flex min-h-9 cursor-pointer items-center gap-3">
 							<input
 								type="checkbox"
 								className="size-5 accent-[var(--kelp)]"

@@ -28,7 +28,7 @@ export const Route = createFileRoute('/_organizer/events/$eventId/participants')
 })
 const eventRoute = getRouteApi('/_organizer/events/$eventId')
 
-const PAGE = 50
+const PAGE = 100
 
 type Card = { id: string; firstName: string; code: string; qr: string }
 type Panel = 'add' | 'import' | { confirm: 'cards' | 'email' } | null
@@ -424,7 +424,9 @@ function Participants() {
 									)}
 									<th className="w-[30%] p-3">{m.column_name()}</th>
 									<th className="w-[38%] p-3 max-md:hidden">{m.column_contact()}</th>
-									{showSessions && <th className="p-3 max-sm:hidden">{m.column_sessions()}</th>}
+									{showSessions && (
+										<th className="p-3 text-right max-sm:hidden">{m.column_sessions()}</th>
+									)}
 									{showWaitlist && <th className="p-3 max-sm:hidden">{m.column_waitlist()}</th>}
 									{ranks && <th className="p-3">{m.column_ranked()}</th>}
 								</tr>
@@ -436,7 +438,7 @@ function Participants() {
 										className="border-b border-border last:border-0 hover:bg-accent/40"
 									>
 										{canWrite && (
-											<td className="p-3">
+											<td className="px-3 py-2">
 												<input
 													type="checkbox"
 													aria-label={m.select_participant({ name: p.displayName })}
@@ -446,28 +448,33 @@ function Participants() {
 												/>
 											</td>
 										)}
-										<td className="p-3 max-sm:w-full max-sm:max-w-0">
-											<span className="block font-bold max-sm:truncate">
-												{p.displayName || m.anonymous()}
-											</span>
-											<span className="block truncate text-muted-foreground md:hidden">
-												{p.email ?? p.guardianEmail}
-											</span>
-											<span className="block text-muted-foreground">
+										<td className="px-3 py-2">
+											<span className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+												<span className="font-bold">{p.displayName || m.anonymous()}</span>
 												{[
 													p.ageGroupId ? groupLabel.get(p.ageGroupId) : null,
 													p.isMinor ? m.minor() : null,
 													p.registeredBy === 'organizer' ? m.added_by_organizer() : null,
 												]
 													.filter(Boolean)
-													.join(' · ')}
+													.map((tag) => (
+														<span
+															key={tag}
+															className="rounded-full bg-accent px-2 py-1 text-xs leading-none font-bold text-muted-foreground"
+														>
+															{tag}
+														</span>
+													))}
+											</span>
+											<span className="block truncate text-muted-foreground md:hidden">
+												{p.email ?? p.guardianEmail}
 											</span>
 										</td>
-										<td className="p-3 break-all max-md:hidden">
+										<td className="px-3 py-2 break-all max-md:hidden">
 											{p.email ?? p.guardianEmail ?? '—'}
 										</td>
 										{showSessions && (
-											<td className="p-3 tabular-nums max-sm:hidden">
+											<td className="px-3 py-2 text-right tabular-nums max-sm:hidden">
 												{ranks
 													? p.bookings
 													: m.bookings_of({
@@ -477,10 +484,12 @@ function Participants() {
 											</td>
 										)}
 										{showWaitlist && (
-											<td className="p-3 tabular-nums max-sm:hidden">{p.waitlisted || '—'}</td>
+											<td className="px-3 py-2 tabular-nums max-sm:hidden">
+												{p.waitlisted || '—'}
+											</td>
 										)}
 										{ranks && (
-											<td className="p-3">
+											<td className="px-3 py-2">
 												<span className="flex items-center justify-between gap-2">
 													<span
 														className={cn(

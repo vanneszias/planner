@@ -70,7 +70,13 @@ export function ExportsPanel({ eventId }: { eventId: string }) {
 			</div>
 			<div className="flex flex-wrap gap-2">
 				{kinds.map(({ kind, label }) => (
-					<Button key={kind} variant="outline" disabled={busy} onClick={() => request(kind)}>
+					<Button
+						key={kind}
+						variant="outline"
+						size="sm"
+						disabled={busy}
+						onClick={() => request(kind)}
+					>
 						{label()}
 					</Button>
 				))}
@@ -90,6 +96,7 @@ export function ExportsPanel({ eventId }: { eventId: string }) {
 							{e.status === 'ready' ? (
 								<Button
 									variant="outline"
+									size="sm"
 									aria-label={m.export_download_for({ name: label(e.kind) })}
 									onClick={() => download(e.id)}
 								>
