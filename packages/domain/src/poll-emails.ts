@@ -5,8 +5,9 @@
  * decision.
  */
 
-export type PollEmail = { to: string; subject: string; text: string }
 type Locale = 'en' | 'nl'
+/** Same shape as Email in @app/brand/email; the jobs Worker renders the branded HTML. */
+export type PollEmail = { to: string; subject: string; text: string; locale: Locale }
 
 const signature = (appName: string) => `\n\n${appName}`
 
@@ -46,12 +47,14 @@ export function pollInviteEmail(input: {
 	if (locale === 'nl') {
 		return {
 			to: input.to,
+			locale,
 			subject: `Wanneer kun je? ${title}`,
 			text: `${organizerName} zoekt een moment voor ${title}. Duid aan wanneer je kunt:\n\n${link}${deadline ? `\n\nGraag voor ${deadline}.` : ''}${signature(appName)}`,
 		}
 	}
 	return {
 		to: input.to,
+		locale,
 		subject: `When can you make it? ${title}`,
 		text: `${organizerName} is finding a time for ${title}. Mark when you're free:\n\n${link}${deadline ? `\n\nPlease answer before ${deadline}.` : ''}${signature(appName)}`,
 	}
@@ -70,12 +73,14 @@ export function pollConfirmedEmail(input: {
 	if (locale === 'nl') {
 		return {
 			to: input.to,
+			locale,
 			subject: `${title}: ${when}`,
 			text: `Het moment voor ${title} staat vast:\n\n${when}${location ? `\n${location}` : ''}\n\nZet het in je agenda via ${link}${signature(appName)}`,
 		}
 	}
 	return {
 		to: input.to,
+		locale,
 		subject: `${title}: ${when}`,
 		text: `The time for ${title} is set:\n\n${when}${location ? `\n${location}` : ''}\n\nAdd it to your calendar from ${link}${signature(appName)}`,
 	}
@@ -92,12 +97,14 @@ export function pollNeedsDecisionEmail(input: {
 	if (locale === 'nl') {
 		return {
 			to: input.to,
+			locale,
 			subject: `Kies zelf een moment: ${title}`,
 			text: `De deadline voor ${title} is voorbij, maar geen enkel moment haalde het minimum. Kies zelf een moment of open de peiling opnieuw:\n\n${link}${signature(appName)}`,
 		}
 	}
 	return {
 		to: input.to,
+		locale,
 		subject: `Pick a time: ${title}`,
 		text: `The deadline for ${title} has passed, but no time reached the minimum. Pick one yourself or reopen the poll:\n\n${link}${signature(appName)}`,
 	}

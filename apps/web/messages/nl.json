@@ -712,5 +712,7 @@
 	"account_passes": "Mijn passen",
 	"account_empty": "Nog geen passen. Schrijf je in voor een evenement met dit e-mailadres, dan verschijnt je pas hier.",
 	"account_open_event": "Open programma",
-	"account_signed_out": "Meld je aan om je passen te zien."
+	"account_signed_out": "Meld je aan om je passen te zien.",
+	"share_event_description": "Schrijf je in en kies je workshops. Georganiseerd door {organization}.",
+	"share_poll_description": "Duid aan wanneer je kunt. Geen account nodig."
 }

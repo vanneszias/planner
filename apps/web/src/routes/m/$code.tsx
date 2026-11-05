@@ -20,6 +20,7 @@ import {
 import { useLivePoll } from '#/components/poll/use-live-poll'
 import { actionMessage } from '#/lib/errors'
 import { formatStamp } from '#/lib/format'
+import { shareMeta } from '#/lib/site'
 import { m } from '#/paraglide/messages'
 import { deleteMyResponseFn, getPublicPoll, saveMyResponseFn } from '#/server/poll-public'
 
@@ -30,6 +31,7 @@ export const Route = createFileRoute('/m/$code')({
 		meta: loaderData
 			? [
 					{ title: `${loaderData.poll.title} · ${brand.name}` },
+					...shareMeta({ title: loaderData.poll.title, description: m.share_poll_description() }),
 					// Guests land here from their private edit link; never pass the URL on.
 					{ name: 'referrer', content: 'no-referrer' },
 					{ name: 'robots', content: 'noindex' },

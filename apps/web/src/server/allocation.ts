@@ -151,6 +151,7 @@ export const publishFn = createServerFn({ method: 'POST' })
 						locale: event.defaultLocale,
 						name: p.name,
 						eventName: event.name,
+						accentColor: event.accentColor,
 						eventUrl,
 						changed: !preview.firstPublish,
 					}),

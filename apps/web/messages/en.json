@@ -712,5 +712,7 @@
 	"account_passes": "My passes",
 	"account_empty": "No passes yet. Register for an event with this email address and it will show up here.",
 	"account_open_event": "Open programme",
-	"account_signed_out": "Sign in to see your passes."
+	"account_signed_out": "Sign in to see your passes.",
+	"share_event_description": "Sign up and pick your workshops. Organized by {organization}.",
+	"share_poll_description": "Mark when you're free. No account needed."
 }

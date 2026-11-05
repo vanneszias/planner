@@ -104,6 +104,7 @@ export const emailGuardiansFn = createServerFn({ method: 'POST' })
 									locale: event.defaultLocale,
 									name: person.displayName,
 									eventName: event.name,
+									accentColor: event.accentColor,
 									link: linkFor(person.token),
 									code: person.code,
 								}),

@@ -1,7 +1,8 @@
-import { brand } from '@app/brand'
+import { brand, brandAssets } from '@app/brand'
 import { Button } from '@app/ui/components/button'
 import { createRootRoute, HeadContent, Scripts, useRouter } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
+import { defaultShareMeta } from '#/lib/site'
 import { m } from '#/paraglide/messages'
 import { getLocale } from '#/paraglide/runtime'
 import appCss from '../styles.css?url'
@@ -14,8 +15,16 @@ export const Route = createRootRoute({
 			{ title: brand.name },
 			{ name: 'description', content: brand.description[getLocale()] },
 			{ name: 'theme-color', content: brand.themeColor },
+			{ name: 'apple-mobile-web-app-title', content: brand.name },
+			...defaultShareMeta(),
 		],
-		links: [{ rel: 'stylesheet', href: appCss }],
+		links: [
+			{ rel: 'stylesheet', href: appCss },
+			{ rel: 'icon', href: brandAssets.faviconIco, sizes: '32x32' },
+			{ rel: 'icon', href: brandAssets.favicon, type: 'image/svg+xml' },
+			{ rel: 'apple-touch-icon', href: brandAssets.appleTouchIcon },
+			{ rel: 'manifest', href: brandAssets.manifest },
+		],
 	}),
 	shellComponent: RootDocument,
 	notFoundComponent: NotFound,
