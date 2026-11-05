@@ -1,7 +1,8 @@
 import { env } from 'cloudflare:workers'
+import type { Email } from '@app/brand/email'
 
-/** An email to send. Delivery goes through the jobs queue when deployed. */
-export type OutgoingEmail = { to: string; subject: string; text: string }
+/** An email to send. Delivery goes through the jobs queue when deployed; jobs adds the branded HTML. */
+export type OutgoingEmail = Email
 
 export async function sendEmail(email: OutgoingEmail): Promise<void> {
 	await sendEmails([email])

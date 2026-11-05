@@ -151,6 +151,7 @@ export async function publicEventMeta(db: Db, eventId: string) {
 			defaultLocale: schema.event.defaultLocale,
 			timezone: schema.event.timezone,
 			status: schema.event.status,
+			accentColor: schema.event.accentColor,
 		})
 		.from(schema.event)
 		.innerJoin(schema.organization, eq(schema.organization.id, schema.event.organizationId))

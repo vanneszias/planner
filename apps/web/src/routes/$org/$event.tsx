@@ -33,6 +33,7 @@ import {
 	groupBySlot,
 	sessionCount,
 } from '#/lib/format'
+import { shareMeta } from '#/lib/site'
 import { m } from '#/paraglide/messages'
 import {
 	bookFn,
@@ -56,6 +57,12 @@ export const Route = createFileRoute('/$org/$event')({
 			? [
 					{ title: `${loaderData.event.name} · ${brand.name}` },
 					{ name: 'description', content: loaderData.event.description.slice(0, 160) },
+					...shareMeta({
+						title: loaderData.event.name,
+						description:
+							loaderData.event.description.slice(0, 160) ||
+							m.share_event_description({ organization: loaderData.event.organizationName }),
+					}),
 					// Private links land here after /r/<token>; never leak the URL onward.
 					{ name: 'referrer', content: 'no-referrer' },
 				]

@@ -137,6 +137,7 @@ export const registerFn = createServerFn({ method: 'POST' })
 					to: data.values.email,
 					locale: meta.defaultLocale,
 					eventName: meta.name,
+					accentColor: meta.accentColor,
 					link: linkFor(token),
 				}),
 			)
@@ -150,6 +151,7 @@ export const registerFn = createServerFn({ method: 'POST' })
 				locale: meta.defaultLocale,
 				name: data.values.name,
 				eventName: meta.name,
+				accentColor: meta.accentColor,
 				link: linkFor(result.credentials.token),
 				code: result.credentials.code,
 			}),
@@ -204,6 +206,7 @@ export const findProgrammeFn = createServerFn({ method: 'POST' })
 					to: email,
 					locale: meta.defaultLocale,
 					eventName: meta.name,
+					accentColor: meta.accentColor,
 					link: linkFor(token),
 				}),
 			)
@@ -296,6 +299,7 @@ async function notifyPromotions(eventId: string, promotions: Promotion[]) {
 				to,
 				locale: meta.defaultLocale,
 				eventName: meta.name,
+				accentColor: meta.accentColor,
 				workshop: row.workshop,
 				when: `${when.date} ${when.time}`,
 				eventUrl: `${env.BETTER_AUTH_URL}/${meta.organizationSlug}/${meta.slug}`,

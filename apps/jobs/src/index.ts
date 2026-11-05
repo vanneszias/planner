@@ -1,4 +1,5 @@
 import { brand } from '@app/brand'
+import { type Email, renderEmailHtml } from '@app/brand/email'
 import { createDb, type Db } from '@app/db'
 import {
 	deleteExpiredPolls,
@@ -18,7 +19,7 @@ import { r2Files } from '@app/platform'
  * (retention cleanup). Handlers must be idempotent: queues deliver at least once.
  */
 
-type EmailMessage = { kind: 'email'; to: string; subject: string; text: string }
+type EmailMessage = { kind: 'email' } & Email
 type JobMessage = EmailMessage | ExportMessage | { kind: string }
 
 /** Matches max_retries in wrangler.jsonc: the last attempt marks an export failed. */
@@ -94,6 +95,7 @@ async function deliverEmail(env: Env, email: EmailMessage) {
 		from: { email: env.EMAIL_FROM, name: brand.email.fromName },
 		subject: email.subject,
 		text: email.text,
+		html: renderEmailHtml(email, env.APP_URL),
 	})
 }
 

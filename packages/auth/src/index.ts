@@ -1,4 +1,5 @@
 import { brand } from '@app/brand'
+import type { Email } from '@app/brand/email'
 import type { Db } from '@app/db'
 import { drizzleAdapter } from '@better-auth/drizzle-adapter'
 import { passkey } from '@better-auth/passkey'
@@ -9,7 +10,7 @@ import { tanstackStartCookies } from 'better-auth/tanstack-start'
 import { ac, roles } from './permissions.ts'
 
 /** An email the auth flows need sent. Delivery is the caller's concern (queue, console in dev). */
-export type AuthEmail = { to: string; subject: string; text: string }
+export type AuthEmail = Email
 
 export type AuthOptions = {
 	db: Db
@@ -130,7 +131,7 @@ export function createAuth({
 					sendEmail({
 						to: email,
 						subject: `${inviter.user.name} invited you to ${organization.name}`,
-						text: `Accept the invitation here:\n\n${baseURL}/invitations/${id}`,
+						text: `${inviter.user.name} invited you to organize events with ${organization.name} on ${brand.name}. Accept the invitation here:\n\n${baseURL}/invitations/${id}`,
 					}),
 			}),
 			haveIBeenPwned(),
