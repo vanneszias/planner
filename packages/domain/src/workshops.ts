@@ -15,6 +15,9 @@ export const workshopInput = z.object({
 	category: z.string().trim().max(60, 'too_long').optional(),
 	/** Limits the workshop to these age groups; empty or absent means everyone. */
 	ageGroupIds: z.array(z.string()).max(20).optional(),
+	/** Organizers may pick another marker from the fixed set, never a free-form colour. */
+	markerColor: z.enum(schema.markerColors).optional(),
+	markerShape: z.enum(schema.markerShapes).optional(),
 })
 export type WorkshopInput = z.input<typeof workshopInput>
 export type Workshop = typeof schema.workshop.$inferSelect
@@ -53,7 +56,8 @@ export async function createWorkshop(
 		.insert(schema.workshop)
 		.values({
 			...values,
-			...markerFor(n),
+			markerColor: values.markerColor ?? markerFor(n).markerColor,
+			markerShape: values.markerShape ?? markerFor(n).markerShape,
 			sortOrder: n,
 			eventId,
 			organizationId: ctx.organizationId,
