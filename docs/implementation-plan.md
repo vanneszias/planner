@@ -92,13 +92,16 @@ production; sign-in works with all four methods; UI renders in English and Dutch
   `https://event-api.zias.workers.dev`; `coordinator` and `jobs` have no public URL.
 - [x] ~~Previews use per-version preview URLs~~ (2026-10-30), superseded
   2026-11-04: **each pull request gets its own environment** (own D1 database,
-  queue and Workers), deleted when it closes. See [previews.md](previews.md).
+  queue and Workers). Since 2026-11-05 per branch, deleted with the branch.
+  See [previews.md](previews.md).
 - [x] Private GitHub repository `vanneszias/planner`, default branch `main`.
-- [x] CI workflow (`.github/workflows/ci.yml`): checks on every PR and push to
-  `main`; a preview environment per PR; migrations and ordered deploy on `main`.
-- [ ] `CLOUDFLARE_API_TOKEN` GitHub secret (owner creates the token: "Edit
-  Cloudflare Workers" template plus D1, Queues and Workers R2 Storage edit).
-  Preview and deploy jobs fail until it exists.
+- [x] ~~CI workflow (`.github/workflows/ci.yml`)~~, replaced 2026-11-05 by
+  Workers Builds on `event-web`: checks on every push, a preview environment
+  per branch, migrations and ordered deploy on `master` (previews.md).
+- [ ] Connect `event-web` to the repository in Workers Builds and add the
+  build secrets `DEPLOY_API_TOKEN` ("Edit Cloudflare Workers" template plus D1,
+  Queues and Workers R2 Storage edit), `PREVIEW_AUTH_SECRET` and
+  `PREVIEW_EXPORT_KEY` (previews.md, "Workers Builds setup").
 - [ ] Email Service sending domain with SPF, DKIM, DMARC; verify its EU processing.
   Until then, deployed emails are queued and dropped (magic links don't work
   deployed; password sign-in does).
@@ -450,8 +453,9 @@ NVDA.
 
 - **Cloudflare:** use the owner's logged-in Wrangler session to create EU
   resources and deploy previews.
-- **Code and CI:** GitHub, with GitHub Actions for checks, migrations and
-  `wrangler deploy` of all four Workers. Repo creation confirmed separately.
+- **Code and CI:** GitHub, with Cloudflare Workers Builds for checks,
+  migrations and `wrangler deploy` of all four Workers (GitHub Actions until
+  2026-11-05). Repo creation confirmed separately.
 - **Domain:** none yet; `*.workers.dev` for previews and the pilot setup.
   Passkeys registered there won't carry over to a later domain.
 - **Google sign-in:** wired behind environment variables; the button shows only
