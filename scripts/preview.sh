@@ -44,6 +44,8 @@ slug() {
 
 down() {
 	local suffix="-$1"
+	# A queue consumer can't be deleted, and a queue with one can't either.
+	wrangler queues consumer remove "event-jobs$suffix" "event-jobs$suffix" || echo "event-jobs$suffix: no consumer to remove"
 	# Dependents first: the coordinator's Durable Object class is bound by the others.
 	for worker in web api jobs coordinator; do
 		wrangler delete --name "event-$worker$suffix" --force || echo "event-$worker$suffix: nothing to delete"
