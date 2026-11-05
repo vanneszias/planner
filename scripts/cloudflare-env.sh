@@ -6,5 +6,7 @@ if [[ -n ${DEPLOY_API_TOKEN:-} ]]; then export CLOUDFLARE_API_TOKEN=$DEPLOY_API_
 # Workers Builds sets WRANGLER_CI_OVERRIDE_NAME to the connected Worker (event-web), and
 # wrangler then deploys every `wrangler deploy` under that name, overwriting event-web
 # with the coordinator, jobs and api code. Each config already names its own Worker, so
-# drop the override and let the config's name decide.
-unset WRANGLER_CI_OVERRIDE_NAME
+# drop the override and let the config's name decide. WRANGLER_CI_MATCH_TAG goes too:
+# wrangler checks that each deployed Worker carries event-web's tag, which only
+# event-web does, so every other Worker fails with "name ... must match".
+unset WRANGLER_CI_OVERRIDE_NAME WRANGLER_CI_MATCH_TAG
