@@ -12,8 +12,14 @@
 	"vars": {
 		"COORDINATOR_JURISDICTION": "eu",
 		// The web Worker's origin, for links in poll emails (same as BETTER_AUTH_URL in apps/web).
-		"APP_URL": "https://event-web.zias.workers.dev"
+		"APP_URL": "https://event-web.zias.workers.dev",
+		// Sender address; its domain must be onboarded to Email Service (docs/security-privacy.md, "Email").
+		"EMAIL_FROM": "noreply@events.zias.be",
+		// "queue" sends through Email Service; preview configs switch to "console" (docs/previews.md).
+		"EMAIL_DELIVERY": "queue"
 	},
+	// Email Service. Restricted to the sender domain so no other address can be used.
+	"send_email": [{ "name": "EMAIL", "allowed_sender_addresses": ["noreply@events.zias.be"] }],
 	"d1_databases": [
 		{
 			"binding": "DB",

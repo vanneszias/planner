@@ -135,4 +135,59 @@ describe('jobs', () => {
 			{ body: expect.objectContaining({ kind: 'email', to: 'anna@example.com' }) },
 		])
 	})
+
+	describe('email', () => {
+		const email = { kind: 'email', to: 'ana@example.com', subject: 'Hi', text: 'Hello' }
+		const sending = (send: () => Promise<unknown>) => ({
+			...env,
+			EMAIL_DELIVERY: 'queue',
+			EMAIL_FROM: 'noreply@events.zias.be',
+			EMAIL: { send: vi.fn(send) } as unknown as SendEmail,
+		})
+
+		it('sends from the configured sender and acks', async () => {
+			const testEnv = sending(async () => ({ messageId: '1' }))
+			const { message, batch } = batchOf(email)
+			await worker.queue(batch, testEnv)
+			expect(testEnv.EMAIL.send).toHaveBeenCalledWith({
+				to: 'ana@example.com',
+				from: { email: 'noreply@events.zias.be', name: 'Planner' },
+				subject: 'Hi',
+				text: 'Hello',
+			})
+			expect(message.ack).toHaveBeenCalled()
+			expect(message.retry).not.toHaveBeenCalled()
+		})
+
+		it('retries a failed send instead of acking it', async () => {
+			const testEnv = sending(async () => {
+				throw Object.assign(new Error('boom'), { code: 'E_INTERNAL' })
+			})
+			const { message, batch } = batchOf(email)
+			await worker.queue(batch, testEnv)
+			expect(message.retry).toHaveBeenCalledWith({ delaySeconds: 10 })
+			expect(message.ack).not.toHaveBeenCalled()
+		})
+
+		it('drops a suppressed recipient without retrying', async () => {
+			const testEnv = sending(async () => {
+				throw Object.assign(new Error('suppressed'), { code: 'E_RECIPIENT_SUPPRESSED' })
+			})
+			const { message, batch } = batchOf(email)
+			await worker.queue(batch, testEnv)
+			expect(message.retry).not.toHaveBeenCalled()
+			expect(message.ack).toHaveBeenCalled()
+		})
+
+		it('logs instead of sending in preview', async () => {
+			const testEnv = sending(async () => ({ messageId: '1' }))
+			const log = vi.spyOn(console, 'log').mockImplementation(() => {})
+			const { message, batch } = batchOf(email)
+			await worker.queue(batch, { ...testEnv, EMAIL_DELIVERY: 'console' })
+			expect(testEnv.EMAIL.send).not.toHaveBeenCalled()
+			expect(log).toHaveBeenCalled()
+			expect(message.ack).toHaveBeenCalled()
+			log.mockRestore()
+		})
+	})
 })
