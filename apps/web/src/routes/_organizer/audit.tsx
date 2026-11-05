@@ -210,7 +210,10 @@ function AuditLog() {
 
 			<div className="flex flex-wrap items-center gap-2">
 				<p className="mr-auto text-sm text-muted-foreground">
-					{m.audit_showing({ count: String(entries.length) })}
+					{m.audit_showing({
+						events: String(entries.length),
+						rows: String(collapse(entries).filter((r) => r.kind === 'entry').length),
+					})}
 				</p>
 				{search.before && (
 					<Button variant="outline" asChild>

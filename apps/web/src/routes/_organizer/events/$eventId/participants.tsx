@@ -41,7 +41,7 @@ export const Route = createFileRoute('/_organizer/events/$eventId/participants')
 })
 const eventRoute = getRouteApi('/_organizer/events/$eventId')
 
-const PAGE = 100
+const PAGE = 50
 
 type Card = { id: string; firstName: string; code: string; qr: string }
 type Panel = 'add' | 'import' | { confirm: 'cards' | 'email' } | null
@@ -59,6 +59,7 @@ function Participants() {
 	const { event, workshops } = eventRoute.useLoaderData()
 	const router = useRouter()
 	const [ranking, setRanking] = useState<RankingPanel | null>(null)
+	const [exporting, setExporting] = useState(false)
 	const ranks = event.mode === 'ranking'
 	const [ageFilter, setAgeFilter] = useState('')
 	const [statusFilter, setStatusFilter] = useState<'all' | 'none' | 'waitlisted'>('all')
@@ -193,11 +194,9 @@ function Participants() {
 							<span className="max-sm:hidden">{m.import_csv()}</span>
 						</Button>
 						{canExport && (
-							<Button asChild variant="outline">
-								<a href="#exports">
-									<Download />
-									<span className="max-sm:sr-only">{m.export_short()}</span>
-								</a>
+							<Button variant="outline" onClick={() => setExporting(true)}>
+								<Download />
+								{m.export_short()}
 							</Button>
 						)}
 						<Button onClick={() => setPanel('add')}>
@@ -576,7 +575,17 @@ function Participants() {
 					)}
 				</>
 			)}
-			{canExport && <ExportsPanel eventId={event.id} />}
+			{canExport && (
+				<Dialog
+					open={exporting}
+					onOpenChange={setExporting}
+					title={m.exports_title()}
+					description={m.exports_hint()}
+					closeLabel={m.close()}
+				>
+					<ExportsPanel eventId={event.id} bare />
+				</Dialog>
+			)}
 		</div>
 	)
 }

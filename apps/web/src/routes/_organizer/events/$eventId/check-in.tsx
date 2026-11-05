@@ -172,7 +172,8 @@ function CheckIn() {
 		<div className="flex flex-col gap-6">
 			<div
 				className={cn(
-					'grid gap-4 rounded-xl bg-card p-5 shadow-card sm:grid-cols-[1fr_auto] sm:items-end print:hidden',
+					'grid gap-4 rounded-xl bg-card p-5 shadow-card print:hidden',
+					expected > 0 && 'sm:grid-cols-[1fr_auto] sm:items-end',
 					page.canCheckIn && !page.anonymised && '-mb-6 rounded-b-none',
 				)}
 			>
@@ -195,7 +196,7 @@ function CheckIn() {
 							<optgroup key={day.label} label={day.label}>
 								{day.items.map((s) => (
 									<option key={s.id} value={s.id}>
-										{formatTime(s.startsAt, page.timezone)} · {s.workshopTitle}
+										{formatShortDayTime(s.startsAt, page.timezone)} · {s.workshopTitle}
 										{s.room ? ` · ${s.room}` : ''}
 									</option>
 								))}
@@ -245,7 +246,7 @@ function CheckIn() {
 									autoCapitalize="characters"
 									spellCheck={false}
 									placeholder="K7Q2-XA"
-									className="max-w-48 font-mono uppercase"
+									className="font-mono uppercase sm:w-56"
 									value={code}
 									onChange={(e) => setCode(e.target.value)}
 								/>

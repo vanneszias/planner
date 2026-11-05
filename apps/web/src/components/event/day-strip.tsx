@@ -75,11 +75,8 @@ export function DayStrip({
 									<Segment key={session.id} time={formatTime(session.startsAt, timeZone)} muted>
 										<div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
 											<p className="text-sm text-muted-foreground">
-												<span className="font-bold tabular-nums">
-													{formatTime(session.startsAt, timeZone)}–
-													{formatTime(session.endsAt, timeZone)}
-												</span>{' '}
-												· {m.open_slot()}
+												{m.open_slot()} ·{' '}
+												{m.until_time({ time: formatTime(session.endsAt, timeZone) })}
 											</p>
 											{onBrowse && (
 												<Button

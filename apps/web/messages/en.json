@@ -60,7 +60,7 @@
 	"create_mode_question": "How should people choose workshops?",
 	"mode_booking_title": "They book sessions themselves",
 	"mode_booking_body": "First come, first served. People pick exact times while places last.",
-	"mode_ranking_title": "They rank favourites, and you plan it",
+	"mode_ranking_title": "They rank, you plan",
 	"mode_ranking_body": "People rank workshops. You run the planning and publish everyone’s programme.",
 	"create_sessions_question": "How many sessions does each person attend?",
 	"sessions_per_participant_label": "Sessions per person",
@@ -391,7 +391,7 @@
 	"checkin_booked_elsewhere": "Booked for {workshop} at this time.",
 	"checkin_anyway": "Check in anyway",
 	"checkin_unknown": "This code isn't for this event, or it no longer works. Try the name search.",
-	"exports_title": "Exports",
+	"exports_title": "Export participant data",
 	"exports_hint": "Spreadsheet files (CSV). They're kept for 7 days, then deleted.",
 	"export_participants": "Participant list",
 	"export_programmes": "Programmes per person",
@@ -580,5 +580,6 @@
 	"allocation_places_unit": "places",
 	"allocation_needed_short": "{needed} needed · {spare}",
 	"export_short": "Export",
-	"audit_showing": "Showing {count} entries"
+	"audit_showing": "{events} activities, grouped into {rows} rows",
+	"place_left_one": "1 place left"
 }

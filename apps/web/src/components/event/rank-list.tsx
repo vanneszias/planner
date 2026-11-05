@@ -180,7 +180,7 @@ export function RankList({
 								<Button
 									variant="outline"
 									size="icon-lg"
-									className="size-9 aria-disabled:border-line aria-disabled:text-edge aria-disabled:opacity-100"
+									className="size-9 border-ink/40 text-foreground aria-disabled:opacity-35"
 									aria-label={m.move_up({ workshop: workshop.title })}
 									aria-disabled={index === 0 || undefined}
 									onClick={() => move(index, -1)}
@@ -190,7 +190,7 @@ export function RankList({
 								<Button
 									variant="outline"
 									size="icon-lg"
-									className="size-9 aria-disabled:border-line aria-disabled:text-edge aria-disabled:opacity-100"
+									className="size-9 border-ink/40 text-foreground aria-disabled:opacity-35"
 									aria-label={m.move_down({ workshop: workshop.title })}
 									aria-disabled={index === ranked.length - 1 || undefined}
 									onClick={() => move(index, 1)}
@@ -209,7 +209,7 @@ export function RankList({
 								</Button>
 							</span>
 							{workshop.times.length > 0 && (
-								<Times times={workshop.times} className="col-span-2 col-start-3" />
+								<Times times={workshop.times} className="col-span-2 col-start-3 max-sm:hidden" />
 							)}
 						</li>
 					)

@@ -73,7 +73,7 @@ function Swatches<T extends string>({
 						className={cn(
 							'grid aspect-square w-full max-w-10 cursor-pointer place-items-center rounded-lg border has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ring',
 							option === value
-								? 'border-ink bg-accent shadow-[inset_0_0_0_1px_var(--ink)]'
+								? 'border-primary bg-tint-success shadow-[inset_0_0_0_1px_var(--kelp)]'
 								: 'border-transparent hover:bg-accent',
 						)}
 					>

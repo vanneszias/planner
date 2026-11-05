@@ -215,10 +215,13 @@ function EventPage() {
 		}
 		if (left === 0) return { text: m.session_full(), action: me ? ('join' as const) : null }
 		if (me && mine.length >= event.sessionsPerParticipant) {
-			return { text: m.places_left({ count: String(left) }), action: null }
+			return {
+				text: left === 1 ? m.place_left_one() : m.places_left({ count: String(left) }),
+				action: null,
+			}
 		}
 		return {
-			text: m.places_left({ count: String(left) }),
+			text: left === 1 ? m.place_left_one() : m.places_left({ count: String(left) }),
 			action: 'book' as const,
 			// Last fifth of the places (at least two): say so at a glance.
 			scarce: left <= Math.max(2, Math.floor(session.capacity / 5)),
@@ -259,7 +262,12 @@ function EventPage() {
 				: null
 	const rail = me ? (
 		<>
-			<section className="flex flex-col gap-3 rounded-xl bg-card p-5 shadow-card">
+			<section
+				className={cn(
+					'flex flex-col gap-3',
+					!(rankingMode && !page.published) && 'rounded-xl bg-card p-5 shadow-card',
+				)}
+			>
 				<div>
 					<p className="font-display text-xl font-semibold">{m.hello_name({ name: me.name })}</p>
 				</div>
@@ -400,11 +408,13 @@ function EventPage() {
 				description={
 					registeringSession && registeringWorkshop ? (
 						<>
-							<span className="block font-bold text-foreground">
-								{registeringWorkshop.title} ·{' '}
+							<span className="block font-bold text-foreground">{registeringWorkshop.title}</span>
+							<span className="mb-1 block text-foreground tabular-nums">
 								{formatShortDayTime(registeringSession.startsAt, event.timezone)}–
 								{formatTime(registeringSession.endsAt, event.timezone)}
-								{registeringSession.room ? ` · ${registeringSession.room}` : ''}
+								{registeringSession.room && (
+									<span className="whitespace-nowrap"> · {registeringSession.room}</span>
+								)}
 							</span>
 							{m.register_intro()}
 						</>
@@ -435,7 +445,15 @@ function EventPage() {
 							setNotice(
 								refusal
 									? { text: `${message} ${(refusals[refusal] ?? m.error_generic)()}`, ok: false }
-									: { text: message, ok: true },
+									: {
+											text:
+												registeringSession && registeringWorkshop
+													? `${message} ${m.booked_notice({
+															session: `${registeringWorkshop.title} ${formatShortDayTime(registeringSession.startsAt, event.timezone)}`,
+														})}`
+													: message,
+											ok: true,
+										},
 							)
 							await router.invalidate()
 						}}
@@ -579,7 +597,7 @@ function EventPage() {
 									}
 									className="group/slot flex flex-col"
 								>
-									<summary className="sticky top-[3.25rem] z-[5] flex min-h-10 cursor-pointer list-none items-center gap-3 bg-background [&::-webkit-details-marker]:hidden">
+									<summary className="sticky top-[3.25rem] z-[5] -mx-2 flex min-h-10 cursor-pointer list-none items-center gap-3 rounded-lg bg-background px-2 hover:bg-accent [&::-webkit-details-marker]:hidden">
 										<span className="font-bold tabular-nums">
 											{formatTime(slot.startsAt, event.timezone)}–
 											{formatTime(slot.endsAt, event.timezone)}
@@ -619,7 +637,7 @@ function EventPage() {
 														me &&
 															state &&
 															state.action === null &&
-															'[&_.session-name]:font-medium [&_.session-title>svg]:[fill-opacity:0.3]',
+															'[&_.session-name]:font-medium [&_.session-name]:text-muted-foreground [&_.session-title>svg]:[fill-opacity:0.3]',
 													)}
 												>
 													<div className="session-title flex flex-1 items-start gap-3">

@@ -19,7 +19,8 @@ const kinds: { kind: ExportKind; label: () => string }[] = [
  * CSV exports (journeys.md, O9). Files are built in the background and kept
  * for 7 days; downloads go through a link that works for 15 minutes.
  */
-export function ExportsPanel({ eventId }: { eventId: string }) {
+/** `bare`: inside a dialog that already carries the title. */
+export function ExportsPanel({ eventId, bare = false }: { eventId: string; bare?: boolean }) {
 	const [exports, setExports] = useState<Export[]>([])
 	const [error, setError] = useState<string | null>(null)
 	const [busy, setBusy] = useState(false)
@@ -60,9 +61,11 @@ export function ExportsPanel({ eventId }: { eventId: string }) {
 	return (
 		<section
 			aria-labelledby="exports"
-			className="scroll-mt-20 flex flex-col gap-3 rounded-xl bg-card shadow-card p-5"
+			className={
+				bare ? 'flex flex-col gap-3' : 'flex flex-col gap-3 rounded-xl bg-card p-5 shadow-card'
+			}
 		>
-			<div>
+			<div className={bare ? 'sr-only' : undefined}>
 				<h2 id="exports" className="font-display text-lg font-semibold">
 					{m.exports_title()}
 				</h2>

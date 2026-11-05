@@ -60,7 +60,7 @@
 	"create_mode_question": "Hoe kiezen deelnemers hun workshops?",
 	"mode_booking_title": "Ze reserveren zelf sessies",
 	"mode_booking_body": "Wie eerst komt, eerst maalt. Deelnemers kiezen exacte momenten zolang er plaats is.",
-	"mode_ranking_title": "Ze kiezen favorieten, jij plant",
+	"mode_ranking_title": "Zij rangschikken, jij plant",
 	"mode_ranking_body": "Deelnemers rangschikken workshops. Jij maakt de planning en publiceert ieders programma.",
 	"create_sessions_question": "Hoeveel sessies volgt elke deelnemer?",
 	"sessions_per_participant_label": "Sessies per persoon",
@@ -391,7 +391,7 @@
 	"checkin_booked_elsewhere": "Ingeschreven voor {workshop} op dit moment.",
 	"checkin_anyway": "Toch aanmelden",
 	"checkin_unknown": "Deze code hoort niet bij dit evenement of werkt niet meer. Zoek op naam.",
-	"exports_title": "Exports",
+	"exports_title": "Deelnemersgegevens exporteren",
 	"exports_hint": "Rekenbladbestanden (CSV). Ze blijven 7 dagen bewaard en worden dan verwijderd.",
 	"export_participants": "Deelnemerslijst",
 	"export_programmes": "Programma per persoon",
@@ -580,5 +580,6 @@
 	"allocation_places_unit": "plaatsen",
 	"allocation_needed_short": "{needed} nodig · {spare}",
 	"export_short": "Exporteren",
-	"audit_showing": "{count} items getoond"
+	"audit_showing": "{events} activiteiten, gegroepeerd in {rows} rijen",
+	"place_left_one": "nog 1 plaats"
 }
