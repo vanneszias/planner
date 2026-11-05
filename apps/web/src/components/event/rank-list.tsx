@@ -2,7 +2,7 @@ import { Button } from '@app/ui/components/button'
 import { Marker, type MarkerColor, type MarkerShape } from '@app/ui/components/marker'
 import { cn } from 'cn'
 import { Check, ChevronDown, ChevronUp, Lock, Plus, X } from 'lucide-react'
-import { Fragment, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { FormError } from '#/components/auth-shell'
 import { m } from '#/paraglide/messages'
 
@@ -33,7 +33,10 @@ export function RankList({
 	saveLabel = m.save_ranking(),
 	hideTitle = false,
 	sessions,
+	draftKey,
 }: {
+	/** Keeps unsaved picks in this browser under this key, so a reload doesn't lose them. */
+	draftKey?: string
 	/** How many sessions each person gets; explains why they rank more than that. */
 	sessions?: number
 	/** In a dialog the dialog's title names the list. */
@@ -59,6 +62,37 @@ export function RankList({
 	const unranked = workshops.filter((w) => !ranked.includes(w.id))
 	const missing = Math.max(0, rules.min - ranked.length)
 	const upToDate = ranked.length > 0 && ranked.join() === stored
+	const dirty = ranked.join() !== stored
+
+	// Restore picks made but not saved before a reload (browser storage can be unavailable).
+	// biome-ignore lint/correctness/useExhaustiveDependencies: runs once, after hydration
+	useEffect(() => {
+		if (!draftKey) return
+		try {
+			const draft = JSON.parse(localStorage.getItem(draftKey) ?? 'null')
+			if (Array.isArray(draft)) {
+				const kept = draft.filter((id): id is string => typeof id === 'string' && byId.has(id))
+				if (kept.length > 0 && kept.join() !== stored) setRanked(kept)
+			}
+		} catch {}
+	}, [])
+
+	// Keep the draft in step with the list; drop it once the server has the same order.
+	useEffect(() => {
+		if (!draftKey) return
+		try {
+			if (dirty) localStorage.setItem(draftKey, JSON.stringify(ranked))
+			else localStorage.removeItem(draftKey)
+		} catch {}
+	}, [draftKey, dirty, ranked])
+
+	// Leaving with unsaved picks asks first.
+	useEffect(() => {
+		if (!dirty) return
+		const warn = (event: BeforeUnloadEvent) => event.preventDefault()
+		window.addEventListener('beforeunload', warn)
+		return () => window.removeEventListener('beforeunload', warn)
+	}, [dirty])
 	const title = (id: string) => byId.get(id)?.title ?? ''
 
 	function update(next: string[], moved: string) {
@@ -260,6 +294,9 @@ export function RankList({
 				<p aria-live="polite" className="sr-only">
 					{saved}
 				</p>
+				{dirty && missing === 0 && !error && (
+					<p className="text-center text-sm text-muted-foreground">{m.ranking_draft()}</p>
+				)}
 				<Button
 					className={cn(
 						'w-full',

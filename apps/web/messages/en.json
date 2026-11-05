@@ -581,5 +581,8 @@
 	"allocation_needed_short": "{needed} needed · {spare}",
 	"export_short": "Export",
 	"audit_showing": "{events} activities, grouped into {rows} rows",
-	"place_left_one": "1 place left"
+	"place_left_one": "1 place left",
+	"ranking_draft": "Not saved yet. Your picks are kept on this device until you save.",
+	"nearly_full": "nearly full",
+	"session_full_short": "full"
 }

@@ -467,6 +467,7 @@ function EventPage() {
 				(me ? (
 					rankingOpen ? (
 						<RankList
+							draftKey={`ranking-draft:${event.id}`}
 							sessions={event.sessionsPerParticipant}
 							contentLocale={event.defaultLocale}
 							initial={me.ranking}

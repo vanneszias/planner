@@ -581,5 +581,8 @@
 	"allocation_needed_short": "{needed} nodig · {spare}",
 	"export_short": "Exporteren",
 	"audit_showing": "{events} activiteiten, gegroepeerd in {rows} rijen",
-	"place_left_one": "nog 1 plaats"
+	"place_left_one": "nog 1 plaats",
+	"ranking_draft": "Nog niet opgeslagen. Je keuzes blijven op dit toestel tot je opslaat.",
+	"nearly_full": "bijna vol",
+	"session_full_short": "vol"
 }

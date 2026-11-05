@@ -4,6 +4,7 @@ import { Button } from '@app/ui/components/button'
 import { ConfirmDialog, Dialog } from '@app/ui/components/dialog'
 import { Marker } from '@app/ui/components/marker'
 import { createFileRoute, getRouteApi, Link, useRouter } from '@tanstack/react-router'
+import { cn } from 'cn'
 import { CalendarClock, Pencil, Plus, Trash2, TriangleAlert } from 'lucide-react'
 import { type FormEvent, useState } from 'react'
 import { FormError } from '#/components/auth-shell'
@@ -22,6 +23,12 @@ const eventRoute = getRouteApi('/_organizer/events/$eventId')
 function Schedule() {
 	const { event, workshops, sessions, seats, conflicts, canEdit } = eventRoute.useLoaderData()
 	const booking = event.mode === 'booking'
+	/** The same "last places" rule as the public page: the last fifth, at least two. */
+	const fill = (session: { id: string; capacity: number }) => {
+		const left = session.capacity - (seats[session.id] ?? 0)
+		if (left <= 0) return 'full'
+		return left <= Math.max(2, Math.floor(session.capacity / 5)) ? 'nearly' : 'open'
+	}
 	const router = useRouter()
 	const [adding, setAdding] = useState(false)
 	const [editing, setEditing] = useState<SessionRow | null>(null)
@@ -146,6 +153,15 @@ function Schedule() {
 																	capacity: String(session.capacity),
 																})
 															: m.places({ count: String(session.capacity) })}
+														{booking && fill(session) !== 'open' && (
+															<span className="font-bold text-destructive">
+																{' '}
+																·{' '}
+																{fill(session) === 'full'
+																	? m.session_full_short()
+																	: m.nearly_full()}
+															</span>
+														)}
 													</p>
 													{booking && (
 														<span
@@ -153,7 +169,12 @@ function Schedule() {
 															aria-hidden
 														>
 															<span
-																className="block h-full rounded-full bg-primary"
+																className={cn(
+																	'block h-full rounded-full',
+																	booking && fill(session) !== 'open'
+																		? 'bg-destructive'
+																		: 'bg-primary',
+																)}
 																style={{
 																	width: `${Math.min(100, ((seats[session.id] ?? 0) / Math.max(1, session.capacity)) * 100)}%`,
 																}}
