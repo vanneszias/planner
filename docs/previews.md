@@ -17,15 +17,15 @@ Workers and resources, deployed by `scripts/preview.sh`.
 Only the `event-web` Worker is connected to the repository; its build deploys
 all four Workers, in order. Settings > Build on `event-web`:
 
-| Setting                          | Value                                                           |
-| -------------------------------- | --------------------------------------------------------------- |
-| Git repository / branch          | `vanneszias/planner`, production branch `master`                |
-| Root directory                   | empty (repository root)                                         |
-| Build command                    | `pnpm check` (lint, typecheck, tests)                           |
-| Deploy command                   | `scripts/deploy.sh`                                             |
-| Preview command (other branches) | `scripts/preview.sh up`                                         |
-| Enable Preview Builds            | on                                                              |
-| Build secrets                    | `PREVIEW_AUTH_SECRET`, `PREVIEW_EXPORT_KEY`, `DEPLOY_API_TOKEN` |
+| Setting                          | Value                                                                                |
+| -------------------------------- | ------------------------------------------------------------------------------------ |
+| Git repository / branch          | `vanneszias/planner`, production branch `master`                                     |
+| Root directory                   | empty (repository root)                                                              |
+| Build command                    | `pnpm check` (lint, typecheck, tests)                                                |
+| Deploy command                   | `scripts/deploy.sh`                                                                  |
+| Preview command (other branches) | `scripts/preview.sh up`                                                              |
+| Enable Preview Builds            | on                                                                                   |
+| Build secrets                    | `PREVIEW_AUTH_SECRET`, `PREVIEW_EXPORT_KEY`, `PREVIEW_TOKEN_KEY`, `DEPLOY_API_TOKEN` |
 
 The other three Workers stay disconnected, so a push builds once.
 
@@ -69,9 +69,10 @@ Differences from production:
 - **No cron triggers**, since the account's cron limit is shared with
   production. Scheduled work (retention, automatic decisions) doesn't run.
 - Rate limit counters are shared with production (same namespaces).
-- `BETTER_AUTH_SECRET` and `EXPORT_SIGNING_KEY` come from the build secrets
-  `PREVIEW_AUTH_SECRET` and `PREVIEW_EXPORT_KEY`, the same for every preview
-  and never the production values.
+- `BETTER_AUTH_SECRET`, `EXPORT_SIGNING_KEY` and `PARTICIPANT_TOKEN_KEY` come
+  from the build secrets `PREVIEW_AUTH_SECRET`, `PREVIEW_EXPORT_KEY` and
+  `PREVIEW_TOKEN_KEY`, the same for every preview and never the production
+  values.
 
 ## How it works
 
