@@ -6,8 +6,6 @@ import {
 import { paraglideMiddleware } from './paraglide/server.js'
 import { newNonce, nonceHeader, secureResponse } from './server/csp'
 
-export { EventCoordinator } from './server/stray-coordinator'
-
 // Same as TanStack Start's default entry, plus locale resolution (cookie, then
 // Accept-Language) before rendering, and security headers with a CSP nonce
 // on every response. Wired up as `main` in wrangler.jsonc.

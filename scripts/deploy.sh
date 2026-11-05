@@ -14,7 +14,8 @@ for app in coordinator jobs api; do
 done
 (cd "$root/apps/web" && pnpm build && pnpm exec wrangler deploy)
 
-curl --fail --retry 3 --retry-delay 5 https://events.zias.be/health
+# A custom domain can 404 for a few seconds after its first attach: retry any error.
+curl --fail --retry 6 --retry-delay 5 --retry-all-errors https://events.zias.be/health
 
 # Merged branches leave their preview behind; a failure here doesn't fail the deploy.
 "$root/scripts/preview.sh" prune || echo "Preview prune failed; run scripts/preview.sh prune by hand"
