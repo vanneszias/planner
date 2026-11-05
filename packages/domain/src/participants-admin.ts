@@ -7,7 +7,13 @@ import { type OrganizerContext, requirePermission } from './context.ts'
 import { chunk, maxInList } from './d1-limits.ts'
 import { invalid } from './errors.ts'
 import { getEvent } from './events.ts'
-import { accessTokenHash, newAccessToken, newShortCode, shortCodeHash } from './tokens.ts'
+import {
+	accessTokenHash,
+	newAccessToken,
+	newShortCode,
+	type SealToken,
+	shortCodeHash,
+} from './tokens.ts'
 import { parse } from './validation.ts'
 
 /*
@@ -214,6 +220,7 @@ export async function issueCredentials(
 	ctx: OrganizerContext,
 	eventId: string,
 	registrationIds: string[],
+	seal?: SealToken,
 ) {
 	requirePermission(ctx, { participant: ['write'] })
 	await getEvent(db, ctx, eventId)
@@ -253,6 +260,7 @@ export async function issueCredentials(
 				token,
 				code,
 				accessTokenHash: await accessTokenHash(token),
+				accessTokenSealed: seal ? await seal(token) : null,
 				shortCodeHash: await shortCodeHash(eventId, code),
 			}
 		}),
@@ -262,7 +270,11 @@ export async function issueCredentials(
 		const [first, ...rest] = group.map((person) =>
 			db
 				.update(schema.registration)
-				.set({ accessTokenHash: person.accessTokenHash, shortCodeHash: person.shortCodeHash })
+				.set({
+					accessTokenHash: person.accessTokenHash,
+					accessTokenSealed: person.accessTokenSealed,
+					shortCodeHash: person.shortCodeHash,
+				})
 				.where(eq(schema.registration.id, person.id)),
 		)
 		if (first) await db.batch([first, ...rest])
@@ -274,5 +286,7 @@ export async function issueCredentials(
 		eventId,
 		data: { count: issued.length },
 	})
-	return issued.map(({ accessTokenHash: _a, shortCodeHash: _s, ...person }) => person)
+	return issued.map(
+		({ accessTokenHash: _a, accessTokenSealed: _e, shortCodeHash: _s, ...person }) => person,
+	)
 }

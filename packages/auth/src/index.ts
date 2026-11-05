@@ -93,6 +93,8 @@ export function createAuth({
 				}),
 		},
 		emailVerification: {
+			// Password sign-ups confirm their address: passes attach only to verified emails (D29).
+			sendOnSignUp: true,
 			sendVerificationEmail: ({ user, url }) =>
 				sendEmail({
 					to: user.email,

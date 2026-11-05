@@ -43,6 +43,13 @@
       "when": 1793807237595,
       "tag": "0005_availability_polls",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1793892353233,
+      "tag": "0006_tired_alice",
+      "breakpoints": true
     }
   ]
 }

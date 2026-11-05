@@ -20,6 +20,7 @@ import { BrandMark } from '#/components/brand-mark'
 import { DayStrip } from '#/components/event/day-strip'
 import { Explanation } from '#/components/event/explanation'
 import { RegisterForm, ReturningForms } from '#/components/event/forms'
+import { PassCards } from '#/components/event/pass-card'
 import { RankList } from '#/components/event/rank-list'
 import { useLiveSeats } from '#/components/event/use-live-seats'
 import { LanguageSwitch } from '#/components/language-switch'
@@ -92,6 +93,7 @@ function EventPage() {
 	const { cancel } = Route.useSearch()
 	const router = useRouter()
 	const { event, workshops, sessions, ageGroups, me } = page
+	const { org, event: eventSlug } = Route.useParams()
 	const seats = useLiveSeats(event.id, page.seats)
 	// Once results are published, participants land on their programme.
 	const [tab, setTab] = useState<'programme' | 'myday'>(
@@ -467,6 +469,13 @@ function EventPage() {
 					/>
 				)}
 			</Dialog>
+
+			<PassCards
+				passes={page.passes}
+				account={page.account}
+				hasLink={Boolean(me)}
+				eventPath={`/${org}/${eventSlug}`}
+			/>
 
 			{rankingMode &&
 				!page.published &&

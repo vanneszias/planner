@@ -1,0 +1,1 @@
+ALTER TABLE `registration` ADD `access_token_sealed` text;

@@ -33,7 +33,12 @@ application and are tested there.
 - The private link carries a 128-bit random token. The short code
   (`K7Q2-XA`) is a separate 6-character Crockford base32 code (no I, L, O, U),
   about a billion combinations, valid only together with its event.
-- Both are stored as SHA-256 hashes.
+- Both are stored as SHA-256 hashes, which is how they are looked up.
+- **Passes (D29):** the link token is also kept sealed with AES-256-GCM under
+  `PARTICIPANT_TOKEN_KEY` (a Worker secret), so a signed-in participant can show
+  their own QR again. It is opened only for the signed-in owner of the
+  registration (own, or a guardian's minors), and cleared at anonymisation.
+  Losing the key means no passes can be shown; registration fails without it.
 - **Code entry is rate-limited** (see table) and gets a Turnstile check after 3
   failures. Many failures across an event alert the organizer.
 - **Tokens leave the URL immediately:** the first visit exchanges the token for
@@ -42,7 +47,10 @@ application and are tested there.
   shared screenshots and `Referer` headers.
 - `Referrer-Policy: no-referrer` on any response that still contains a token.
 - **Log redaction:** request logging strips token path segments and query values.
-- Organizers can regenerate a token; the old one stops working at once.
+- Organizers can regenerate a token; the old one stops working at once, and so
+  does its sealed copy, which is replaced in the same write.
+- **Accounts attach by verified email only** (D29). An unverified address could
+  belong to someone else, so nothing is shown until the email is confirmed.
 - Feed tokens (iCal) are separate and can only read the itinerary (domain model).
 
 ### Authentication (Better Auth)

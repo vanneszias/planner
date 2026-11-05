@@ -8,3 +8,6 @@ GOOGLE_CLIENT_SECRET=
 TURNSTILE_SECRET=
 # Signs export download links; same value in apps/api/.dev.vars.
 EXPORT_SIGNING_KEY=
+# Encrypts participant link tokens at rest (passes, D29). Required: registration fails without it.
+# Generate with: openssl rand -base64 32
+PARTICIPANT_TOKEN_KEY=

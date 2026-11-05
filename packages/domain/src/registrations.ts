@@ -2,7 +2,14 @@ import { type Db, schema } from '@app/db'
 import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { invalid, notFound } from './errors.ts'
-import { accessTokenHash, newAccessToken, newShortCode, shortCodeHash } from './tokens.ts'
+import {
+	accessTokenHash,
+	newAccessToken,
+	newShortCode,
+	type OpenToken,
+	type SealToken,
+	shortCodeHash,
+} from './tokens.ts'
 import { parse } from './validation.ts'
 
 /**
@@ -49,6 +56,7 @@ export async function registerSelf(
 	db: Db,
 	eventId: string,
 	input: SelfRegistrationInput,
+	seal?: SealToken,
 ): Promise<
 	| { kind: 'created'; context: ParticipantContext; credentials: NewCredentials }
 	| { kind: 'existing'; registrationId: string }
@@ -86,6 +94,7 @@ export async function registerSelf(
 			email: values.email,
 			ageGroupId: values.ageGroupId ?? null,
 			accessTokenHash: await accessTokenHash(credentials.token),
+			accessTokenSealed: seal ? await seal(credentials.token) : null,
 			shortCodeHash: await shortCodeHash(eventId, credentials.code),
 		})
 		.returning({ id: schema.registration.id })
@@ -148,13 +157,37 @@ export async function contextFromCode(
  * Used when a link is lost or leaked, and when resending a link by email
  * (the old token can't be recovered from its hash).
  */
-export async function rotateAccessToken(db: Db, registrationId: string): Promise<string> {
+export async function rotateAccessToken(
+	db: Db,
+	registrationId: string,
+	seal?: SealToken,
+): Promise<string> {
 	const token = newAccessToken()
 	await db
 		.update(schema.registration)
-		.set({ accessTokenHash: await accessTokenHash(token) })
+		.set({
+			accessTokenHash: await accessTokenHash(token),
+			accessTokenSealed: seal ? await seal(token) : null,
+		})
 		.where(eq(schema.registration.id, registrationId))
 	return token
+}
+
+/**
+ * The participant's own pass token, opened. Null when the credential was issued
+ * before passes existed (then the organizer issues new codes to get one).
+ */
+export async function passToken(
+	db: Db,
+	registrationId: string,
+	open: OpenToken,
+): Promise<string | null> {
+	const [found] = await db
+		.select({ sealed: schema.registration.accessTokenSealed })
+		.from(schema.registration)
+		.where(eq(schema.registration.id, registrationId))
+		.limit(1)
+	return found?.sealed ? open(found.sealed) : null
 }
 
 /**

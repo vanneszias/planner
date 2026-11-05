@@ -38,6 +38,8 @@ export const registration = sqliteTable(
 		isMinor: integer('is_minor', { mode: 'boolean' }).notNull().default(false),
 		/** SHA-256 of the private link token (D16). The token itself is never stored. */
 		accessTokenHash: text('access_token_hash').notNull(),
+		/** The link token, sealed with PARTICIPANT_TOKEN_KEY (passes, D29). Null until issued under the new key. */
+		accessTokenSealed: text('access_token_sealed'),
 		/** SHA-256 of event id + short code, so codes only work with their event. */
 		shortCodeHash: text('short_code_hash').notNull(),
 		feedTokenHash: text('feed_token_hash'),

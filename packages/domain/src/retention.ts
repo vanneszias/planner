@@ -84,7 +84,8 @@ export async function anonymiseEvent(
 			UPDATE registration SET
 				display_name = '', email = NULL, guardian_email = NULL,
 				user_id = NULL, managed_by_user_id = NULL,
-				access_token_hash = 'anonymised:' || id, short_code_hash = 'anonymised:' || id,
+				access_token_hash = 'anonymised:' || id, access_token_sealed = NULL,
+				short_code_hash = 'anonymised:' || id,
 				feed_token_hash = NULL, checked_in_by = NULL, anonymised_at = ${now.getTime()}
 			WHERE id IN (
 				SELECT id FROM registration

@@ -23,6 +23,7 @@ interface __BaseEnv_Env {
 	GOOGLE_CLIENT_SECRET: string;
 	TURNSTILE_SECRET: string;
 	EXPORT_SIGNING_KEY: string;
+	PARTICIPANT_TOKEN_KEY: string;
 	EVENT_COORDINATOR: DurableObjectNamespace<import("../coordinator/src/index").EventCoordinator>;
 }
 declare namespace Cloudflare {
@@ -36,7 +37,7 @@ type StringifyValues<EnvType extends Record<string, unknown>> = {
 	[Binding in keyof EnvType]: EnvType[Binding] extends string ? EnvType[Binding] : string;
 };
 declare namespace NodeJS {
-	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "COORDINATOR_JURISDICTION" | "BETTER_AUTH_URL" | "EMAIL_DELIVERY" | "TURNSTILE_SITE_KEY" | "API_URL" | "BETTER_AUTH_SECRET" | "GOOGLE_CLIENT_ID" | "GOOGLE_CLIENT_SECRET" | "TURNSTILE_SECRET" | "EXPORT_SIGNING_KEY">> {}
+	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "COORDINATOR_JURISDICTION" | "BETTER_AUTH_URL" | "EMAIL_DELIVERY" | "TURNSTILE_SITE_KEY" | "API_URL" | "BETTER_AUTH_SECRET" | "GOOGLE_CLIENT_ID" | "GOOGLE_CLIENT_SECRET" | "TURNSTILE_SECRET" | "EXPORT_SIGNING_KEY" | "PARTICIPANT_TOKEN_KEY">> {}
 }
 declare module "*.txt" {
 	const value: string;

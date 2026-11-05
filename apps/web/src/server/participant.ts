@@ -30,9 +30,11 @@ import { coordinatorFor, r2RunStorage } from '@app/platform'
 import { notFound, redirect } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
 import { and, eq } from 'drizzle-orm'
+import { accountPasses, signedInUser } from './account-passes'
 import { sendEmail } from './email'
 import { newLinkEmail, promotedEmail, registrationEmail } from './participant-emails'
 import { readParticipant, setParticipantCookie } from './participant-session'
+import { sealToken } from './pass'
 import { clientIp, withinLimit } from './rate-limit'
 import { verifyTurnstile } from './turnstile'
 
@@ -88,9 +90,13 @@ export const getEventPage = createServerFn({ method: 'GET' })
 		}
 		const meta = await eventOr404(page.event.id)
 		const participant = await readParticipant(page.event.id, meta.organizationId)
+		// Signed in: this event's passes (own, and a guardian's children), without the cookie.
+		const user = await signedInUser()
 		return {
 			...page,
 			seats: await seatCounts(db(), page.event.id),
+			account: user ? { verified: user.emailVerified } : null,
+			passes: user ? await accountPasses(user, page.event.id) : [],
 			published: await hasPublishedRun(db(), page.event.id),
 			turnstileSiteKey: env.TURNSTILE_SITE_KEY || null,
 			me: participant
@@ -120,18 +126,20 @@ export const registerFn = createServerFn({ method: 'POST' })
 		if (!(await verifyTurnstile(data.turnstileToken)))
 			return { ok: false as const, reason: 'bot' as const }
 
-		const result = await registerSelf(db(), data.eventId, data.values).catch((error: unknown) => {
-			if (error instanceof DomainError && error.code === 'invalid') {
-				return { kind: 'invalid' as const, issues: error.issues ?? {} }
-			}
-			throw error
-		})
+		const result = await registerSelf(db(), data.eventId, data.values, sealToken).catch(
+			(error: unknown) => {
+				if (error instanceof DomainError && error.code === 'invalid') {
+					return { kind: 'invalid' as const, issues: error.issues ?? {} }
+				}
+				throw error
+			},
+		)
 		if (result.kind === 'invalid')
 			return { ok: false as const, reason: 'invalid' as const, issues: result.issues }
 
 		if (result.kind === 'existing') {
 			// Same neutral answer as a new registration; the inbox owner gets a fresh link.
-			const token = await rotateAccessToken(db(), result.registrationId)
+			const token = await rotateAccessToken(db(), result.registrationId, sealToken)
 			await sendEmail(
 				newLinkEmail({
 					to: data.values.email,
@@ -200,7 +208,7 @@ export const findProgrammeFn = createServerFn({ method: 'POST' })
 			)
 			.limit(1)
 		if (found) {
-			const token = await rotateAccessToken(db(), found.id)
+			const token = await rotateAccessToken(db(), found.id, sealToken)
 			await sendEmail(
 				newLinkEmail({
 					to: email,
