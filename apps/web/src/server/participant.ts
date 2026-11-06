@@ -30,7 +30,7 @@ import { coordinatorFor, r2RunStorage } from '@app/platform'
 import { notFound, redirect } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
 import { and, eq } from 'drizzle-orm'
-import { accountPasses, signedInUser } from './account-passes'
+import { accountPasses, linkPass, signedInUser } from './account-passes'
 import { sendEmail } from './email'
 import { newLinkEmail, promotedEmail, registrationEmail } from './participant-emails'
 import { readParticipant, setParticipantCookie } from './participant-session'
@@ -92,22 +92,35 @@ export const getEventPage = createServerFn({ method: 'GET' })
 		const participant = await readParticipant(page.event.id, meta.organizationId)
 		// Signed in: this event's passes (own, and a guardian's children), without the cookie.
 		const user = await signedInUser()
+		const passes = user ? await accountPasses(user, page.event.id) : []
+		const me = participant ? await participantView(participant) : null
+		// Recognised by link or code: their own pass too, unless the account already lists it.
+		if (participant && me && !passes.some((p) => p.registrationId === participant.registrationId)) {
+			const own = await linkPass(participant.registrationId, me.name)
+			if (own)
+				passes.unshift({
+					...own,
+					eventId: page.event.id,
+					eventName: page.event.name,
+					eventPath: `/${data.org}/${data.event}`,
+				})
+		}
 		return {
 			...page,
 			seats: await seatCounts(db(), page.event.id),
 			account: user ? { verified: user.emailVerified } : null,
-			passes: user ? await accountPasses(user, page.event.id) : [],
+			passes,
 			published: await hasPublishedRun(db(), page.event.id),
 			turnstileSiteKey: env.TURNSTILE_SITE_KEY || null,
-			me: participant
-				? await participantView(participant).then((view) => ({
-						...view,
+			me: me
+				? {
+						...me,
 						// The counter on the ranking screen (D8, D26).
 						rules: {
-							min: minimumRanks(page.event, view.rankable.length),
-							max: Math.min(page.event.rankLimit, view.rankable.length),
+							min: minimumRanks(page.event, me.rankable.length),
+							max: Math.min(page.event.rankLimit, me.rankable.length),
 						},
-					}))
+					}
 				: null,
 		}
 	})

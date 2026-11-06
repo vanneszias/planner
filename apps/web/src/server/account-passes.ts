@@ -1,6 +1,6 @@
 import { env } from 'cloudflare:workers'
 import { createDb } from '@app/db'
-import { linkRegistrations, passesFor } from '@app/domain'
+import { linkRegistrations, passesFor, passToken } from '@app/domain'
 import { getRequestHeaders } from '@tanstack/react-start/server'
 import { getAuth } from './auth'
 import { openToken, passSvg } from './pass'
@@ -35,4 +35,14 @@ export async function accountPasses(
 		forChild: pass.forChild,
 		qr: passSvg(pass.token),
 	}))
+}
+
+/**
+ * The pass of a participant recognised by their private link or code: they
+ * already hold the link, so showing it as a QR reveals nothing new. Null when
+ * the credential predates passes (the organizer issues new codes to get one).
+ */
+export async function linkPass(registrationId: string, displayName: string) {
+	const token = await passToken(db(), registrationId, openToken)
+	return token ? { registrationId, displayName, forChild: false, qr: passSvg(token) } : null
 }
