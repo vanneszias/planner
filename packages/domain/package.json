@@ -5,7 +5,8 @@
 	"exports": {
 		".": "./src/index.ts",
 		"./time": "./src/time.ts",
-		"./poll-grid": "./src/poll-grid.ts"
+		"./poll-grid": "./src/poll-grid.ts",
+		"./capacity": "./src/capacity.ts"
 	},
 	"scripts": {
 		"typecheck": "tsc --noEmit",
