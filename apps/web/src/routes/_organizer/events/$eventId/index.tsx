@@ -1,3 +1,4 @@
+import { peopleCapacity } from '@app/domain/capacity'
 import { Button } from '@app/ui/components/button'
 import { createFileRoute, getRouteApi, Link, useRouter } from '@tanstack/react-router'
 import { cn } from 'cn'
@@ -54,11 +55,16 @@ function Overview() {
 	const ready = published && steps.every((step) => step.done)
 	const participation = Route.useLoaderData()
 	const ranks = event.mode === 'ranking'
-	const places = sessions.reduce((sum, session) => sum + session.capacity, 0)
+	const places = sessions
+		.filter((session) => session.status !== 'cancelled')
+		.reduce((sum, session) => sum + session.capacity, 0)
+	// People, not seats: everyone takes several sessions (D30).
+	const room = peopleCapacity(sessions, event.sessionsPerParticipant)
 	const stats: { label: string; value: number; of?: number; sub?: string }[] = [
 		{
 			label: m.stat_registered(),
 			value: participation.registrations,
+			of: room,
 			sub: ranks
 				? m.stat_still_to_rank({
 						count: String(participation.registrations - participation.ranked),
@@ -76,7 +82,11 @@ function Overview() {
 		{
 			label: m.stat_programme(),
 			value: sessions.length,
-			sub: m.stat_programme_sub({ workshops: String(workshops.length), places: String(places) }),
+			sub: m.stat_programme_sub({
+				workshops: String(workshops.length),
+				places: String(places),
+				people: String(room),
+			}),
 		},
 	]
 
@@ -133,8 +143,8 @@ function Overview() {
 										total: String(participation.registrations),
 									})
 								: m.next_book_body({
-										booked: String(participation.booked),
-										places: String(places),
+										registered: String(participation.registrations),
+										people: String(room),
 									})}
 						</p>
 						<div>
